@@ -12,4 +12,6 @@ public interface IAuthenticationService
     AccountDto CreateAccountByAdmin(AdminCreateAccountDto account);            // create admin/author
     IEnumerable<AccountOverviewDto> GetAllAccounts();                         // list all users (no password)
     void SetAccountActiveState(long userId, bool isActive);                   // block/unblock
+    AccountDto GetById(long id);
+
 }
