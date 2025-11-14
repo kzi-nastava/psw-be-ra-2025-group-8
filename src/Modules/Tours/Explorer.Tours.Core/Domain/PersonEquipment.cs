@@ -12,7 +12,6 @@ namespace Explorer.Tours.Core.Domain
     public class PersonEquipment : Entity
     {
         public long PersonId { get; set; }
-        public Person Person { get; set; }
 
         public long EquipmentId { get; set; }
         public Equipment Equipment { get; set; }

@@ -1,4 +1,5 @@
-﻿using Explorer.Tours.Core.Domain;
+﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Tours.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Tours.Infrastructure.Database;
@@ -14,6 +15,8 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
+        modelBuilder.Ignore<Person>();
+
         modelBuilder.Entity<PersonEquipment>(builder =>
         {
             builder.HasKey(pe => pe.Id);
@@ -21,11 +24,6 @@ public class ToursContext : DbContext
             builder.HasOne(pe => pe.Equipment)
                    .WithMany()
                    .HasForeignKey(pe => pe.EquipmentId)
-                   .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasOne(pe => pe.Person)
-                   .WithMany()
-                   .HasForeignKey(pe => pe.PersonId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
     }
