@@ -6,11 +6,27 @@ namespace Explorer.Tours.Infrastructure.Database;
 public class ToursContext : DbContext
 {
     public DbSet<Equipment> Equipment { get; set; }
+    public DbSet<PersonEquipment> PersonEquipment { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("tours");
+
+        modelBuilder.Entity<PersonEquipment>(builder =>
+        {
+            builder.HasKey(pe => pe.Id);
+
+            builder.HasOne(pe => pe.Equipment)
+                   .WithMany()
+                   .HasForeignKey(pe => pe.EquipmentId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(pe => pe.Person)
+                   .WithMany()
+                   .HasForeignKey(pe => pe.PersonId)
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
