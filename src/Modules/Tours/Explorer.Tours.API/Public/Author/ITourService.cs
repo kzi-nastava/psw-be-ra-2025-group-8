@@ -1,7 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 
-namespace Explorer.Tours.API.Public.Administration
+namespace Explorer.Tours.API.Public.Author
 {
     public interface ITourService
     {
