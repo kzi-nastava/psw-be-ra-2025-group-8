@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Administrator.Administration;
 
-[Authorize(Policy = "administratorPolicy")]
-[Route("api/administration/report-problem")]
+[Authorize(Policy = "touristPolicy")]
+[Route("api/tours/report-problem")]
 [ApiController]
 public class ReportProblemController : ControllerBase
 {
