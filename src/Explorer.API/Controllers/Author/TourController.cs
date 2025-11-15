@@ -44,6 +44,7 @@ public class TourController : ControllerBase
     public ActionResult<TourDto> Update([FromBody] TourDto tour)
     {
         var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        tour.AuthorId = authorId; // ensure service gets current author
 
         // Check if the author can update their own tour
         var existingTours = _tourService.GetByAuthor(authorId);

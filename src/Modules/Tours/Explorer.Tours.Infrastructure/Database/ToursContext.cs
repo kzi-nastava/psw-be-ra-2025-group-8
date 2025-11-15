@@ -1,5 +1,6 @@
 ﻿using Explorer.Tours.Core.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Explorer.Tours.Infrastructure.Database;
 
@@ -22,5 +23,11 @@ public class ToursContext : DbContext
         modelBuilder.Entity<Tour>().Property(t => t.Status).IsRequired();
         modelBuilder.Entity<Tour>().Property(t => t.Price).HasColumnType("decimal(18,2)").IsRequired();
         modelBuilder.Entity<Tour>().Property(t => t.AuthorId).IsRequired();
+
+        // Value converter for list of tags stored as comma separated string
+        var tagsConverter = new ValueConverter<List<string>, string>(
+            v => string.Join(',', v ?? new List<string>()),
+            v => string.IsNullOrWhiteSpace(v) ? new List<string>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList());
+        modelBuilder.Entity<Tour>().Property(t => t.Tags).HasConversion(tagsConverter).HasColumnName("Tags");
     }
 }

@@ -33,8 +33,7 @@ public class TourService : ITourService
             tourDto.Name,
             tourDto.Description,
             tourDto.Difficulty,
-            tourDto.Tags,
-           
+            tourDto.Tags ?? new List<string>(),
             tourDto.AuthorId
         );
 
@@ -50,25 +49,24 @@ public class TourService : ITourService
 
     public TourDto Update(TourDto tourDto)
     {
-        var tour = _mapper.Map<Tour>(tourDto);
-        var result = _crudRepository.Update(tour);
+        var existing = _crudRepository.Get(tourDto.Id);
+        if (existing.AuthorId != tourDto.AuthorId && tourDto.AuthorId != 0) // allow if not provided
+        {
+            throw new UnauthorizedAccessException("You can only update your own tours.");
+        }
+        existing.Name = tourDto.Name;
+        existing.Description = tourDto.Description;
+        existing.Difficulty = tourDto.Difficulty;
+        existing.Tags = tourDto.Tags ?? new List<string>();
+        var result = _crudRepository.Update(existing);
         return _mapper.Map<TourDto>(result);
     }
 
     public void Delete(long id, int authorId)
     {
         var tour = _crudRepository.Get(id);
-
-        if (tour.AuthorId != authorId)
-        {
-            throw new UnauthorizedAccessException("You can only delete your own tours.");
-        }
-
-        if (tour.Status != TourStatus.Draft)
-        {
-            throw new InvalidOperationException("Only draft tours can be deleted.");
-        }
-
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException("You can only delete your own tours.");
+        if (tour.Status != TourStatus.Draft) throw new InvalidOperationException("Only draft tours can be deleted.");
         _crudRepository.Delete(id);
     }
 }
