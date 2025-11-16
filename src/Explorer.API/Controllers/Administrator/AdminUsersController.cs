@@ -41,7 +41,7 @@ public class AdminUsersController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<AccountOverviewDto>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<AccountOverviewDto>> GetAll()
     {
-        return Ok(_authService.GetAllAccounts());
+        return Ok(_authService.GetAccounts());
     }
 
     // -------------------------
@@ -74,7 +74,7 @@ public class AdminUsersController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        _authService.SetAccountActiveState(id, dto.IsActive);
+        _authService.ChangeAccountActivation(id, dto.IsActive);
         return NoContent();
     }
 }

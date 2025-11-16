@@ -84,7 +84,7 @@ public class AuthenticationService : IAuthenticationService
         };
     }
 
-    public IEnumerable<AccountOverviewDto> GetAllAccounts()
+    public IEnumerable<AccountOverviewDto> GetAccounts()
     {
         var users = _userRepository.GetAll(); // uses repository method
         var result = new List<AccountOverviewDto>();
@@ -119,12 +119,18 @@ public class AuthenticationService : IAuthenticationService
         return result;
     }
 
-    public void SetAccountActiveState(long userId, bool isActive)
+    public void ChangeAccountActivation(long userId, bool isActive)
     {
         var user = _userRepository.GetById(userId);
         if (user == null) throw new NotFoundException("User not found.");
 
-        // optionally prevent admin from deactivating the last admin, or self-block
+        if (user.Role == UserRole.Administrator)
+        {
+            // blocking another admin is forbidden
+            throw new EntityValidationException("Modification of 'IsActive' status for an Administrator account is not allowed.");
+        }
+
+        // only if the user is not Administrator
         user.IsActive = isActive;
         _userRepository.Update(user);
     }

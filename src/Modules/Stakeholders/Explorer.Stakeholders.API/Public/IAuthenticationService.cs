@@ -10,8 +10,8 @@ public interface IAuthenticationService
 
     // Admin operations
     AccountDto CreateAccountByAdmin(AdminCreateAccountDto account);            // create admin/author
-    IEnumerable<AccountOverviewDto> GetAllAccounts();                         // list all users (no password)
-    void SetAccountActiveState(long userId, bool isActive);                   // block/unblock
+    IEnumerable<AccountOverviewDto> GetAccounts();                         // list all users (no password)
+    void ChangeAccountActivation(long userId, bool isActive);                   // block/unblock
     AccountDto GetById(long id);
 
 }
