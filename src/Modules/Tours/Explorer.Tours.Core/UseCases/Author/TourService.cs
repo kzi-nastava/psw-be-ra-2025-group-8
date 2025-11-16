@@ -5,7 +5,7 @@ using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 
-namespace Explorer.Tours.Core.UseCases.Administration;
+namespace Explorer.Tours.Core.UseCases.Author;
 
 public class TourService : ITourService
 {
