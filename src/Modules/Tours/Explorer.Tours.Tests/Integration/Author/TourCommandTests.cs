@@ -39,55 +39,59 @@ public class TourCommandTests : BaseToursIntegrationTest
  stored.Status.ShouldBe(Core.Domain.TourStatus.Draft);
  }
 
- [Fact]
- public void Updates_tour_of_author()
- {
- using var scope = Factory.Services.CreateScope();
- var controller = CreateController(scope, "-1");
- var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
- var updated = new TourDto
- {
- Id = -10,
- Name = "Izmenjena Test Tour1",
- Description = "Izmenjen opis",
- Difficulty =4,
- Tags = new List<string> { "tagX" },
- Status = "Draft",
- Price =0,
- AuthorId = -1
- };
- var result = ((ObjectResult)controller.Update(updated).Result)?.Value as TourDto;
- result.ShouldNotBeNull();
- result.Id.ShouldBe(-10);
- result.Name.ShouldBe(updated.Name);
- result.Description.ShouldBe(updated.Description);
- var stored = dbContext.Tours.FirstOrDefault(t => t.Id == -10);
- stored.ShouldNotBeNull();
- stored!.Name.ShouldBe(updated.Name);
- stored.Description.ShouldBe(updated.Description);
- }
+    [Fact]
+    public void Updates_tour_of_author()
+    {
+        // Arrange
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-1");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        var updatedEntity = new TourDto
+        {
+            Id = -10,
+            Name = "Updated Tour Name",
+            Description = "Updated description",
+            Difficulty = 5,
+            Tags = new List<string> { "updated" },
+            Status = "Draft",
+            Price = 0,
+            AuthorId = -1
+        };
 
- [Fact]
- public void Update_fails_for_other_authors_tour()
- {
- using var scope = Factory.Services.CreateScope();
- var controller = CreateController(scope, "-1");
- var updated = new TourDto
- {
- Id = -12,
- Name = "Hack attempt",
- Description = "Neuspesna izmena",
- Difficulty =1,
- Tags = new List<string>(),
- Status = "Draft",
- Price =0,
- AuthorId = -1
- };
- var result = controller.Update(updated);
- result.Result.ShouldBeOfType<ForbidResult>();
- }
+        // Act
+        var result = ((ObjectResult)controller.Update(updatedEntity).Result)?.Value as TourDto;
 
- [Fact]
+        // Assert - Response
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe("Updated Tour Name");
+
+        // Assert - Database
+        var storedEntity = dbContext.Tours.FirstOrDefault(t => t.Id == -10);
+        storedEntity.ShouldNotBeNull();
+        storedEntity.Name.ShouldBe("Updated Tour Name");
+    }
+
+    [Fact]
+    public void Update_fails_for_other_authors_tour()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-1");
+        var updated = new TourDto
+        {
+            Id = -12, // Belongs to author -2
+            Name = "Hack attempt",
+            Description = "Neuspesna izmena",
+            Difficulty = 1,
+            Tags = new List<string>(),
+            Status = "Draft",
+            Price = 0,
+            AuthorId = -1
+        };
+
+        Should.Throw<UnauthorizedAccessException>(() => controller.Update(updated));
+    }
+
+    [Fact]
  public void Deletes_draft_tour_of_author()
  {
  using var scope = Factory.Services.CreateScope();
