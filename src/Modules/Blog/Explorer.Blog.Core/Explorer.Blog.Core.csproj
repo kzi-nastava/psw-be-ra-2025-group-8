@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="Domain\RepositoryInterfaces\" />
+    <Folder Include="Mappers\" />
     <Folder Include="UseCases\" />
   </ItemGroup>
 
