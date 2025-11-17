@@ -13,13 +13,13 @@ namespace Explorer.Tours.Core.Domain
 
         public Monument(string name, string description, int yearOfConstruction, double latitude, double longitude)
         {
-            Validate();
             Name = name;
             Description = description;
             YearOfConstruction = yearOfConstruction;
             Status = MonumentStatus.Active; // Automatically set to Active upon creation
             Latitude = latitude;
             Longitude = longitude;
+            Validate();
         }
 
         private void Validate()

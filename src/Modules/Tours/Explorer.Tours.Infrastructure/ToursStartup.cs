@@ -28,12 +28,14 @@ public static class ToursStartup
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IEquipmentService, EquipmentService>();
+        services.AddScoped<IMonumentService, MonumentService>();
         services.AddScoped<IPersonEquipmentService, PersonEquipmentService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped<IPersonEquipmentRepository, PersonEquipmentRepository>();
+        services.AddScoped<IMonumentRepository, MonumentDbRepository>();
 
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
 
