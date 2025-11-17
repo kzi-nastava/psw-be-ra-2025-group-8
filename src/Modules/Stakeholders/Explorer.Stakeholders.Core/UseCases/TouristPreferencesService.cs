@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Core.Domain;
@@ -15,38 +15,38 @@ using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Stakeholders.Core.UseCases
 {
-    public class PreferencesService : IPreferencesService
+    public class TouristPreferencesService : ITouristPreferencesService
     {
-        private readonly ICrudRepository<Preferences> _repository;
+        private readonly ITouristPreferencesRepository _repository;
         private readonly IMapper _mapper;
 
-        public PreferencesService(
-            ICrudRepository<Preferences> repository,
+        public TouristPreferencesService(
+            ITouristPreferencesRepository repository,
             IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
         }
 
-        public PreferencesDto Get(long personId)
+        public TouristPreferencesDto Get(long personId)
         {
-            var entity = _repository.Get(personId);
-            return _mapper.Map<PreferencesDto>(entity);
+            var entity = _repository.GetByPersonId(personId);
+            return _mapper.Map<TouristPreferencesDto>(entity);
         }
 
-        public PreferencesDto Create(long personId, PreferencesDto dto)
+        public TouristPreferencesDto Create(long personId, TouristPreferencesDto dto)
         {
-            var entity = _mapper.Map<Preferences>(dto);
+            var entity = _mapper.Map<TouristPreferences>(dto);
             //entity.Set("PersonId", personId);
             entity.PersonId = personId;
 
             var created = _repository.Create(entity);
-            return _mapper.Map<PreferencesDto>(created);
+            return _mapper.Map<TouristPreferencesDto>(created);
         }
 
-        public PreferencesDto Update(long personId, PreferencesDto dto)
+        public TouristPreferencesDto Update(long personId, TouristPreferencesDto dto)
         {
-            var existing = _repository.Get(personId);
+            var existing = _repository.GetByPersonId(personId);
             if (existing == null) return null;
 
             _mapper.Map(dto, existing);
@@ -54,12 +54,13 @@ namespace Explorer.Stakeholders.Core.UseCases
             existing.PersonId = personId;
 
             var updated = _repository.Update(existing);
-            return _mapper.Map<PreferencesDto>(updated);
+            return _mapper.Map<TouristPreferencesDto>(updated);
         }
 
         public void Delete(long personId)
         {
-            _repository.Delete(personId);
+            _repository.DeleteByPersonId(personId);
         }
     }
 }
+

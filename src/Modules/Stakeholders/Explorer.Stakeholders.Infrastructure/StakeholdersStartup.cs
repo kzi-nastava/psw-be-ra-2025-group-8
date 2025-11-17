@@ -27,12 +27,22 @@ public static class StakeholdersStartup
     {
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
+
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
+        services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
+        //
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped(typeof(ICrudRepository<Person>), typeof(CrudDatabaseRepository<Person, StakeholdersContext>));
         services.AddScoped<IUserRepository, UserDatabaseRepository>();
+
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
+        services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
+        //
 
         services.AddDbContext<StakeholdersContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("stakeholders"),

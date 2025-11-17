@@ -8,6 +8,11 @@ public class StakeholdersContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Person> People { get; set; }
 
+    //Preference
+    public DbSet<TouristPreferences> TouristPreferences { get; set; }
+    public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
+
+
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,5 +30,27 @@ public class StakeholdersContext : DbContext
             .HasOne<User>()
             .WithOne()
             .HasForeignKey<Person>(s => s.UserId);
+
+        modelBuilder.Entity<TouristPreferences>()
+            .HasOne(tp => tp.Person)
+            .WithOne()
+            .HasForeignKey<TouristPreferences>(tp => tp.PersonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TransportTypePreferences>()
+            .HasOne(t => t.Preference)
+            .WithMany(p => p.TransportTypePreferences)
+            .HasForeignKey(t => t.PreferenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        //enum konverzije
+        modelBuilder.Entity<TouristPreferences>()
+            .Property(tp => tp.Difficulty)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<TransportTypePreferences>()
+            .Property(t => t.Transport)
+            .HasConversion<string>();
     }
 }
