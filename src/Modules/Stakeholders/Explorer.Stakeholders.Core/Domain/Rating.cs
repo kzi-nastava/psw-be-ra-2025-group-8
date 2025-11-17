@@ -4,10 +4,14 @@ namespace Explorer.Stakeholders.Core.Domain
 {
     public class Rating : Entity
     {
-        public long UserId {  get; init; } 
+        public long UserId {  get; set; } 
         public int Grade { get; private set; }
         public string? Comment {  get; private set; }
-        public DateTime CreationDate {  get; private set; }
+        public DateTime CreationDate {  get; set; }
+
+        public Rating()
+        {
+        }
         public Rating(long userId, int grade, string? comment)
         {
             Validate(userId, grade);
@@ -18,7 +22,7 @@ namespace Explorer.Stakeholders.Core.Domain
             CreationDate = DateTime.Now;
         }
 
-        private void Validate(long userId, int grade)
+        public void Validate(long userId, int grade)
         {
             if (userId < 0)
             {

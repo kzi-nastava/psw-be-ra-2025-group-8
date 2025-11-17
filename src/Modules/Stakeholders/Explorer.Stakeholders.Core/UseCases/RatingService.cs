@@ -18,20 +18,22 @@ namespace Explorer.Stakeholders.Core.UseCases
             _mapper = mapper;
         }
 
-        public RatingDto Create(RatingDto ratingDto)
+        public RatingDto Create(RatingDto ratingDto, long userId)
         {
             var rating = _mapper.Map<Rating>(ratingDto);
-            var result = _ratingRepository.Create(rating);
 
+            rating.CreationDate = DateTime.UtcNow;
+            rating.UserId = userId;
+            //rating.Validate();
+
+            var result = _ratingRepository.Create(rating);
             return _mapper.Map<RatingDto>(result);
         }
 
         public PagedResult<RatingDto> GetPaged(int page, int pageSize)
         {
             var result = _ratingRepository.GetPaged(page, pageSize);
-
             var items = result.Results.Select(_mapper.Map<RatingDto>).ToList();
-
             return new PagedResult<RatingDto>(items, result.TotalCount);
         }
 
@@ -41,15 +43,33 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<RatingDto>(result);
         }
 
-        public RatingDto Update(RatingDto ratingDto)
+        public RatingDto Update(RatingDto ratingDto, long userId)
         {
-            var rating = _mapper.Map<Rating>(ratingDto);
-            var result = _ratingRepository.Update(rating);
+            var existingRating = _ratingRepository.Get(ratingDto.Id);
+
+            if (existingRating.UserId != userId)
+            {
+                throw new InvalidOperationException("Niste autorizovani da menjate ovu ocenu.");
+            }
+            _mapper.Map(ratingDto, existingRating);
+            //var rating = _mapper.Map<Rating>(ratingDto);
+            //rating.UserId = userId;
+            existingRating.CreationDate = existingRating.CreationDate;
+
+            //rating.Validate();
+            var result = _ratingRepository.Update(existingRating);
             return _mapper.Map<RatingDto>(result);
         }
 
-        public void Delete(int id)
+        public void Delete(int id, long userId)
         {
+            var existingRating = _ratingRepository.Get(id);
+
+            if (existingRating.UserId != userId)
+            {
+                throw new InvalidOperationException("Niste autorizovani da obrišete ovu ocenu.");
+            }
+
             _ratingRepository.Delete(id);
         }
     }
