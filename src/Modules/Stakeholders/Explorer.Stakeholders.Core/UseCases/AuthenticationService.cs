@@ -50,4 +50,126 @@ public class AuthenticationService : IAuthenticationService
 
         return _tokenGenerator.GenerateAccessToken(user, person.Id);
     }
+
+    public AccountDto CreateAccountByAdmin(AdminCreateAccountDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Role))
+            throw new EntityValidationException("Role must be provided.");
+
+        if (!Enum.TryParse<UserRole>(dto.Role, ignoreCase: true, out var role))
+            throw new EntityValidationException("Invalid role.");
+
+        if (role == UserRole.Tourist)
+            throw new EntityValidationException("Cannot create Tourist via admin. Use tourist registration.");
+
+        if (_userRepository.Exists(dto.Username))
+            throw new EntityValidationException("Provided username already exists.");
+
+        var user = new User(dto.Username, dto.Password, role, true);
+        var createdUser = _userRepository.Create(user);
+
+        // create a Person row (so email/name are stored)
+        var person = _personRepository.Create(new Person(createdUser.Id, dto.Name ?? "", dto.Surname ?? "", dto.Email ?? ""));
+
+        // map to AccountDto (no password)
+        return new AccountDto
+        {
+            Id = createdUser.Id,
+            Username = createdUser.Username,
+            Email = person.Email,
+            Role = createdUser.Role.ToString(),
+            IsActive = createdUser.IsActive,
+            Name = person.Name,
+            Surname = person.Surname
+        };
+    }
+
+    public IEnumerable<AccountOverviewDto> GetAccounts()
+    {
+        var users = _userRepository.GetAll(); // uses repository method
+        var result = new List<AccountOverviewDto>();
+
+        foreach (var u in users)
+        {
+            // attempt to fetch person for email if exists
+            long personId;
+            string email = "";
+            try
+            {
+                personId = _userRepository.GetPersonId(u.Id);
+                // if you have a person repo or direct db access use it; otherwise query ICrudRepository<Person>
+                var person = _personRepository.Get(personId);
+                if (person != null) email = person.Email;
+            }
+            catch
+            {
+                // ignore if person missing
+            }
+
+            result.Add(new AccountOverviewDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Role = u.Role.ToString(),
+                IsActive = u.IsActive,
+                Email = email
+            });
+        }
+
+        return result;
+    }
+
+    public void ChangeAccountActivation(long userId, bool isActive)
+    {
+        var user = _userRepository.GetById(userId);
+        if (user == null) throw new NotFoundException("User not found.");
+
+        if (user.Role == UserRole.Administrator)
+        {
+            // blocking another admin is forbidden
+            throw new EntityValidationException("Modification of 'IsActive' status for an Administrator account is not allowed.");
+        }
+
+        // only if the user is not Administrator
+        user.IsActive = isActive;
+        _userRepository.Update(user);
+    }
+
+    public AccountDto GetById(long id)
+    {
+        var user = _userRepository.GetById(id);
+        if (user == null) return null;
+
+        string email = "";
+        string name = "";
+        string surname = "";
+
+        try
+        {
+            var personId = _userRepository.GetPersonId(id);
+            var person = _personRepository.Get(personId);
+            if (person != null)
+            {
+                email = person.Email;
+                name = person.Name;
+                surname = person.Surname;
+            }
+        }
+        catch
+        {
+            // user without person record → still allowed
+        }
+
+        return new AccountDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = email,
+            Role = user.Role.ToString(),
+            IsActive = user.IsActive,
+            Name = name,
+            Surname = surname
+        };
+    }
+
 }
