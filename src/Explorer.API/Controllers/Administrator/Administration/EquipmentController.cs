@@ -16,6 +16,7 @@ public class EquipmentController : ControllerBase
     public EquipmentController(IEquipmentService equipmentService)
     {
         _equipmentService = equipmentService;
+
     }
 
     [HttpGet]
