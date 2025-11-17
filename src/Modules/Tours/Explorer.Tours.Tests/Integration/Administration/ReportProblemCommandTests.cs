@@ -128,7 +128,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         };
 
         // Act
-        var result = ((ObjectResult)controller.Update(updatedEntity).Result)?.Value as ReportProblemDto;
+        var result = ((ObjectResult)controller.Update(-1, updatedEntity).Result)?.Value as ReportProblemDto;
 
         // Assert - Response
         result.ShouldNotBeNull();
@@ -164,7 +164,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         };
 
         // Act & Assert
-        Should.Throw<NotFoundException>(() => controller.Update(updatedEntity));
+        Should.Throw<NotFoundException>(() => controller.Update(-1000, updatedEntity));
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         var storedEntity = dbContext.ReportProblem.FirstOrDefault(i => i.Id == -2);
         storedEntity.ShouldBeNull();
     }
-    
+
     [Fact]
     public void Delete_fails_invalid_id()
     {
@@ -197,7 +197,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         // Act & Assert
         Should.Throw<NotFoundException>(() => controller.Delete(-1000));
     }
-    
+
     private static ReportProblemController CreateController(IServiceScope scope)
     {
         return new ReportProblemController(scope.ServiceProvider.GetRequiredService<IReportProblemService>())

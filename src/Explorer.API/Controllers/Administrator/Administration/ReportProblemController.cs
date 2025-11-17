@@ -31,8 +31,9 @@ public class ReportProblemController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
-    public ActionResult<ReportProblemDto> Update([FromBody] ReportProblemDto problem)
+    public ActionResult<ReportProblemDto> Update(long id, [FromBody] ReportProblemDto problem)
     {
+        problem.Id = (int)id;
         return Ok(_reportProblemService.Update(problem));
     }
 

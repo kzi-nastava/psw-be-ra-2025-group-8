@@ -61,7 +61,7 @@ namespace Explorer.Tours.Tests.Integration.Administration
             };
 
             // Act
-            var result = ((ObjectResult)controller.Update(updatedReport).Result)?.Value as ReportProblemDto;
+            var result = ((ObjectResult)controller.Update(-1, updatedReport).Result)?.Value as ReportProblemDto;
 
             // Assert
             result.ShouldNotBeNull();
