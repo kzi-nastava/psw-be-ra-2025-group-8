@@ -2,7 +2,7 @@
 
 namespace Explorer.Stakeholders.Core.Domain
 {
-    internal class Rating : Entity
+    public class Rating : Entity
     {
         public long UserId {  get; init; } 
         public int Grade { get; private set; }
