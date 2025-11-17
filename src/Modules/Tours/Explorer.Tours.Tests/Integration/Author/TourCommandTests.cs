@@ -11,33 +11,33 @@ namespace Explorer.Tours.Tests.Integration.Author;
 [Collection("Sequential")]
 public class TourCommandTests : BaseToursIntegrationTest
 {
- public TourCommandTests(ToursTestFactory factory) : base(factory) { }
+    public TourCommandTests(ToursTestFactory factory) : base(factory) { }
 
- [Fact]
- public void Creates_tour_draft()
- {
- using var scope = Factory.Services.CreateScope();
- var controller = CreateController(scope, "-1");
- var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
- var newEntity = new TourDto
- {
- Name = "Nova test tura",
- Description = "Opis nove ture",
- Difficulty =2,
- Tags = new List<string> { "tagA", "tagB" }
- };
- var result = ((ObjectResult)controller.Create(newEntity).Result)?.Value as TourDto;
- result.ShouldNotBeNull();
- result.Id.ShouldNotBe(0);
- result.Name.ShouldBe(newEntity.Name);
- result.Status.ShouldBe("Draft");
- result.Price.ShouldBe(0);
- result.AuthorId.ShouldBe(-1);
- var stored = dbContext.Tours.FirstOrDefault(t => t.Name == newEntity.Name);
- stored.ShouldNotBeNull();
- stored!.AuthorId.ShouldBe(-1);
- stored.Status.ShouldBe(Core.Domain.TourStatus.Draft);
- }
+    [Fact]
+    public void Creates_tour_draft()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-1");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        var newEntity = new TourDto
+        {
+            Name = "Nova test tura",
+            Description = "Opis nove ture",
+            Difficulty = 2,
+            Tags = new List<string> { "tagA", "tagB" }
+        };
+        var result = ((ObjectResult)controller.Create(newEntity).Result)?.Value as TourDto;
+        result.ShouldNotBeNull();
+        result.Id.ShouldNotBe(0);
+        result.Name.ShouldBe(newEntity.Name);
+        result.Status.ShouldBe("Draft");
+        result.Price.ShouldBe(0);
+        result.AuthorId.ShouldBe(-1);
+        var stored = dbContext.Tours.FirstOrDefault(t => t.Name == newEntity.Name);
+        stored.ShouldNotBeNull();
+        stored!.AuthorId.ShouldBe(-1);
+        stored.Status.ShouldBe(Core.Domain.TourStatus.Draft);
+    }
 
     [Fact]
     public void Updates_tour_of_author()
@@ -92,22 +92,22 @@ public class TourCommandTests : BaseToursIntegrationTest
     }
 
     [Fact]
- public void Deletes_draft_tour_of_author()
- {
- using var scope = Factory.Services.CreateScope();
- var controller = CreateController(scope, "-1");
- var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
- var response = (OkResult)controller.Delete(-11);
- response.StatusCode.ShouldBe(200);
- var stored = dbContext.Tours.FirstOrDefault(t => t.Id == -11);
- stored.ShouldBeNull();
- }
+    public void Deletes_draft_tour_of_author()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope, "-1");
+        var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        var response = (OkResult)controller.Delete(-11);
+        response.StatusCode.ShouldBe(200);
+        var stored = dbContext.Tours.FirstOrDefault(t => t.Id == -11);
+        stored.ShouldBeNull();
+    }
 
- private static TourController CreateController(IServiceScope scope, string authorId)
- {
- return new TourController(scope.ServiceProvider.GetRequiredService<ITourService>())
- {
- ControllerContext = BuildContext(authorId)
- };
- }
+    private static TourController CreateController(IServiceScope scope, string authorId)
+    {
+        return new TourController(scope.ServiceProvider.GetRequiredService<ITourService>())
+        {
+            ControllerContext = BuildContext(authorId)
+        };
+    }
 }

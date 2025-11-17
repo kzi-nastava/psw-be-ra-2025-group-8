@@ -28,14 +28,14 @@ public class TourController : ControllerBase
     [HttpGet("my-tours")]
     public ActionResult<List<TourDto>> GetMyTours()
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorId();
         return Ok(_tourService.GetByAuthor(authorId));
     }
 
     [HttpPost]
     public ActionResult<TourDto> Create([FromBody] TourDto tour)
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorId();
         tour.AuthorId = authorId;
         return Ok(_tourService.Create(tour));
     }
@@ -43,15 +43,17 @@ public class TourController : ControllerBase
     [HttpPut("{id:long}")]
     public ActionResult<TourDto> Update([FromBody] TourDto tour)
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorId();
 
-        // Check if the author can update their own tour
+        // Ensure caller is the author; use service data instead of trusting input
         var existingTours = _tourService.GetByAuthor(authorId);
         if (!existingTours.Any(t => t.Id == tour.Id))
         {
             throw new UnauthorizedAccessException("You can only update your own tours.");
         }
 
+        // Force AuthorId to current user to avoid spoofing
+        tour.AuthorId = authorId;
         var result = _tourService.Update(tour);
         return Ok(result);
     }
@@ -59,8 +61,15 @@ public class TourController : ControllerBase
     [HttpDelete("{id:long}")]
     public ActionResult Delete(long id)
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorId();
         _tourService.Delete(id, authorId);
         return Ok();
+    }
+
+    private int GetAuthorId()
+    {
+        // Tests set claim type "personId"; keep backward compatibility with NameIdentifier if present.
+        var claim = User.FindFirst("personId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+        return int.Parse(claim?.Value ?? "0");
     }
 }

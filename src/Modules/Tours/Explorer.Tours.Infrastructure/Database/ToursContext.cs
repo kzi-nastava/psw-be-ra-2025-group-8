@@ -8,14 +8,13 @@ public class ToursContext : DbContext
 {
     public DbSet<Equipment> Equipment { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
-
+    public DbSet<Tour> Tours { get; set; }
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("tours");
 
-<<<<<<< HEAD
         // Tour Entity Configuration
         modelBuilder.Entity<Tour>().HasKey(t => t.Id);
         modelBuilder.Entity<Tour>().Property(t => t.Name).IsRequired().HasMaxLength(255);
@@ -27,7 +26,7 @@ public class ToursContext : DbContext
         modelBuilder.Entity<Tour>()
            .Property(t => t.Tags)
            .HasColumnType("text[]");
-=======
+
         modelBuilder.Ignore<Person>();
 
         modelBuilder.Entity<PersonEquipment>(builder =>
@@ -39,6 +38,5 @@ public class ToursContext : DbContext
                    .HasForeignKey(pe => pe.EquipmentId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
->>>>>>> development
     }
 }
