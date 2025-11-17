@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Explorer.API.Controllers.Administrator.Administration;
 
 [Authorize(Policy = "administratorPolicy")]
-[Route("api/administration/facility")]
+[Route("api/administration/facilities")]
 [ApiController]
 public class FacilityController : ControllerBase
 {
