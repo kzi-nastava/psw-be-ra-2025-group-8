@@ -36,18 +36,6 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(result);
         }
 
-        // URL: POST /api/tourist/tourist-preferences
-        [HttpPost]
-        public ActionResult<TouristPreferencesDto> Create([FromBody] TouristPreferencesDto touristPreferencesDto)
-        {
-            long personId = User.PersonId();
-
-            // Šaljemo i ID osobe i DTO. Servis postavlja PersonId na entitet
-            var result = _touristPreferencesService.Create(personId, touristPreferencesDto);
-
-            return Ok(result);
-        }
-
         // URL: PUT /api/tourist/tourist-preferences
         [HttpPut]
         public ActionResult<TouristPreferencesDto> Update([FromBody] TouristPreferencesDto touristPreferencesDto)
@@ -63,17 +51,6 @@ namespace Explorer.API.Controllers.Tourist
             }
 
             return Ok(result);
-        }
-
-        // URL: DELETE /api/tourist/tourist-preferences
-        [HttpDelete]
-        public ActionResult Delete()
-        {
-            long personId = User.PersonId();
-
-            _touristPreferencesService.Delete(personId);
-
-            return Ok();
         }
     }
 

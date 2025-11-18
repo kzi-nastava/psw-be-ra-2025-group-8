@@ -34,15 +34,6 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<TouristPreferencesDto>(entity);
         }
 
-        public TouristPreferencesDto Create(long personId, TouristPreferencesDto dto)
-        {
-            var entity = _mapper.Map<TouristPreferences>(dto);
-            //entity.Set("PersonId", personId);
-            entity.PersonId = personId;
-
-            var created = _repository.Create(entity);
-            return _mapper.Map<TouristPreferencesDto>(created);
-        }
 
         public TouristPreferencesDto Update(long personId, TouristPreferencesDto dto)
         {
@@ -55,11 +46,6 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             var updated = _repository.Update(existing);
             return _mapper.Map<TouristPreferencesDto>(updated);
-        }
-
-        public void Delete(long personId)
-        {
-            _repository.DeleteByPersonId(personId);
         }
     }
 }
