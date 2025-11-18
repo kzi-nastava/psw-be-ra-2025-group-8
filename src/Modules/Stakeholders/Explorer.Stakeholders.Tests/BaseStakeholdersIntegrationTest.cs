@@ -1,18 +1,8 @@
-﻿using System.Net.Http;
-using Explorer.BuildingBlocks.Tests;
-using Xunit;
+﻿using Explorer.BuildingBlocks.Tests;
 
-namespace Explorer.Stakeholders.Tests
+namespace Explorer.Stakeholders.Tests;
+
+public class BaseStakeholdersIntegrationTest : BaseWebIntegrationTest<StakeholdersTestFactory>
 {
-    public abstract class BaseStakeholdersIntegrationTest : IClassFixture<StakeholdersTestFactory>
-    {
-        protected readonly HttpClient Client;
-        protected readonly StakeholdersTestFactory Factory;
-
-        protected BaseStakeholdersIntegrationTest(StakeholdersTestFactory factory)
-        {
-            Factory = factory;
-            Client = factory.CreateClient();
-        }
-    }
+    public BaseStakeholdersIntegrationTest(StakeholdersTestFactory factory) : base(factory) { }
 }
