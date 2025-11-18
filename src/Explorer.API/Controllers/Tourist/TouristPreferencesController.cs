@@ -37,13 +37,14 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         // URL: PUT /api/tourist/tourist-preferences
+        // PersonId se automatski uzima iz JWT tokena ulogovanog korisnika
         [HttpPut]
-        public ActionResult<TouristPreferencesDto> Update([FromBody] TouristPreferencesDto touristPreferencesDto)
+        public ActionResult<TouristPreferencesDto> Update([FromBody] UpdateTouristPreferencesDto updateDto)
         {
             long personId = User.PersonId();
 
             // Šaljemo i ID osobe i DTO. Servis pronalazi postojeće po personId i ažurira ih
-            var result = _touristPreferencesService.Update(personId, touristPreferencesDto);
+            var result = _touristPreferencesService.Update(personId, updateDto);
 
             if (result == null)
             {

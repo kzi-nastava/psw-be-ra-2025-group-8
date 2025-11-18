@@ -10,7 +10,7 @@ namespace Explorer.Stakeholders.API.Public
     public interface ITouristPreferencesService
     {
         TouristPreferencesDto Get(long personId);
-        TouristPreferencesDto Update(long personId, TouristPreferencesDto dto);
+        TouristPreferencesDto Update(long personId, UpdateTouristPreferencesDto dto);
     }
 }
 

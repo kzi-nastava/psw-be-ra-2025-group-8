@@ -12,13 +12,20 @@ public class StakeholderProfile : Profile
         //CreateMap<TouristPreferencesDto, TouristPreferences>().ReverseMap();
         //ovu liniju iznad sam zakomentarisao i umesto toga sam napravio 2 odvojene funkcije koje mapiraju dto u domensku klasu i obrnuto
         CreateMap<TouristPreferences, Explorer.Stakeholders.API.Dtos.TouristPreferencesDto>()
-                .ForMember(d => d.Difficulty, o => o.MapFrom(s => s.Difficulty.ToString()))
-                .ForMember(d => d.TransportPreferences, o => o.MapFrom(s => s.TransportTypePreferences));
+                .ForMember(d => d.Difficulty, o => o.MapFrom(s => s.Difficulty.ToString()));
 
 
         CreateMap<Explorer.Stakeholders.API.Dtos.TouristPreferencesDto, TouristPreferences>()
                 .ForMember(d => d.Difficulty, o => o.MapFrom(src => Enum.Parse<DifficultyLevel>(src.Difficulty)))
                 .ForMember(d => d.TransportTypePreferences, o => o.Ignore());
+
+        // Mapping za UpdateTouristPreferencesDto (bez PersonId)
+        CreateMap<Explorer.Stakeholders.API.Dtos.UpdateTouristPreferencesDto, TouristPreferences>()
+                .ForMember(d => d.Difficulty, o => o.MapFrom(src => Enum.Parse<DifficultyLevel>(src.Difficulty)))
+                .ForMember(d => d.TransportTypePreferences, o => o.Ignore())
+                .ForMember(d => d.PersonId, o => o.Ignore())
+                .ForMember(d => d.Id, o => o.Ignore())
+                .ForMember(d => d.Person, o => o.Ignore());
 
         //takodje sam to slicno uradio za TransportType
         CreateMap<TransportTypePreferences, Explorer.Stakeholders.API.Dtos.TransportTypePreferenceDto>()

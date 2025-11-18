@@ -35,7 +35,7 @@ namespace Explorer.Stakeholders.Core.UseCases
         }
 
 
-        public TouristPreferencesDto Update(long personId, TouristPreferencesDto dto)
+        public TouristPreferencesDto Update(long personId, UpdateTouristPreferencesDto dto)
         {
             var existing = _repository.GetByPersonId(personId);
             if (existing == null) return null;
