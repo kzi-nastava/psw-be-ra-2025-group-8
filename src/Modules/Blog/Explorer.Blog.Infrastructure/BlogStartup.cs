@@ -1,31 +1,35 @@
-using Explorer.Blog.Core.Mappers;
+﻿using System;
 using Explorer.Blog.Infrastructure.Database;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Explorer.Blog.Infrastructure;
-
-public static class BlogStartup
+namespace Explorer.Blog.Infrastructure
 {
-    public static IServiceCollection ConfigureBlogModule(this IServiceCollection services)
+    public static class BlogStartup
     {
-        // Registers all profiles since it works on the assembly
-        services.AddAutoMapper(typeof(BlogProfile).Assembly);
-        SetupCore(services);
-        SetupInfrastructure(services);
-        return services;
-    }
-    
-    private static void SetupCore(IServiceCollection services)
-    {
-    }
+        public static IServiceCollection ConfigureBlogModule(this IServiceCollection services)
+        {
+            // Registruje sve AutoMapper profile iz svih učitanih asembli-ja
+            // više nam ne treba BlogProfile tip, pa nema CS0246 greške
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-    private static void SetupInfrastructure(IServiceCollection services)
-    {
+            SetupCore(services);
+            SetupInfrastructure(services);
+            return services;
+        }
 
-        services.AddDbContext<BlogContext>(opt =>
-            opt.UseNpgsql(DbConnectionStringBuilder.Build("blog"),
-                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog")));
+        private static void SetupCore(IServiceCollection services)
+        {
+            // ovde ide registracija Core servisa za Blog modul (trenutno prazno)
+        }
+
+        private static void SetupInfrastructure(IServiceCollection services)
+        {
+
+            services.AddDbContext<BlogContext>(opt =>
+                opt.UseNpgsql(DbConnectionStringBuilder.Build("blog"),
+                    x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog")));
+        }
     }
 }

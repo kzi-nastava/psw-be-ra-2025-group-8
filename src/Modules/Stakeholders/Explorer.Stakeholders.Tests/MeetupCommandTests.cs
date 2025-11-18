@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
+using Explorer.BuildingBlocks.Tests;
 
 namespace Explorer.Stakeholders.Tests;
 
