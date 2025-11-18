@@ -71,7 +71,7 @@ public class EquipmentCommandTests : BaseToursIntegrationTest
         };
 
         // Act
-        var result = ((ObjectResult)controller.Update(updatedEntity).Result)?.Value as EquipmentDto;
+        var result = ((ObjectResult)controller.Update(-1, updatedEntity).Result)?.Value as EquipmentDto;
 
         // Assert - Response
         result.ShouldNotBeNull();
@@ -100,7 +100,7 @@ public class EquipmentCommandTests : BaseToursIntegrationTest
         };
 
         // Act & Assert
-        Should.Throw<NotFoundException>(() => controller.Update(updatedEntity));
+        Should.Throw<NotFoundException>(() => controller.Update(-1000, updatedEntity));
     }
 
     [Fact]
