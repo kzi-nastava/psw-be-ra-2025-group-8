@@ -22,7 +22,7 @@ namespace Explorer.Stakeholders.Core.Domain
 
         //novo polje za povezivanje
         public ICollection<TransportTypePreferences> TransportTypePreferences { get; set; } = new List<TransportTypePreferences>();
-        //public List<TransportTypePreferences> TransportPreferences { get; set; } = new();
+        public ICollection<PreferenceTags> PreferenceTags { get; set; } = new List<PreferenceTags>();
 
 
         //prazan

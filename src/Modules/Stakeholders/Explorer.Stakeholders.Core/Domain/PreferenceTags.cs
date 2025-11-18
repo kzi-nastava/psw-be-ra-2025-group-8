@@ -7,13 +7,15 @@ using Explorer.BuildingBlocks.Core.Domain;
 
 namespace Explorer.Stakeholders.Core.Domain
 {
-    public class PreferenceTags : Entity
+    public class PreferenceTags
     {
         // ova klasa vezuje tagove za preferencu
         // jedna preferenca ima 0 ili vise tagova
 
         public long TouristPreferencesId { get; set; }
         public long TagsId { get; set; }
+        public TouristPreferences TouristPreferences { get; set; }
+        public Tags Tags { get; set; }
 
         public PreferenceTags() { }
 

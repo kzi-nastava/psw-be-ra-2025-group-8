@@ -11,6 +11,7 @@ using Explorer.Stakeholders.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace Explorer.Stakeholders.Infrastructure;
 
 public static class StakeholdersStartup
@@ -31,6 +32,7 @@ public static class StakeholdersStartup
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
+        services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
         //
     }
 
@@ -42,6 +44,8 @@ public static class StakeholdersStartup
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
         services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
+        services.AddScoped<ITagsRepository, TagsRepository>();
+        services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
         //
 
         services.AddDbContext<StakeholdersContext>(opt =>

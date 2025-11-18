@@ -11,6 +11,8 @@ public class StakeholdersContext : DbContext
     //Preference
     public DbSet<TouristPreferences> TouristPreferences { get; set; }
     public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
+    public DbSet<PreferenceTags> PreferenceTags { get; set; }
+    public DbSet<Tags> Tags { get; set; }
 
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
@@ -42,6 +44,23 @@ public class StakeholdersContext : DbContext
             .WithMany(p => p.TransportTypePreferences)
             .HasForeignKey(t => t.PreferenceId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PreferenceTags>()
+        .HasKey(pt => new { pt.TouristPreferencesId, pt.TagsId });
+
+        modelBuilder.Entity<PreferenceTags>()
+            .HasOne(pt => pt.TouristPreferences)
+            .WithMany(tp => tp.PreferenceTags)
+            .HasForeignKey(pt => pt.TouristPreferencesId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PreferenceTags>()
+            .HasOne(pt => pt.Tags)
+            .WithMany(t => t.PreferenceTags)
+            .HasForeignKey(pt => pt.TagsId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
 
 
         //enum konverzije

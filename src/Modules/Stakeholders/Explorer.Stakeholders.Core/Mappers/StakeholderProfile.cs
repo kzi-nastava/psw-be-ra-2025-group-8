@@ -30,5 +30,11 @@ public class StakeholderProfile : Profile
                 .ForMember(d => d.Transport, o => o.MapFrom(src => Enum.Parse<TransportType>(src.Transport)))
                 .ForMember(d => d.Rating, o => o.MapFrom(src => src.Rating))
                 .ForMember(d => d.PreferenceId, o => o.Ignore());
+
+
+
+        //mapper za preference
+        CreateMap<PreferenceTags, PreferenceTagsDto>().ReverseMap();
+
     }
 }
