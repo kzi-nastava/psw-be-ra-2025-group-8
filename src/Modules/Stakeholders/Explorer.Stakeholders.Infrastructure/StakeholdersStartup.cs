@@ -32,13 +32,9 @@ public static class StakeholdersStartup
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
-        services.AddScoped<IPersonRepository, PersonDbRepository>();
-        services.AddScoped<IUserRepository, UserDbRepository>();
+        services.AddScoped(typeof(ICrudRepository<Person>), typeof(CrudDatabaseRepository<Person, StakeholdersContext>));
+        services.AddScoped<IUserRepository, UserDatabaseRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
-
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
-        dataSourceBuilder.EnableDynamicJson();
-        var dataSource = dataSourceBuilder.Build();
 
         services.AddDbContext<StakeholdersContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("stakeholders"),

@@ -24,11 +24,12 @@ namespace Explorer.Blog.Infrastructure
             // ovde ide registracija Core servisa za Blog modul (trenutno prazno)
         }
 
-    private static void SetupInfrastructure(IServiceCollection services)
-    {
+        private static void SetupInfrastructure(IServiceCollection services)
+        {
 
-        services.AddDbContext<BlogContext>(opt =>
-            opt.UseNpgsql(DbConnectionStringBuilder.Build("blog"),
-                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog")));
+            services.AddDbContext<BlogContext>(opt =>
+                opt.UseNpgsql(DbConnectionStringBuilder.Build("blog"),
+                    x => x.MigrationsHistoryTable("__EFMigrationsHistory", "blog")));
+        }
     }
 }
