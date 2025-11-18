@@ -43,7 +43,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<MeetupDto>(entity);
         }
 
-        public IEnumerable<MeetupDto> GetByCreator(int creatorId)
+        public IEnumerable<MeetupDto> GetByCreator(long creatorId)
         {
             var list = _repo.GetByCreator(creatorId);
             return _mapper.Map<IEnumerable<MeetupDto>>(list);

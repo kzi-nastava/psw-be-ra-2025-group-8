@@ -8,6 +8,6 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
         Meetup Update(Meetup meetup);
         void Delete(int id);
         Meetup Get(int id);
-        IEnumerable<Meetup> GetByCreator(int creatorId);
+        IEnumerable<Meetup> GetByCreator(long creatorId);
     }
 }

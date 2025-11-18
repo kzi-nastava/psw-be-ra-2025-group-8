@@ -21,7 +21,7 @@ namespace Explorer.Stakeholders.Core.Domain
         public double Longitude { get; set; }
 
        
-        public int CreatorId { get; set; }
+        public long CreatorId { get; set; }
         public User Creator { get; set; }
 
        
@@ -34,7 +34,7 @@ namespace Explorer.Stakeholders.Core.Domain
             DateTime scheduledAt,
             double latitude,
             double longitude,
-            int creatorId)
+            long creatorId)
         {
             Name = name;
             Description = description;

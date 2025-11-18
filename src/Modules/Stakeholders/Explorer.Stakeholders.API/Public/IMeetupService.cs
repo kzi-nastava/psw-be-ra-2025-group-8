@@ -9,6 +9,6 @@ namespace Explorer.Stakeholders.API.Public
         MeetupDto Update(MeetupDto dto);
         void Delete(int id);
         MeetupDto Get(int id);
-        IEnumerable<MeetupDto> GetByCreator(int creatorId);
+        IEnumerable<MeetupDto> GetByCreator(long creatorId);
     }
 }
