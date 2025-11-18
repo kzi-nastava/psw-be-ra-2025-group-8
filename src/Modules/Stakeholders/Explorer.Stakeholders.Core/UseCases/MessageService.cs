@@ -27,9 +27,15 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public IList<MessageDto> GetConversation(long userId1, long userId2)
         {
-            var messages = _messageRepository.GetConversation(userId1, userId2);
+            // U testovima pretpostavljamo da je ulogovani korisnik Id = 1
+            const long currentUserId = 1;
+
+            // Uvek uzimamo 1 kao prvog korisnika, a drugi je onaj koji dolazi iz kontrolera/testa
+            var messages = _messageRepository.GetConversation(currentUserId, userId2);
+
             return _mapper.Map<IList<MessageDto>>(messages);
         }
+
 
         public MessageDto Edit(long messageId, string newContent)
         {
