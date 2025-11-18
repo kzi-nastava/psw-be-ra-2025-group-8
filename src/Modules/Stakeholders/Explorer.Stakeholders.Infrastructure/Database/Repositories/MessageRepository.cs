@@ -23,16 +23,23 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 
         public Message Get(long id)
         {
-            return _context.Messages.FirstOrDefault(m => m.Id == id);
+            // Ne vraćamo obrisane poruke
+            return _context.Messages
+                .FirstOrDefault(m => m.Id == id && !m.IsDeleted);
         }
 
         public IEnumerable<Message> GetConversation(long userId1, long userId2)
         {
+            // Sve poruke između userId1 i userId2 (u oba smera), koje nisu obrisane,
+            // sortirane po vremenu slanja
             return _context.Messages
                 .Where(m =>
-                    (m.SenderId == userId1 && m.RecipientId == userId2) ||
-                    (m.SenderId == userId2 && m.RecipientId == userId1))
-                .OrderBy(m => m.TimestampCreated)
+                    !m.IsDeleted &&
+                    (
+                        (m.SenderId == userId1 && m.RecipientId == userId2) ||
+                        (m.SenderId == userId2 && m.RecipientId == userId1)
+                    ))
+                .OrderBy(m => m.TimestampCreated)   // ako se svojstvo zove drugačije, javi mi
                 .ToList();
         }
 
