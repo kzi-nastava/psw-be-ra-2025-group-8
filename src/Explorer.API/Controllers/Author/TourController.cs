@@ -28,32 +28,47 @@ public class TourController : ControllerBase
     [HttpGet("my-tours")]
     public ActionResult<List<TourDto>> GetMyTours()
     {
-        var authorId = GetAuthorId();
+        var authorId = GetAuthorIdFromToken();
         return Ok(_tourService.GetByAuthor(authorId));
+    }
+
+    [HttpGet("{id:long}")]
+    public ActionResult<TourDto> GetById(long id)
+    {
+        var authorId = GetAuthorIdFromToken();
+
+        var tours = _tourService.GetByAuthor(authorId);
+        var tour = tours.FirstOrDefault(t => t.Id == id);
+
+        if (tour == null)
+        {
+            return NotFound("Tour not found or you don't have permission to access it");
+        }
+
+        return Ok(tour);
     }
 
     [HttpPost]
     public ActionResult<TourDto> Create([FromBody] TourDto tour)
     {
-        var authorId = GetAuthorId();
+        var authorId = GetAuthorIdFromToken();
         tour.AuthorId = authorId;
-        return Ok(_tourService.Create(tour));
+        var result = _tourService.Create(tour);
+        return Ok(result);
     }
 
     [HttpPut("{id:long}")]
     public ActionResult<TourDto> Update([FromBody] TourDto tour)
     {
-        var authorId = GetAuthorId();
+        var authorId = GetAuthorIdFromToken();
 
-        // Ensure caller is the author; use service data instead of trusting input
         var existingTours = _tourService.GetByAuthor(authorId);
         if (!existingTours.Any(t => t.Id == tour.Id))
         {
-            throw new UnauthorizedAccessException("You can only update your own tours.");
+            throw new UnauthorizedAccessException("You cannot modify another author's tour");
         }
 
-        // Force AuthorId to current user to avoid spoofing
-        tour.AuthorId = authorId;
+
         var result = _tourService.Update(tour);
         return Ok(result);
     }
@@ -61,15 +76,23 @@ public class TourController : ControllerBase
     [HttpDelete("{id:long}")]
     public ActionResult Delete(long id)
     {
-        var authorId = GetAuthorId();
+        var authorId = GetAuthorIdFromToken();
         _tourService.Delete(id, authorId);
         return Ok();
     }
-
-    private int GetAuthorId()
+    private int GetAuthorIdFromToken()
     {
-        // Tests set claim type "personId"; keep backward compatibility with NameIdentifier if present.
-        var claim = User.FindFirst("personId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
-        return int.Parse(claim?.Value ?? "0");
+
+        var idClaim = User.FindFirst("id")
+                   ?? User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("personId")
+                   ?? User.FindFirst("sub");
+
+        if (idClaim != null && int.TryParse(idClaim.Value, out int authorId))
+        {
+            return authorId;
+        }
+
+        throw new UnauthorizedAccessException("Unable to determine user ID from token");
     }
 }

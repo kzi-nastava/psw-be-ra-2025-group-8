@@ -50,15 +50,19 @@ public class TourService : ITourService
     public TourDto Update(TourDto tourDto)
     {
         var existing = _crudRepository.Get(tourDto.Id);
-        // AuthorId is enforced by controller; service still guards direct usage
-        if (tourDto.AuthorId != 0 && existing.AuthorId != tourDto.AuthorId)
+
+        if (existing.AuthorId != tourDto.AuthorId && tourDto.AuthorId != 0)
         {
             throw new UnauthorizedAccessException("You can only update your own tours.");
         }
+
         existing.Name = tourDto.Name;
         existing.Description = tourDto.Description;
         existing.Difficulty = tourDto.Difficulty;
         existing.Tags = tourDto.Tags ?? new List<string>();
+        existing.Status = Enum.Parse<TourStatus>(tourDto.Status);
+        existing.Price = tourDto.Price;
+
         var result = _crudRepository.Update(existing);
         return _mapper.Map<TourDto>(result);
     }
