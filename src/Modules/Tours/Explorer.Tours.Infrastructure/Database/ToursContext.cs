@@ -9,6 +9,7 @@ public class ToursContext : DbContext
     public DbSet<Equipment> Equipment { get; set; }
     public DbSet<Monument> Monument { get; set; }
     public DbSet<Facility> Facilities { get; set; }
+    public DbSet<ReportProblem> ReportProblem { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
