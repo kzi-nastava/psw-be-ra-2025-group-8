@@ -29,6 +29,7 @@ public static class ToursStartup
     {
         services.AddScoped<IEquipmentService, EquipmentService>();
         services.AddScoped<IMonumentService, MonumentService>();
+        services.AddScoped<IFacilityService, FacilityService>();
         services.AddScoped<IPersonEquipmentService, PersonEquipmentService>();
     }
 
@@ -38,6 +39,7 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
 
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
+        services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));
 
         services.AddDbContext<ToursContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("tours"),
