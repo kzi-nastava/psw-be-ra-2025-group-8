@@ -6,16 +6,33 @@ namespace Explorer.Stakeholders.Core.Domain;
 public class Person : Entity
 {
     public long UserId { get; init; }
-    public string Name { get; init; }
-    public string Surname { get; init; }
-    public string Email { get; init; }
+    public string Name { get; private set; }
+    public string Surname { get; private set; }
+    public string Email { get; private set; }
+    public string? ProfilePicture { get; private set; }
+    public string? Bio { get; private set; }
+    public string? Motto { get; private set; }
 
-    public Person(long userId, string name, string surname, string email)
+    public Person(long userId, string name, string surname, string email, string? profilePicture = null, string? bio = null, string? motto = null)
     {
         UserId = userId;
         Name = name;
         Surname = surname;
         Email = email;
+        ProfilePicture = profilePicture;
+        Bio = bio;
+        Motto = motto;
+        Validate();
+    }
+
+    public void UpdateProfile(string name, string surname, string email, string? profilePicture, string? bio, string? motto)
+    {
+        Name = name;
+        Surname = surname;
+        Email = email;
+        ProfilePicture = profilePicture;
+        Bio = bio;
+        Motto = motto;
         Validate();
     }
 
