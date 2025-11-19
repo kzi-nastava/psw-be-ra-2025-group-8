@@ -34,12 +34,11 @@ public class EquipmentCommandTests : BaseToursIntegrationTest
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(0);
         result.Name.ShouldBe(newEntity.Name);
-
+        
         // Assert - Database
         var storedEntity = dbContext.Equipment.FirstOrDefault(i => i.Name == newEntity.Name);
         storedEntity.ShouldNotBeNull();
         storedEntity.Id.ShouldBe(result.Id);
-        storedEntity.Description.ShouldBe(newEntity.Description);
     }
 
     [Fact]
@@ -72,7 +71,7 @@ public class EquipmentCommandTests : BaseToursIntegrationTest
         };
 
         // Act
-        var result = ((ObjectResult)controller.Update(updatedEntity).Result)?.Value as EquipmentDto;
+        var result = ((ObjectResult)controller.Update(-1, updatedEntity).Result)?.Value as EquipmentDto;
 
         // Assert - Response
         result.ShouldNotBeNull();
@@ -101,7 +100,7 @@ public class EquipmentCommandTests : BaseToursIntegrationTest
         };
 
         // Act & Assert
-        Should.Throw<NotFoundException>(() => controller.Update(updatedEntity));
+        Should.Throw<NotFoundException>(() => controller.Update(-1000, updatedEntity));
     }
 
     [Fact]

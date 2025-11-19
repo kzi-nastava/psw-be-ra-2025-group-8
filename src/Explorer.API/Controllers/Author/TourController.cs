@@ -28,39 +28,71 @@ public class TourController : ControllerBase
     [HttpGet("my-tours")]
     public ActionResult<List<TourDto>> GetMyTours()
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorIdFromToken();
         return Ok(_tourService.GetByAuthor(authorId));
+    }
+
+    [HttpGet("{id:long}")]
+    public ActionResult<TourDto> GetById(long id)
+    {
+        var authorId = GetAuthorIdFromToken();
+
+        var tours = _tourService.GetByAuthor(authorId);
+        var tour = tours.FirstOrDefault(t => t.Id == id);
+
+        if (tour == null)
+        {
+            return NotFound("Tour not found or you don't have permission to access it");
+        }
+
+        return Ok(tour);
     }
 
     [HttpPost]
     public ActionResult<TourDto> Create([FromBody] TourDto tour)
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorIdFromToken();
         tour.AuthorId = authorId;
-        return Ok(_tourService.Create(tour));
+        var result = _tourService.Create(tour);
+        return Ok(result);
     }
 
     [HttpPut("{id:long}")]
     public ActionResult<TourDto> Update([FromBody] TourDto tour)
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        tour.AuthorId = authorId; // ensure service gets current author
+        var authorId = GetAuthorIdFromToken();
 
-        // Check if the author can update their own tour
         var existingTours = _tourService.GetByAuthor(authorId);
         if (!existingTours.Any(t => t.Id == tour.Id))
         {
-            return Forbid();
+            throw new UnauthorizedAccessException("You cannot modify another author's tour");
         }
 
-        return Ok(_tourService.Update(tour));
+
+        var result = _tourService.Update(tour);
+        return Ok(result);
     }
 
     [HttpDelete("{id:long}")]
     public ActionResult Delete(long id)
     {
-        var authorId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var authorId = GetAuthorIdFromToken();
         _tourService.Delete(id, authorId);
         return Ok();
+    }
+    private int GetAuthorIdFromToken()
+    {
+
+        var idClaim = User.FindFirst("id")
+                   ?? User.FindFirst(ClaimTypes.NameIdentifier)
+                   ?? User.FindFirst("personId")
+                   ?? User.FindFirst("sub");
+
+        if (idClaim != null && int.TryParse(idClaim.Value, out int authorId))
+        {
+            return authorId;
+        }
+
+        throw new UnauthorizedAccessException("Unable to determine user ID from token");
     }
 }

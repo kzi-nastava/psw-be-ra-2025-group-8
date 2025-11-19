@@ -5,7 +5,7 @@ using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 
-namespace Explorer.Tours.Core.UseCases.Author;
+namespace Explorer.Tours.Core.UseCases.Administration;
 
 public class TourService : ITourService
 {
@@ -50,14 +50,19 @@ public class TourService : ITourService
     public TourDto Update(TourDto tourDto)
     {
         var existing = _crudRepository.Get(tourDto.Id);
-        if (existing.AuthorId != tourDto.AuthorId && tourDto.AuthorId != 0) // allow if not provided
+
+        if (existing.AuthorId != tourDto.AuthorId && tourDto.AuthorId != 0)
         {
             throw new UnauthorizedAccessException("You can only update your own tours.");
         }
+
         existing.Name = tourDto.Name;
         existing.Description = tourDto.Description;
         existing.Difficulty = tourDto.Difficulty;
         existing.Tags = tourDto.Tags ?? new List<string>();
+        existing.Status = Enum.Parse<TourStatus>(tourDto.Status);
+        existing.Price = tourDto.Price;
+
         var result = _crudRepository.Update(existing);
         return _mapper.Map<TourDto>(result);
     }
