@@ -23,10 +23,11 @@ public static class StakeholdersStartup
         SetupInfrastructure(services);
         return services;
     }
-    
+
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
 
         //Minja dodao ovo
@@ -34,12 +35,17 @@ public static class StakeholdersStartup
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
         //
+
+        services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<IMeetupService, MeetupService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped(typeof(ICrudRepository<Person>), typeof(CrudDatabaseRepository<Person, StakeholdersContext>));
         services.AddScoped<IUserRepository, UserDatabaseRepository>();
+        services.AddScoped<IMessageRepository, MessageRepository>();
+        services.AddScoped<IMeetupRepository, MeetupRepository>();
 
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
