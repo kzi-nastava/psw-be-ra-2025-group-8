@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
@@ -24,12 +23,44 @@ public class PreferenceTagsTests : IClassFixture<StakeholdersTestFactory>
     [Fact]
     public void GetTagsForPerson_Returns_existing_tags()
     {
+        // Arrange
         using var scope = _factory.Services.CreateScope();
         var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
+        var ctx = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
+        var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
+
+        // Reset current state so test is deterministic regardless of execution order
+        ctx.PreferenceTags.RemoveRange(ctx.PreferenceTags.Where(pt => pt.TouristPreferencesId == pref.Id));
+        ctx.SaveChanges();
+
+        // Ensure baseline tags exist for this person
+        svc.AddTagForPerson(-21, new TagDto { Tag = "mountain" });
+        svc.AddTagForPerson(-21, new TagDto { Tag = "food" });
+
+        // Act
         var tags = svc.GetTagsForPerson(-21).ToList();
-        tags.Count.ShouldBeGreaterThan(0);
-        tags.Any(t => t.Tag == "mountain").ShouldBeTrue();
+
+        // Assert
+        tags.ShouldNotBeNull();
+        tags.Count.ShouldBe(2, "Person -21 treba da ima tačno 2 tagova: mountain i food");
+
+        // Proveri da sadrži očekivane tagove
+        var tagNames = tags.Select(t => t.Tag).ToList();
+        tagNames.ShouldContain("mountain", "Person -21 treba da ima tag 'mountain'");
+        tagNames.ShouldContain("food", "Person -21 treba da ima tag 'food'");
+
+        // Proveri da ne sadrži tagove koji nisu povezani sa tom osobom
+        tagNames.ShouldNotContain("history", "Person -21 ne treba da ima tag 'history' (on je povezan sa person -22)");
+
+        // Proveri da tagovi imaju postavljene ID-ove (ne 0)
+        var mountainTag = tags.FirstOrDefault(t => t.Tag == "mountain");
+        mountainTag.ShouldNotBeNull();
+        mountainTag.Id.ShouldNotBe(0, "Tag 'mountain' treba da ima postavljen ID");
+
+        var foodTag = tags.FirstOrDefault(t => t.Tag == "food");
+        foodTag.ShouldNotBeNull();
+        foodTag.Id.ShouldNotBe(0, "Tag 'food' treba da ima postavljen ID");
     }
 
     [Fact]
