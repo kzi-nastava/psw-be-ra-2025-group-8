@@ -24,10 +24,10 @@ namespace Explorer.Stakeholders.Core.Domain
 
         public void Validate(long userId, int grade)
         {
-            if (userId < 0)
-            {
-                throw new ArgumentException("Invalid User ID.");
-            }
+            //if (userId < 0)
+            //{
+              //  throw new ArgumentException("Invalid User ID.");
+            //}
 
             if (grade < 1 || grade > 5)
             {
