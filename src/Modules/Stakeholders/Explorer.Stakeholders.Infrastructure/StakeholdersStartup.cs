@@ -11,6 +11,7 @@ using Explorer.Stakeholders.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace Explorer.Stakeholders.Infrastructure;
 
 public static class StakeholdersStartup
@@ -28,6 +29,13 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
+
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
+        services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
+        services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
+        //
+
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IMeetupService, MeetupService>();
@@ -40,6 +48,13 @@ public static class StakeholdersStartup
         services.AddScoped<IRatingRepository, RatingDbRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IMeetupRepository, MeetupRepository>();
+
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
+        services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
+        services.AddScoped<ITagsRepository, TagsRepository>();
+        services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
+        //
 
         services.AddDbContext<StakeholdersContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("stakeholders"),
