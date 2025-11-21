@@ -7,6 +7,7 @@ public class StakeholdersContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Person> People { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
     public DbSet<Message> Messages { get; set; }
     public DbSet<Meetup> Meetups { get; set; }
 
@@ -73,5 +74,9 @@ public class StakeholdersContext : DbContext
         modelBuilder.Entity<TransportTypePreferences>()
             .Property(t => t.Transport)
             .HasConversion<string>();
+        modelBuilder.Entity<Rating>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(r => r.UserId);
     }
 }

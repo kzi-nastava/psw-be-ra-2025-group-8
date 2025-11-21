@@ -27,7 +27,11 @@ public class BaseWebIntegrationTest<TTestFactory> : IClassFixture<TTestFactory> 
             {
                 User = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
-                    new Claim("personId", id)
+                    new Claim("personId", id),
+                    // Added NameIdentifier claim so author controllers can resolve current author id
+                    new Claim(ClaimTypes.NameIdentifier, id),
+                    // za rating(GetLoggedInUserId())
+                    new Claim("id", id)
                 }))
             }
         };
