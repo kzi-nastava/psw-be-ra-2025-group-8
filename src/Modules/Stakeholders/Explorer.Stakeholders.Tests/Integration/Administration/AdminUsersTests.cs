@@ -26,14 +26,14 @@ public class AdminUsersTests : BaseStakeholdersIntegrationTest
         var dto = new AdminCreateAccountDto
         {
             Username = "newadmin@test.com",
-            Password = "pass",
+            Password = "password",
             Email = "newadmin@test.com",
-            Name = "New",
-            Surname = "Admin",
             Role = "Administrator"
         };
 
-        var result = ((ObjectResult)controller.CreateAccount(dto).Result).Value as AccountDto;
+        var actionResult = controller.CreateAccount(dto).Result;
+        var createdResult = actionResult.ShouldBeOfType<CreatedAtActionResult>();
+        var result = createdResult.Value.ShouldBeOfType<AccountDto>();
 
         // Response assertions
         result.ShouldNotBeNull();
@@ -57,13 +57,13 @@ public class AdminUsersTests : BaseStakeholdersIntegrationTest
         var dto = new AdminCreateAccountDto
         {
             Username = "authorNew@test.com",
-            Password = "pass",
+            Password = "password",
             Email = "authorNew@test.com",
-            Name = "Auth",
-            Surname = "Or",
             Role = "Author"
         };
-        var result = ((ObjectResult)controller.CreateAccount(dto).Result).Value as AccountDto;
+        var actionResult = controller.CreateAccount(dto).Result;
+        var createdResult = actionResult.ShouldBeOfType<CreatedAtActionResult>();
+        var result = createdResult.Value.ShouldBeOfType<AccountDto>();
 
         result.ShouldNotBeNull();
         result.Role.ShouldBe("Author");
