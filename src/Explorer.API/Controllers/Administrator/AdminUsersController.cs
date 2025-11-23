@@ -1,4 +1,5 @@
-﻿using Explorer.Stakeholders.API.Dtos;
+﻿using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,11 +29,19 @@ public class AdminUsersController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var created = _authService.CreateAccountByAdmin(dto);
+        try
+        {
+            var created = _authService.CreateAccountByAdmin(dto);
 
-        // Use GetById for CreatedAtAction
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (EntityValidationException ex)
+        {
+            // If email,pasword,username validation fails
+            return BadRequest(new { message = ex.Message });
+        }
     }
+
 
     // -------------------------
     // READ ALL
@@ -74,7 +83,14 @@ public class AdminUsersController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        _authService.ChangeAccountActivation(id, dto.IsActive);
-        return NoContent();
+        try
+        {
+            _authService.ChangeAccountActivation(id, dto.IsActive);
+            return NoContent();
+        }
+        catch (EntityValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

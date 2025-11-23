@@ -8,7 +8,7 @@ DELETE FROM stakeholders."TransportTypePreferences";
 DELETE FROM stakeholders."TouristPreferences";
 -- Tags is independent, but PreferenceTags depends on it (already deleted)
 DELETE FROM stakeholders."Tags";
-﻿DELETE FROM stakeholders."Ratings";
+DELETE FROM stakeholders."Ratings";
 DELETE FROM stakeholders."Messages";
 -- People depends on Users
 DELETE FROM stakeholders."People";

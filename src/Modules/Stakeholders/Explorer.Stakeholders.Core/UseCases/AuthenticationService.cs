@@ -4,6 +4,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace Explorer.Stakeholders.Core.UseCases;
 
@@ -25,6 +26,7 @@ public class AuthenticationService : IAuthenticationService
     public AuthenticationTokensDto Login(CredentialsDto credentials)
     {
         var user = _userRepository.GetActiveByName(credentials.Username);
+
         if (user == null || credentials.Password != user.Password)
         {
             throw new UnauthorizedAccessException("Invalid credentials");
@@ -65,25 +67,33 @@ public class AuthenticationService : IAuthenticationService
         if (role == UserRole.Tourist)
             throw new EntityValidationException("Cannot create Tourist via admin. Use tourist registration.");
 
+        if (string.IsNullOrWhiteSpace(dto.Username))
+            throw new EntityValidationException("Username must be provided.");
+
+        if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
+            throw new EntityValidationException("Password must be at least 6 characters long.");
+
+        if (string.IsNullOrWhiteSpace(dto.Email) || !new EmailAddressAttribute().IsValid(dto.Email))
+            throw new EntityValidationException("A valid email must be provided.");
+
         if (_userRepository.Exists(dto.Username))
             throw new EntityValidationException("Provided username already exists.");
 
         var user = new User(dto.Username, dto.Password, role, true);
         var createdUser = _userRepository.Create(user);
 
-        // create a Person row (so email/name are stored)
-        var person = _personRepository.Create(new Person(createdUser.Id, dto.Name ?? "", dto.Surname ?? "", dto.Email ?? ""));
+        // create a Person row (so email/name are stored) — name and surname are empty because admin doesn't provide them here
+        var person = _personRepository.Create(new Person(createdUser.Id, "", "", dto.Email ?? ""));
 
-        // map to AccountDto (no password)
         return new AccountDto
         {
             Id = createdUser.Id,
             Username = createdUser.Username,
-            Email = person.Email,
+            Email = dto.Email ?? "",
             Role = createdUser.Role.ToString(),
             IsActive = createdUser.IsActive,
-            Name = person.Name,
-            Surname = person.Surname
+            Name = "",    // empty
+            Surname = ""  // empty
         };
     }
 
