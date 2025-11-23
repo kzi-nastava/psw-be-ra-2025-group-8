@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
-namespace Explorer.Clubs.Tests.Integration.Clubs;
+namespace Explorer.Stakeholders.Tests.Integration.Clubs;
 
 [Collection("Sequential")]
 public class ClubsQueryTests : BaseStakeholdersIntegrationTest
