@@ -5,6 +5,7 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
 {
     public interface IRatingRepository: ICrudRepository<Rating>
     {
-        //ICrudRepository sadrzi sve potrebne
+        //ICrudRepository sadrzi CRUD
+        Rating GetByUserId(long userId);
     }
 }

@@ -4,35 +4,44 @@ using Explorer.Stakeholders.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.API.Controllers.Tourist;
+using System.Collections.Generic; // Za KeyNotFoundException
 
-namespace Explorer.Stakeholders.Tests.Integration;
+namespace Explorer.Stakeholders.Tests.Rating;
 
 [Collection("Sequential")]
 public class RatingCommandTests : BaseStakeholdersIntegrationTest
 {
     public RatingCommandTests(StakeholdersTestFactory factory) : base(factory) { }
 
-    private const long AUTHOR_USER_ID = -13;
-    private const long AUTHOR_USER_ID_2 = -22;
+    // Ključni ID-jevi iz SQL skripte:
+    private const long AUTHOR_USER_ID_CREATE = -23;         // Turista 3: Nema ocenu, koristi se za CREATE
+    private const long AUTHOR_USER_ID_UPDATE = -22;         // Turista 2: Ima ocenu -4 (Grade 1), koristi se za UPDATE
+    private const long AUTHOR_USER_ID_DELETE = -21;         // Turista 1: Ima ocenu -3 (Grade 3), koristi se za DELETE
+    private const long USER_WITHOUT_RATING_ID = -100;       // Admin: Nema ocenu
 
-    //CREATE TEST
+    // ID ocene koja se koristi za brisanje
+    private const int RATING_ID_TO_DELETE = -3;
+
+
+    // --- CREATE TEST ---
     [Fact]
     public void Creates_rating_successfully()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope, AUTHOR_USER_ID);
+        var controller = CreateController(scope, AUTHOR_USER_ID_CREATE); // Logujemo se kao -23
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-        var newEntity = new RatingDto
+        var newEntity = new RatingNoIdDto
         {
-            Grade = 5,
-            Comment = "Kreirano u testu."
+            Grade = 4,
+            Comment = "Kreirano u testu uspešno."
         };
 
         // Act
-        var result = ((ObjectResult)controller.Create(newEntity).Result)?.Value as RatingDto;
+        var actionResult = controller.Create(newEntity);
+        var result = ((ObjectResult)actionResult.Result)?.Value as RatingDto;
 
         // Assert - Response
         result.ShouldNotBeNull();
@@ -42,109 +51,106 @@ public class RatingCommandTests : BaseStakeholdersIntegrationTest
         // Assert - Database
         var storedEntity = dbContext.Ratings.FirstOrDefault(i => i.Id == result.Id);
         storedEntity.ShouldNotBeNull();
-        storedEntity.UserId.ShouldBe(AUTHOR_USER_ID);
+        storedEntity.CreationDate.ShouldBeGreaterThan(DateTime.MinValue);
     }
 
-    //UPDATE TEST
+
+    // --- UPDATE TEST ---
     [Fact]
     public void Updates_rating_successfully()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope, AUTHOR_USER_ID_2);
+        // Logujemo se kao AUTHOR_USER_ID_UPDATE (-22), koji ima rating ID -4
+        var controller = CreateController(scope, AUTHOR_USER_ID_UPDATE);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
-        var updatedEntity = new RatingDto
+        var updatedEntity = new RatingNoIdDto
         {
-            Id = -4, // ID ocene koju menjamo (pripada UserID -22)
-            Grade = 5,
+            Grade = 3,
             Comment = "Izmenjeno u testu."
         };
 
+        var oldRating = dbContext.Ratings.FirstOrDefault(i => i.Id == -4);
+        oldRating.ShouldNotBeNull();
+        var oldCreationDate = oldRating.CreationDate;
+
         // Act
-        var result = ((ObjectResult)controller.Update(updatedEntity).Result)?.Value as RatingDto;
+        var actionResult = controller.UpdateByCurrentUser(updatedEntity);
+        var result = ((ObjectResult)actionResult.Result)?.Value as RatingDto;
 
         // Assert - Response
         result.ShouldNotBeNull();
         result.Id.ShouldBe(-4);
+        result.Grade.ShouldBe(updatedEntity.Grade);
         result.Comment.ShouldBe(updatedEntity.Comment);
 
         // Assert - Database
         var storedEntity = dbContext.Ratings.FirstOrDefault(i => i.Id == -4);
         storedEntity.ShouldNotBeNull();
-        storedEntity.Comment.ShouldBe("Izmenjeno u testu.");
+        storedEntity.Comment.ShouldBe(updatedEntity.Comment);
+        storedEntity.CreationDate.ShouldBeGreaterThan(oldCreationDate);
     }
 
+    // UPDATE TEST (Neuspeh: Korisnik koji pokušava da ažurira nema kreiranu ocenu)
     [Fact]
-    public void Update_fails_invalid_id()
+    public void Update_fails_no_existing_rating()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope, AUTHOR_USER_ID);
-        var updatedEntity = new RatingDto
-        {
-            Id = -1000, // Nepostojeći ID
-            Grade = 5
-        };
+        // Logujemo se kao -100 (korisnik bez ocene)
+        var controller = CreateController(scope, USER_WITHOUT_RATING_ID);
+
+        var updatedEntity = new RatingNoIdDto { Grade = 5, Comment = "..." };
 
         // Act & Assert
-        Should.Throw<NotFoundException>(() => controller.Update(updatedEntity));
+        // Servis baca KeyNotFoundException ako ocena ne postoji za datog korisnika
+        Should.Throw<KeyNotFoundException>(() => controller.UpdateByCurrentUser(updatedEntity));
     }
 
-    [Fact]
-    public void Update_fails_not_owner()
-    {
-        // Arrange
-        using var scope = Factory.Services.CreateScope();
-        // Logujemo se kao UserID = -1 (Admin), a želimo da menjamo ocenu -4 koja pripada UserID = -22 (Autor)
-        var controller = CreateController(scope, -1);
-        var updatedEntity = new RatingDto
-        {
-            Id = -4, // Vlasnik je ID -22
-            Grade = 5
-        };
 
-        // Act & Assert
-        Should.Throw<InvalidOperationException>(() => controller.Update(updatedEntity));
-    }
-
-    //DELETE TEST
+    // --- DELETE TEST ---
     [Fact]
     public void Deletes_rating_successfully()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        // Logujemo se kao UserID = -21
-        var controller = CreateController(scope, -21);
+        // Logujemo se kao UserID = -21 (koji ima ocenu ID -3)
+        var controller = CreateController(scope, AUTHOR_USER_ID_DELETE);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
         // Act
-        var result = (OkResult)controller.Delete(-3); // ID ocene koju brišemo
+        var actionResult = controller.DeleteByCurrentUser();
+        var result = actionResult as OkResult;
 
         // Assert - Response
         result.ShouldNotBeNull();
         result.StatusCode.ShouldBe(200);
 
         // Assert - Database
-        var storedEntity = dbContext.Ratings.FirstOrDefault(i => i.Id == -3);
+        var storedEntity = dbContext.Ratings.FirstOrDefault(i => i.Id == RATING_ID_TO_DELETE);
         storedEntity.ShouldBeNull();
     }
 
+    // DELETE TEST (Neuspeh: Korisnik koji pokušava da briše nema kreiranu ocenu)
     [Fact]
-    public void Delete_fails_not_owner()
+    public void Delete_fails_no_existing_rating()
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        // Logujemo se kao UserID = -21 (Admin)
-        var controller = CreateController(scope, -21);
+        // Logujemo se kao UserID = -100 (Admin) koji NEMA rating
+        var controller = CreateController(scope, USER_WITHOUT_RATING_ID);
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => controller.Delete(-2));
+        // Servis vraća Ok() jer ne baca izuzetak za nepostojeću ocenu
+        var result = controller.DeleteByCurrentUser() as OkResult;
+        result.ShouldNotBeNull();
+        result.StatusCode.ShouldBe(200);
     }
 
-    private static Explorer.API.Controllers.Tourist.RatingController CreateController(IServiceScope scope, long userId)
+    private static RatingController CreateController(IServiceScope scope, long userId)
     {
-        return new Explorer.API.Controllers.Tourist.RatingController(
+        return new RatingController(
             scope.ServiceProvider.GetRequiredService<IRatingService>())
         {
             ControllerContext = BuildContext(userId.ToString())
