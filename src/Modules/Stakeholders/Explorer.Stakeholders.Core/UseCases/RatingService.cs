@@ -18,7 +18,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             _mapper = mapper;
         }
 
-        public RatingDto Create(RatingDto ratingDto, long userId)
+        public RatingDto Create(RatingNoIdDto ratingDto, long userId)
         {
             var rating = _mapper.Map<Rating>(ratingDto);
 
@@ -37,9 +37,35 @@ namespace Explorer.Stakeholders.Core.UseCases
             return new PagedResult<RatingDto>(items, result.TotalCount);
         }
 
+        public RatingDto GetByUserId(long userId)
+        {
+            var rating = _ratingRepository.GetByUserId(userId);
+
+            if (rating == null) return null;
+
+            return _mapper.Map<RatingDto>(rating);
+        }
+
         public RatingDto Get(int id)
         {
             var result = _ratingRepository.Get(id);
+            return _mapper.Map<RatingDto>(result);
+        }
+
+        public RatingDto UpdateByUserId(RatingNoIdDto ratingDto, long userId)
+        {
+            var existingRating = _ratingRepository.GetByUserId(userId);
+
+            if (existingRating == null)
+            {
+                throw new KeyNotFoundException("Ocena nije pronađena. Kreirajte je prvo.");
+            }
+
+            _mapper.Map(ratingDto, existingRating);
+
+            existingRating.CreationDate = DateTime.UtcNow;
+
+            var result = _ratingRepository.Update(existingRating);
             return _mapper.Map<RatingDto>(result);
         }
 
@@ -47,18 +73,28 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var existingRating = _ratingRepository.Get(ratingDto.Id);
 
-            if (existingRating.UserId != userId)
+            if (existingRating == null || existingRating.UserId != userId)
             {
-                throw new InvalidOperationException("Niste autorizovani da menjate ovu ocenu.");
+                throw new KeyNotFoundException("Ocena nije pronađena ili niste autorizovani.");
             }
+
             _mapper.Map(ratingDto, existingRating);
-            //var rating = _mapper.Map<Rating>(ratingDto);
-            //rating.UserId = userId;
             existingRating.CreationDate = existingRating.CreationDate;
 
-            //rating.Validate();
             var result = _ratingRepository.Update(existingRating);
             return _mapper.Map<RatingDto>(result);
+        }
+
+        public void DeleteByUserId(long userId)
+        {
+            var existingRating = _ratingRepository.GetByUserId(userId);
+
+            if (existingRating == null)
+            {
+                return;
+            }
+
+            _ratingRepository.Delete((int)existingRating.Id);
         }
 
         public void Delete(int id, long userId)
