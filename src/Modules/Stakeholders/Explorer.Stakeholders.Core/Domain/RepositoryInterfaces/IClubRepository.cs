@@ -1,6 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 
-namespace Explorer.Clubs.Core.Domain.RepositoryInterfaces
+namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
 {
     public interface IClubRepository
     {

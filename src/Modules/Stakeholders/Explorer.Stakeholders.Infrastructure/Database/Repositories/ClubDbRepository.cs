@@ -1,16 +1,18 @@
-﻿using Explorer.BuildingBlocks.Core.UseCases;
-using Explorer.BuildingBlocks.Infrastructure.Database;
-using Explorer.Clubs.Core.Domain;
-using Explorer.Clubs.Core.Domain.RepositoryInterfaces;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
+using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.BuildingBlocks.Infrastructure.Database;
 
-namespace Explorer.Clubs.Infrastructure.Database.Repositories
+namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
 {
     public class ClubDbRepository : IClubRepository
     {
-        protected readonly ClubsContext _dbContext;
+        protected readonly StakeholdersContext _dbContext;
         private readonly DbSet<Club> _dbSet;
-        public ClubDbRepository(ClubsContext dbContext)
+        public ClubDbRepository(StakeholdersContext dbContext)
         {
             _dbContext = dbContext;
             _dbSet = _dbContext.Set<Club>();

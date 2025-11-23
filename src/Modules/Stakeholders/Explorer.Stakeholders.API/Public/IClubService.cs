@@ -1,7 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
-using Explorer.Clubs.API.Dtos;
+using Explorer.Stakeholders.API.Dtos;
 
-namespace Explorer.Clubs.API.Public
+namespace Explorer.Stakeholders.API.Public
 {
     public interface IClubService
     {

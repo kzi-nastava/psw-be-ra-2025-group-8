@@ -1,13 +1,12 @@
-﻿using Explorer.BuildingBlocks.Core.UseCases;
-using Explorer.Clubs.API.Dtos;
-using Explorer.Clubs.API.Public;
-using Explorer.Tours.API.Dtos;
-using Explorer.Tours.Core.Domain;
+﻿using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.API.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.BuildingBlocks.Infrastructure.Database;
 
-namespace Explorer.API.Controllers.Clubs
+namespace Explorer.API.Controllers.User
 {
     [Authorize(Policy = "touristPolicy")]
     [Route("api/tourist/clubs")]
@@ -40,7 +39,7 @@ namespace Explorer.API.Controllers.Clubs
         // List
         [HttpGet]
         [AllowAnonymous]
-        public ActionResult<PagedResult<EquipmentDto>> GetAll([FromQuery] int page, [FromQuery] int pageSize)
+        public ActionResult<PagedResult<ClubDto>> GetAll([FromQuery] int page, [FromQuery] int pageSize)
         {
             return Ok(_clubService.GetPaged(page, pageSize));
         }

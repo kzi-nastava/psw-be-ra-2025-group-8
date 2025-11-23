@@ -1,11 +1,12 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
-using Explorer.Clubs.API.Dtos;
-using Explorer.Clubs.API.Public;
-using Explorer.Clubs.Core.Domain;
-using Explorer.Clubs.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 
-namespace Explorer.Clubs.Core.UseCases
+namespace Explorer.Stakeholders.Core.UseCases
 {
     public class ClubService : IClubService
     {

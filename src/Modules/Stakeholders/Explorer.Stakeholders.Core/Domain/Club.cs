@@ -2,7 +2,7 @@
 using System.Net.Mail;
 using System.Text.Json;
 
-namespace Explorer.Clubs.Core.Domain
+namespace Explorer.Stakeholders.Core.Domain
 {
     public class Club : Entity
     {

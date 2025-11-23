@@ -1,4 +1,4 @@
-﻿namespace Explorer.Clubs.API.Dtos
+﻿namespace Explorer.Stakeholders.API.Dtos
 {
     public class CreateClubDto
     {
