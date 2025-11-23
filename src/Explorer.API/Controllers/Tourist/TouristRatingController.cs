@@ -30,30 +30,34 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpPost]
-        public ActionResult<RatingDto> Create([FromBody] RatingDto rating)
+        public ActionResult<RatingDto> Create([FromBody] RatingNoIdDto rating)
         {
             var result = _ratingService.Create(rating, GetLoggedInUserId());
             return Ok(result);
         }
 
-        [HttpGet("{id:int}")]
-        public ActionResult<RatingDto> Get(int id)
+        [HttpGet("user")]
+        public ActionResult<RatingDto> GetByCurrentUser()
         {
-            var result = _ratingService.Get(id);
+            var result = _ratingService.GetByUserId(GetLoggedInUserId());
+            if (result == null)
+            {
+                return NotFound();
+            }
             return Ok(result);
         }
 
-        [HttpPut("{id:int}")]
-        public ActionResult<RatingDto> Update([FromBody] RatingDto rating)
+        [HttpPut("user")]
+        public ActionResult<RatingDto> UpdateByCurrentUser([FromBody] RatingNoIdDto rating)
         {
-            var result = _ratingService.Update(rating, GetLoggedInUserId());
+            var result = _ratingService.UpdateByUserId(rating, GetLoggedInUserId());
             return Ok(result);
         }
 
-        [HttpDelete("{id:int}")]
-        public ActionResult Delete(int id)
+        [HttpDelete("user")]
+        public ActionResult DeleteByCurrentUser()
         {
-            _ratingService.Delete(id, GetLoggedInUserId());
+            _ratingService.DeleteByUserId(GetLoggedInUserId());
             return Ok();
         }
     }
