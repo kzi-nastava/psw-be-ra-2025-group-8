@@ -70,6 +70,10 @@ public class StakeholdersContext : DbContext
         {
             b.ToTable("Clubs");
             b.HasKey(c => c.Id);
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(c => c.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
             //konverzije za slike kluba
             var imagesConverter = new ValueConverter<List<string>, string>(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
