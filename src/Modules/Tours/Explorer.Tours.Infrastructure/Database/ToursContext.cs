@@ -12,6 +12,8 @@ public class ToursContext : DbContext
     public DbSet<ReportProblem> ReportProblem { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
+    public DbSet<Position> Positions { get; set; }
+    
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
