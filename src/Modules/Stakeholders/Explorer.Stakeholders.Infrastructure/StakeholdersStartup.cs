@@ -39,6 +39,9 @@ public static class StakeholdersStartup
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IMeetupService, MeetupService>();
+
+        //za klubove
+        services.AddScoped<IClubService, ClubService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -54,7 +57,9 @@ public static class StakeholdersStartup
         services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
         services.AddScoped<ITagsRepository, TagsRepository>();
         services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
-        //
+        //za klubove
+        services.AddScoped<IClubRepository, ClubDbRepository>();
+
 
         services.AddDbContext<StakeholdersContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("stakeholders"),
