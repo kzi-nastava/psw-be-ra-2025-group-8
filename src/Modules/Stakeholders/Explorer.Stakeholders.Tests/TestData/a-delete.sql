@@ -15,3 +15,4 @@ DELETE FROM stakeholders."People";
 -- Users is the root table (has no dependencies)
 DELETE FROM stakeholders."Users";
 DELETE FROM stakeholders."Meetups";
+DELETE FROM stakeholders."Clubs";
