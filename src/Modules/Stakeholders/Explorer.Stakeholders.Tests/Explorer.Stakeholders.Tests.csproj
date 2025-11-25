@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="TestData\a-delete-stakeholders.sql" />
     <None Remove="TestData\a-delete.sql" />
     <None Remove="TestData\b-insert-stakeholders.sql" />
     <None Remove="TestData\b-users.sql" />
@@ -19,9 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="TestData\a-delete-stakeholders.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="TestData\a-delete.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
