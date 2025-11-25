@@ -112,7 +112,7 @@ public class ClubsCommandTests : BaseStakeholdersIntegrationTest
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope, "-33");
+        var controller = CreateController(scope, "-13");
         var db = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
         // Act
