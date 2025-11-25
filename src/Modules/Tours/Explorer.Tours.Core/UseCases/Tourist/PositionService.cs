@@ -17,6 +17,12 @@ namespace Explorer.Tours.Core.UseCases.Tourist
         public PositionDto GetByTouristId(int touristId)
         {
             var pos = _repo.GetByTouristId(touristId);
+
+            if (pos == null)
+            {
+                return null; // ili throw new KeyNotFoundException() ako želite da vratite 404
+            }
+
             return new PositionDto
             {
                 Id = (int)pos.Id,

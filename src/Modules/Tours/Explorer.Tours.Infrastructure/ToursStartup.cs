@@ -37,6 +37,7 @@ public static class ToursStartup
         services.AddScoped<IPersonEquipmentService, PersonEquipmentService>();
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IPositionService, PositionService>();
+        services.AddScoped<IObjectService, ObjectService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
