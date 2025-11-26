@@ -41,8 +41,12 @@ public class LoginTests : BaseStakeholdersIntegrationTest
         var controller = CreateController(scope);
         var loginSubmission = new CredentialsDto { Username = "turistaY@gmail.com", Password = "turista1" };
 
-        // Act & Assert
-        Should.Throw<UnauthorizedAccessException>(() => controller.Login(loginSubmission));
+        // Act
+        var result = controller.Login(loginSubmission).Result;
+
+        // Assert
+        // check if error code 401
+        result.ShouldBeOfType<UnauthorizedObjectResult>();
     }
 
     [Fact]
@@ -51,10 +55,15 @@ public class LoginTests : BaseStakeholdersIntegrationTest
         // Arrange
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
+        // Pretpostavljam da "turista3@gmail.com" postoji u vašoj bazi za testiranje
         var loginSubmission = new CredentialsDto { Username = "turista3@gmail.com", Password = "123" };
 
-        // Act & Assert
-        Should.Throw<UnauthorizedAccessException>(() => controller.Login(loginSubmission));
+        // Act
+        var result = controller.Login(loginSubmission).Result;
+
+        // Assert
+        // check if error code 401
+        result.ShouldBeOfType<UnauthorizedObjectResult>();
     }
 
     private static AuthenticationController CreateController(IServiceScope scope)

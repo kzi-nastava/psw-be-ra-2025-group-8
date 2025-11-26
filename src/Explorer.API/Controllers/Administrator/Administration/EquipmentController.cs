@@ -16,6 +16,7 @@ public class EquipmentController : ControllerBase
     public EquipmentController(IEquipmentService equipmentService)
     {
         _equipmentService = equipmentService;
+
     }
 
     [HttpGet]
@@ -31,8 +32,9 @@ public class EquipmentController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
-    public ActionResult<EquipmentDto> Update([FromBody] EquipmentDto equipment)
+    public ActionResult<EquipmentDto> Update(long id, [FromBody] EquipmentDto equipment)
     {
+        equipment.Id = (int)id;
         return Ok(_equipmentService.Update(equipment));
     }
 
