@@ -21,7 +21,6 @@ namespace Explorer.API.Controllers.Stakeholders
         private long GetCurrentUserId()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
             // Ako nema claim-a (npr. u test okruženju bez autentikacije) – 
             // koristimo podrazumevanog korisnika sa Id = 1,
             // što se slaže sa seed-ovanim podacima iz TestData skripti.
@@ -29,8 +28,16 @@ namespace Explorer.API.Controllers.Stakeholders
             {
                 return 1;
             }
-
             return long.Parse(idClaim.Value);
+        }
+
+        // NOVI ENDPOINT - Vrati sve konverzacije za trenutnog korisnika
+        [HttpGet("conversations")]
+        public ActionResult<List<ConversationSummaryDto>> GetConversations()
+        {
+            var currentUserId = GetCurrentUserId();
+            var conversations = _messageService.GetConversations(currentUserId);
+            return Ok(conversations);
         }
 
         [HttpPost]

@@ -8,5 +8,8 @@ namespace Explorer.Stakeholders.Core.Domain.RepositoryInterfaces
         Message Get(long id);
         IEnumerable<Message> GetConversation(long userId1, long userId2);
         Message Update(Message message);
+
+        // NOVA METODA
+        IEnumerable<Message> GetAll();
     }
 }
