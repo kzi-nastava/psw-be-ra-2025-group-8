@@ -39,7 +39,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
                         (m.SenderId == userId1 && m.RecipientId == userId2) ||
                         (m.SenderId == userId2 && m.RecipientId == userId1)
                     ))
-                .OrderBy(m => m.TimestampCreated)   // ako se svojstvo zove drugačije, javi mi
+                .OrderBy(m => m.TimestampCreated)
                 .ToList();
         }
 
@@ -48,6 +48,12 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
             _context.Messages.Update(message);
             _context.SaveChanges();
             return message;
+        }
+
+        // NOVA METODA - Vrati sve poruke
+        public IEnumerable<Message> GetAll()
+        {
+            return _context.Messages.ToList();
         }
     }
 }
