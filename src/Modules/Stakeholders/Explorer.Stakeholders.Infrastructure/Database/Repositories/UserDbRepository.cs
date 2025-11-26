@@ -1,5 +1,6 @@
 ﻿using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Stakeholders.Infrastructure.Database.Repositories;
 
@@ -34,5 +35,22 @@ public class UserDbRepository : IUserRepository
         var person = _dbContext.People.FirstOrDefault(i => i.UserId == userId);
         if (person == null) throw new KeyNotFoundException("Not found.");
         return person.Id;
+    }
+
+    public IEnumerable<User> GetAll() //returns all users (active and inactive)
+    {
+        return _dbContext.Users.AsNoTracking().ToList();
+    }
+
+    public User? GetById(long id)
+    {
+        return _dbContext.Users.FirstOrDefault(u => u.Id == id);
+    }
+
+    public User Update(User user)
+    {
+        _dbContext.Users.Update(user);
+        _dbContext.SaveChanges();
+        return user;
     }
 }
