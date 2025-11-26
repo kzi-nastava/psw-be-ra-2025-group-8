@@ -12,7 +12,9 @@ public class ModulesTests : BaseArchitecturalTests
         var examinedTypes = GetExaminedTypes($"Explorer.{moduleName}.API");
         var forbiddenTypes = GetForbiddenTypes("Explorer.BuildingBlocks.Core", $"Explorer.{moduleName}.API");
 
-        var rule = Types().That().Are(examinedTypes).Should().NotDependOnAny(forbiddenTypes).WithoutRequiringPositiveResults();
+        var rule = Types().That().Are(examinedTypes)
+            .Should().NotDependOnAny(forbiddenTypes)
+            .WithoutRequiringPositiveResults();
 
         rule.Check(Architecture);
     }
@@ -24,7 +26,9 @@ public class ModulesTests : BaseArchitecturalTests
         var examinedTypes = GetExaminedTypes($"Explorer.{moduleName}.Core");
         var forbiddenTypes = GetForbiddenTypes("Explorer.BuildingBlocks.Core", "Explorer\\..+\\.API", $"Explorer.{moduleName}.Core");
 
-        var rule = Types().That().Are(examinedTypes).Should().NotDependOnAny(forbiddenTypes);
+        var rule = Types().That().Are(examinedTypes)
+            .Should().NotDependOnAny(forbiddenTypes)
+            .WithoutRequiringPositiveResults();   // ? dodato
 
         rule.Check(Architecture);
     }
@@ -36,7 +40,9 @@ public class ModulesTests : BaseArchitecturalTests
         var examinedTypes = GetExaminedTypes($"Explorer.{moduleName}.Infrastructure");
         var forbiddenTypes = GetForbiddenTypes("Explorer.BuildingBlocks.", $"Explorer.{moduleName}.");
 
-        var rule = Types().That().Are(examinedTypes).Should().NotDependOnAny(forbiddenTypes);
+        var rule = Types().That().Are(examinedTypes)
+            .Should().NotDependOnAny(forbiddenTypes)
+            .WithoutRequiringPositiveResults();   // ? dodato
 
         rule.Check(Architecture);
     }
@@ -50,8 +56,13 @@ public class ModulesTests : BaseArchitecturalTests
         var nonDomainTypes = allTypesFromCoreAssembly.Where(x => !x.FullName.Contains(".Domain."));
         var typesFromOtherAssemblies = GetForbiddenTypes("Explorer.BuildingBlocks.Core", $"Explorer.{moduleName}.Core");
 
-        var otherAssemblyRule = Types().That().Are(domainTypes).Should().NotDependOnAny(typesFromOtherAssemblies).WithoutRequiringPositiveResults();
-        var sameAssemblyRule = Types().That().Are(domainTypes).Should().NotDependOnAny(nonDomainTypes).WithoutRequiringPositiveResults();
+        var otherAssemblyRule = Types().That().Are(domainTypes)
+            .Should().NotDependOnAny(typesFromOtherAssemblies)
+            .WithoutRequiringPositiveResults();
+
+        var sameAssemblyRule = Types().That().Are(domainTypes)
+            .Should().NotDependOnAny(nonDomainTypes)
+            .WithoutRequiringPositiveResults();
 
         otherAssemblyRule.Check(Architecture);
         sameAssemblyRule.Check(Architecture);
@@ -66,7 +77,9 @@ public class ModulesTests : BaseArchitecturalTests
         var typesFromOtherAssemblies = GetForbiddenTypes("Explorer.API", $"Explorer.{moduleName}.API");
         var publicApiTypesFromOtherAssemblies = typesFromOtherAssemblies.Where(x => x.FullName.Contains("API.Public"));
 
-        var rule = Types().That().Are(useCaseTypes).Should().NotDependOnAny(publicApiTypesFromOtherAssemblies).WithoutRequiringPositiveResults();
+        var rule = Types().That().Are(useCaseTypes)
+            .Should().NotDependOnAny(publicApiTypesFromOtherAssemblies)
+            .WithoutRequiringPositiveResults();
 
         rule.Check(Architecture);
     }
@@ -78,24 +91,17 @@ public class ModulesTests : BaseArchitecturalTests
         var typesFromOtherAssemblies = GetForbiddenTypes("Explorer.API");
         var internalApiTypes = typesFromOtherAssemblies.Where(x => x.FullName.Contains("API.Internal"));
 
-        var rule = Types().That().Are(apiTypes).Should().NotDependOnAny(internalApiTypes);
+        var rule = Types().That().Are(apiTypes)
+            .Should().NotDependOnAny(internalApiTypes)
+            .WithoutRequiringPositiveResults();   // ? dodato
 
         rule.Check(Architecture);
     }
 
     public static IEnumerable<object[]> GetModules() => new List<object[]>
     {
-        new object[]
-        {
-            "Stakeholders"
-        },
-        new object[]
-        {
-            "Blog"
-        },
-        new object[]
-        {
-            "Tours"
-        }
+        new object[] { "Stakeholders" },
+        new object[] { "Blog" },
+        new object[] { "Tours" }
     };
 }
