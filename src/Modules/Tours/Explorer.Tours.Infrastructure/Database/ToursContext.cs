@@ -83,10 +83,19 @@ public class ToursContext : DbContext
             builder.Property(kp => kp.Order)
                 .IsRequired();
 
-            // GeoCorordinate kao JSONB in db
-            builder.Property(kp => kp.Location)
-                .HasColumnType("jsonb");
+            builder.OwnsOne(kp => kp.Location, navigation =>
+            {
+                navigation.Property(c => c.Latitude)
+                    .HasColumnName("Latitude")
+                    .IsRequired();
+
+                navigation.Property(c => c.Longitude)
+                    .HasColumnName("Longitude")
+                    .IsRequired();
+            });
         });
+
+
 
         modelBuilder.Ignore<Person>();
 

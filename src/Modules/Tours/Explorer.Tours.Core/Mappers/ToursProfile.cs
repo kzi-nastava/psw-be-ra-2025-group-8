@@ -18,6 +18,7 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Location,
                 opt => opt.MapFrom(src => new GeoCoordinate(src.Latitude, src.Longitude)));
 
+        // KeyPointDto <-> KeyPoint
         CreateMap<KeyPoint, KeyPointDto>()
             .ForMember(dest => dest.Latitude,
                 opt => opt.MapFrom(src => src.Location.Latitude))
