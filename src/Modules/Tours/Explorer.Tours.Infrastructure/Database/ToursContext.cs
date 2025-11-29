@@ -49,7 +49,7 @@ public class ToursContext : DbContext
         modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.Latitude).IsRequired();
         modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.Longitude).IsRequired();
         
-        // Relationship: Tour has many TourKeyPoints
+        // Relationship: Tour has many KeyPoints
         modelBuilder.Entity<KeyPoint>().HasOne<Tour>().WithMany().HasForeignKey(tkp => tkp.TourId).OnDelete(DeleteBehavior.Cascade);
 
         // KeyPointReached Entity Configuration

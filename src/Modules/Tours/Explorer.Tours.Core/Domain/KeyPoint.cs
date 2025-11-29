@@ -4,14 +4,14 @@ namespace Explorer.Tours.Core.Domain;
 
 public class KeyPoint : Entity
 {
-    public int TourId { get; private set; }
+    public long TourId { get; private set; }
     public int OrderNum { get; private set; }
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
     public string? Name { get; private set; }
     public string? Description { get; private set; }
 
-    public KeyPoint(int tourId, int orderNum, double latitude, double longitude, string? name = null, string? description = null)
+    public KeyPoint(long tourId, int orderNum, double latitude, double longitude, string? name = null, string? description = null)
     {
         TourId = tourId;
         OrderNum = orderNum;

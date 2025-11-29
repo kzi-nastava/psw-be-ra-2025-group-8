@@ -13,7 +13,7 @@ public class KeyPointRepository : IKeyPointRepository
         _context = context;
     }
 
-    public List<KeyPoint> GetByTour(int tourId)
+    public List<KeyPoint> GetByTour(long tourId)
     {
         return _context.KeyPoints.Where(kp => kp.TourId == tourId).OrderBy(kp => kp.OrderNum).ToList();
     }

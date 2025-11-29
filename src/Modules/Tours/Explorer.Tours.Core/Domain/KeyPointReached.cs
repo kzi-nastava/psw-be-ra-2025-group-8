@@ -14,7 +14,7 @@ public class KeyPointReached : Entity
     {
         TourExecutionId = tourExecutionId;
         KeyPointOrder = keyPointOrder;
-        ReachedAt = DateTime.UtcNow;
+        ReachedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
         Latitude = latitude;
         Longitude = longitude;
         Validate();
@@ -24,11 +24,8 @@ public class KeyPointReached : Entity
 
     private void Validate()
     {
-        if (TourExecutionId <= 0)
-            throw new ArgumentException("TourExecutionId must be a positive integer");
-
-        if (KeyPointOrder < 0)
-            throw new ArgumentException("KeyPointOrder cannot be negative");
+        if (TourExecutionId == 0)
+            throw new ArgumentException("TourExecutionId cannot be zero");
 
         if (Latitude < -90 || Latitude > 90)
             throw new ArgumentException("Latitude must be between -90 and 90");

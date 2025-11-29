@@ -1,4 +1,4 @@
-using Explorer.BuildingBlocks.Core.UseCases;
+﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
@@ -87,6 +87,10 @@ public class TourExecutionController : ControllerBase
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Explorer.BuildingBlocks.Core.Exceptions.NotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
