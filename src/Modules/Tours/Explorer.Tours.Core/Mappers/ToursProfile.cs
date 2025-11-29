@@ -13,6 +13,7 @@ public class ToursProfile : Profile
         CreateMap<MonumentDto, Monument>().ReverseMap();
         CreateMap<ReportProblemDto, ReportProblem>().ReverseMap();
         CreateMap<FacilityDto, Facility>().ReverseMap();
+        CreateMap<KeyPointReachedDto, KeyPointReached>().ReverseMap();
 
         CreateMap<TourDto, Tour>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => MapStatus(src.Status)));

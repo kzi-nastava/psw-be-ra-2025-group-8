@@ -1,7 +1,9 @@
-DELETE FROM tours."Equipment";
+DELETE FROM tours."KeyPointsReached";   
+DELETE FROM tours."PersonEquipment";   
+DELETE FROM tours."TourExecutions"; 
+DELETE FROM tours."KeyPoints";       
 DELETE FROM tours."ReportProblem";
+DELETE FROM tours."Equipment";
 DELETE FROM tours."Tours";
-DELETE FROM tours."PersonEquipment";
 DELETE FROM tours."Facilities";
 DELETE FROM tours."Monument";
-DELETE FROM tours."TourExecutions";

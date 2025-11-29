@@ -1,4 +1,4 @@
-using Explorer.BuildingBlocks.Core.UseCases;
+﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
@@ -76,5 +76,30 @@ public class TourExecutionController : ControllerBase
     {
         _tourExecutionService.Delete(id);
         return Ok();
+    }
+
+    [HttpPost("check-keypoint")]
+    public ActionResult<CheckKeyPointResponseDto> CheckKeyPoint([FromBody] CheckKeyPointRequestDto request)
+    {
+        try
+        {
+            var result = _tourExecutionService.CheckKeyPoint(request);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Explorer.BuildingBlocks.Core.Exceptions.NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{tourExecutionId:long}/reached-keypoints")]
+    public ActionResult<List<KeyPointReachedDto>> GetReachedKeyPoints(long tourExecutionId)
+    {
+        var result = _tourExecutionService.GetReachedKeyPoints(tourExecutionId);
+        return Ok(result);
     }
 }

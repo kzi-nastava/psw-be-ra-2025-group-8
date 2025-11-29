@@ -14,6 +14,8 @@ public class ToursContext : DbContext
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Position> Positions { get; set; }
     public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<KeyPointReached> KeyPointsReached { get; set; }
+    public DbSet<KeyPoint> KeyPoints { get; set; }
     
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -29,9 +31,7 @@ public class ToursContext : DbContext
         modelBuilder.Entity<Tour>().Property(t => t.Status).IsRequired();
         modelBuilder.Entity<Tour>().Property(t => t.Price).HasColumnType("decimal(18,2)").IsRequired();
         modelBuilder.Entity<Tour>().Property(t => t.AuthorId).IsRequired();
-        modelBuilder.Entity<Tour>()
-           .Property(t => t.Tags)
-           .HasColumnType("text[]");
+        modelBuilder.Entity<Tour>().Property(t => t.Tags).HasColumnType("text[]");
 
         // TourExecution Entity Configuration
         modelBuilder.Entity<TourExecution>().HasKey(te => te.Id);
@@ -41,6 +41,27 @@ public class ToursContext : DbContext
         modelBuilder.Entity<TourExecution>().Property(te => te.IdTourist).IsRequired();
         modelBuilder.Entity<TourExecution>().Property(te => te.Status).IsRequired();
         modelBuilder.Entity<TourExecution>().Property(te => te.LastActivity).IsRequired();
+
+        // TourKeyPoint Entity Configuration
+        modelBuilder.Entity<KeyPoint>().HasKey(tkp => tkp.Id);
+        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.TourId).IsRequired();
+        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.OrderNum).IsRequired();
+        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.Latitude).IsRequired();
+        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.Longitude).IsRequired();
+        
+        // Relationship: Tour has many KeyPoints
+        modelBuilder.Entity<KeyPoint>().HasOne<Tour>().WithMany().HasForeignKey(tkp => tkp.TourId).OnDelete(DeleteBehavior.Cascade);
+
+        // KeyPointReached Entity Configuration
+        modelBuilder.Entity<KeyPointReached>().HasKey(kpr => kpr.Id);
+        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.TourExecutionId).IsRequired();
+        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.KeyPointOrder).IsRequired();
+        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.ReachedAt).IsRequired();
+        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.Latitude).IsRequired();
+        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.Longitude).IsRequired();
+        
+        // Relationship: TourExecution has many KeyPointReached
+        modelBuilder.Entity<KeyPointReached>().HasOne<TourExecution>().WithMany().HasForeignKey(kpr => kpr.TourExecutionId).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Ignore<Person>();
 

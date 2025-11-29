@@ -47,6 +47,8 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<ITourExecutionRepository, TourExecutionRepository>();
+        services.AddScoped<IKeyPointReachedRepository, KeyPointReachedRepository>();
+        services.AddScoped<IKeyPointRepository, KeyPointRepository>();
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Tour>), typeof(CrudDatabaseRepository<Tour, ToursContext>));
