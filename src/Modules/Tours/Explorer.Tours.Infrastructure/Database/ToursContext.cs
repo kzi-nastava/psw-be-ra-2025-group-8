@@ -13,6 +13,7 @@ public class ToursContext : DbContext
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Position> Positions { get; set; }
+    public DbSet<TourExecution> TourExecutions { get; set; }
     
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -31,6 +32,15 @@ public class ToursContext : DbContext
         modelBuilder.Entity<Tour>()
            .Property(t => t.Tags)
            .HasColumnType("text[]");
+
+        // TourExecution Entity Configuration
+        modelBuilder.Entity<TourExecution>().HasKey(te => te.Id);
+        modelBuilder.Entity<TourExecution>().Property(te => te.IdTour).IsRequired();
+        modelBuilder.Entity<TourExecution>().Property(te => te.Longitude).IsRequired();
+        modelBuilder.Entity<TourExecution>().Property(te => te.Latitude).IsRequired();
+        modelBuilder.Entity<TourExecution>().Property(te => te.IdTourist).IsRequired();
+        modelBuilder.Entity<TourExecution>().Property(te => te.Status).IsRequired();
+        modelBuilder.Entity<TourExecution>().Property(te => te.LastActivity).IsRequired();
 
         modelBuilder.Ignore<Person>();
 
