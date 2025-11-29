@@ -74,4 +74,58 @@ public class TourService : ITourService
         if (tour.Status != TourStatus.Draft) throw new InvalidOperationException("Only draft tours can be deleted.");
         _crudRepository.Delete(id);
     }
+
+    // ============================================================
+    // Authoring use-cases over Tour aggregate
+    // ============================================================
+
+    public TourDto AddKeyPoint(long tourId, KeyPointDto keyPointDto, int authorId)
+    {
+        // loading aggregate with KeyPoints through ITourRepository
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        // creation of Value Object from DTO and delegation to aggregate root
+        var location = new GeoCoordinate(keyPointDto.Latitude, keyPointDto.Longitude);
+
+        tour.AddKeyPoint(
+            keyPointDto.Name,
+            keyPointDto.Description ?? string.Empty,
+            keyPointDto.ImageUrl ?? string.Empty,
+            keyPointDto.Secret ?? string.Empty,
+            location
+        );
+
+        // saving changes through repository
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto Publish(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only publish your own tours.");
+
+        tour.Publish();                   // domen logic inside aggregate root(status, min 2 KeyPoints)
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto Archive(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only archive your own tours.");
+
+        tour.Archive();
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
 }

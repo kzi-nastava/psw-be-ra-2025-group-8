@@ -13,24 +13,89 @@ public class ToursContext : DbContext
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Position> Positions { get; set; }
-    
+    public DbSet<KeyPoint> KeyPoints { get; set; }
+
+
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("tours");
 
-        // Tour Entity Configuration
-        modelBuilder.Entity<Tour>().HasKey(t => t.Id);
-        modelBuilder.Entity<Tour>().Property(t => t.Name).IsRequired().HasMaxLength(255);
-        modelBuilder.Entity<Tour>().Property(t => t.Description).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Difficulty).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Status).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Price).HasColumnType("decimal(18,2)").IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.AuthorId).IsRequired();
-        modelBuilder.Entity<Tour>()
-           .Property(t => t.Tags)
-           .HasColumnType("text[]");
+        // TOUR CONFIGURATION
+        modelBuilder.Entity<Tour>(builder =>
+        {
+            builder.HasKey(t => t.Id);
+
+            builder.Property(t => t.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(t => t.Description)
+                .IsRequired();
+
+            builder.Property(t => t.Difficulty)
+                .IsRequired();
+
+            builder.Property(t => t.Status)
+                .IsRequired();
+
+            builder.Property(t => t.Price)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(t => t.AuthorId)
+                .IsRequired();
+
+            builder.Property(t => t.Tags)
+                .HasColumnType("text[]");
+
+            // route length
+            builder.Property(t => t.LengthInKilometers)
+                .HasColumnType("double precision")
+                .HasDefaultValue(0.0);  // important because of c-tours.sql insert
+
+            // Tour -> KeyPoints (1 - N)
+            builder.HasMany(t => t.KeyPoints)
+                .WithOne()                         // KeyPoint does not have navigation property to Tour
+                .HasForeignKey("TourId")           // shadow FK column TourId
+                .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
+        });
+
+        // KEYPOINT CONFIGURATION
+        modelBuilder.Entity<KeyPoint>(builder =>
+        {
+            builder.HasKey(kp => kp.Id);
+
+            builder.Property(kp => kp.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(kp => kp.Description)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.ImageUrl)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.Secret)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.Order)
+                .IsRequired();
+
+            builder.OwnsOne(kp => kp.Location, navigation =>
+            {
+                navigation.Property(c => c.Latitude)
+                    .HasColumnName("Latitude")
+                    .IsRequired();
+
+                navigation.Property(c => c.Longitude)
+                    .HasColumnName("Longitude")
+                    .IsRequired();
+            });
+        });
+
+
 
         modelBuilder.Ignore<Person>();
 
@@ -44,4 +109,5 @@ public class ToursContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade);
         });
     }
+
 }
