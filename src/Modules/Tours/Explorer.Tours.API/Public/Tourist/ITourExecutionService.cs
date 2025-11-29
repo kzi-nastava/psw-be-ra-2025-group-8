@@ -13,4 +13,6 @@ public interface ITourExecutionService
     List<TourExecutionDto> GetByTourist(int touristId);
     List<TourExecutionDto> GetByTour(int tourId);
     void Delete(int id);
+    CheckKeyPointResponseDto CheckKeyPoint(CheckKeyPointRequestDto request);
+    List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId);
 }
