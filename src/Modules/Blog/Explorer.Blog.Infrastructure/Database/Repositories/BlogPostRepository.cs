@@ -42,4 +42,17 @@ public class BlogPostRepository : IBlogPostRepository
         _dbContext.Set<BlogPost>().Update(blogPost);
         _dbContext.SaveChanges();
     }
+
+    public void Delete(long id)
+    {
+        var blogPost = _dbContext.BlogPosts
+            .Include(bp => bp.Images)
+            .FirstOrDefault(bp => bp.Id == id);
+
+        if (blogPost == null) return;
+
+        // EF će automatski obrisati slike (zbog FK i cascade rules)
+        _dbContext.BlogPosts.Remove(blogPost);
+        _dbContext.SaveChanges();
+    }
 }

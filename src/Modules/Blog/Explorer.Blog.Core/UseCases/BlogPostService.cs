@@ -49,4 +49,13 @@ public class BlogPostService : IBlogPostService
         var blogPosts = _blogPostRepository.GetForAuthor(authorId);
         return _mapper.Map<List<BlogPostDto>>(blogPosts.ToList());
     }
+
+    public void Delete(long id)
+    {
+        var blogPost = _blogPostRepository.Get(id);
+        if (blogPost == null) throw new KeyNotFoundException("Blog post not found.");
+
+        _blogPostRepository.Delete(id);
+    }
+
 }

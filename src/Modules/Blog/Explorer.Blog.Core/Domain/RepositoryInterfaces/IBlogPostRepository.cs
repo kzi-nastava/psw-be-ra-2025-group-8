@@ -8,4 +8,5 @@ public interface IBlogPostRepository
     IEnumerable<BlogPost> GetForAuthor(long authorId);
     void Add(BlogPost blogPost);
     void Update(BlogPost blogPost);
+    void Delete(long id);
 }

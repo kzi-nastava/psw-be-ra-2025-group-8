@@ -8,4 +8,5 @@ public interface IBlogPostService
     BlogPostDto Create(CreateBlogPostDto request);
     BlogPostDto Update(long id, UpdateBlogPostDto request);
     List<BlogPostDto> GetForAuthor(long authorId);
+    void Delete(long id);
 }

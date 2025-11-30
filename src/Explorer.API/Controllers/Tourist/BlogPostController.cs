@@ -41,4 +41,11 @@ public class BlogPostController : ControllerBase
         var updated = _blogPostService.Update(id, dto);
         return Ok(updated);
     }
+
+    [HttpDelete("{id:long}")]
+    public ActionResult Delete(long id)
+    {
+        _blogPostService.Delete(id);
+        return Ok();
+    }
 }
