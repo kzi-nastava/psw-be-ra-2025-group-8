@@ -21,13 +21,28 @@ namespace Explorer.API.Controllers.Stakeholders
         private long GetCurrentUserId()
         {
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            // Ako nema claim-a (npr. u test okruženju bez autentikacije) – 
-            // koristimo podrazumevanog korisnika sa Id = 1,
-            // što se slaže sa seed-ovanim podacima iz TestData skripti.
+
+            // ✅ ISPRAVKA: Ako nema claim-a, uzmi ID iz User.Identity.Name koji Angular šalje
             if (idClaim == null || string.IsNullOrWhiteSpace(idClaim.Value))
             {
+                // Pokušaj da pročitaš ID iz Name claim-a (Angular JWT sadrži ID u 'id' claim-u)
+                var nameClaim = User.FindFirst("id");
+                if (nameClaim != null && long.TryParse(nameClaim.Value, out long userId))
+                {
+                    return userId;
+                }
+
+                // Fallback: ako je Name numerički, koristi ga
+                if (User.Identity?.IsAuthenticated == true &&
+                    long.TryParse(User.Identity.Name, out long nameId))
+                {
+                    return nameId;
+                }
+
+                // Poslednji fallback - return 1 (samo za testove)
                 return 1;
             }
+
             return long.Parse(idClaim.Value);
         }
 
@@ -43,7 +58,8 @@ namespace Explorer.API.Controllers.Stakeholders
         [HttpPost]
         public ActionResult<MessageDto> Send([FromBody] MessageDto dto)
         {
-            dto.SenderId = GetCurrentUserId();
+            var currentUserId = GetCurrentUserId();
+            dto.SenderId = currentUserId;  // ✅ ISPRAVKA: Koristi stvarni ID
             var created = _messageService.Send(dto);
             return Ok(created);
         }
@@ -68,6 +84,22 @@ namespace Explorer.API.Controllers.Stakeholders
         {
             var deleted = _messageService.Delete(messageId);
             return Ok(deleted);
+        }
+
+        // NOVI ENDPOINT - Obriši celu konverzaciju sa određenim korisnikom
+        [HttpDelete("deleteConversation/{participantId:long}")]
+        public ActionResult DeleteConversation(long participantId)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                _messageService.DeleteConversation(currentUserId, participantId);
+                return NoContent(); // 204 - success, bez odgovora
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
     }
 }

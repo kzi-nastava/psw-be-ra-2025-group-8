@@ -36,5 +36,18 @@ public class AuthenticationController : ControllerBase
         }
     }
 
-
+    // ✅ NOVI ENDPOINT - Vrati sve korisnike
+    [HttpGet]
+    public ActionResult<IEnumerable<AccountOverviewDto>> GetAllAccounts()
+    {
+        try
+        {
+            var accounts = _authenticationService.GetAccounts();
+            return Ok(accounts);
+        }
+        catch (System.Exception ex)
+        {
+            return StatusCode(500, new { message = "Error retrieving accounts.", error = ex.Message });
+        }
+    }
 }
