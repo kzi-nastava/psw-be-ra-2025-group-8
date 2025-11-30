@@ -18,6 +18,13 @@ public class ToursProfile : Profile
 
         CreateMap<Tour, TourDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+        CreateMap<ShoppingCart, ShoppingCartDto>()
+               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
+               .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice))
+               .ReverseMap()
+               .ConstructUsing(dto => new ShoppingCart(dto.UserId));
+        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
+                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.TourName, dto.Price));
     }
 
     private static TourStatus MapStatus(string status)
