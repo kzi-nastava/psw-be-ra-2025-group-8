@@ -1,4 +1,8 @@
 ﻿using System;
+using Explorer.Blog.API.Public;
+using Explorer.Blog.Core.UseCases;
+using Explorer.Blog.Core.Domain.RepositoryInterfaces;
+using Explorer.Blog.Infrastructure.Database.Repositories;
 using Explorer.Blog.Infrastructure.Database;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -21,11 +25,12 @@ namespace Explorer.Blog.Infrastructure
 
         private static void SetupCore(IServiceCollection services)
         {
-            // ovde ide registracija Core servisa za Blog modul (trenutno prazno)
+            services.AddScoped<IBlogPostService, BlogPostService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
         {
+            services.AddScoped<IBlogPostRepository, BlogPostRepository>();
 
             services.AddDbContext<BlogContext>(opt =>
                 opt.UseNpgsql(DbConnectionStringBuilder.Build("blog"),
