@@ -1,5 +1,5 @@
-﻿using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.API.Public;
+﻿using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Public.Tourist;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Explorer.BuildingBlocks.Core.Domain;
 
-namespace Explorer.Stakeholders.Core.Domain
+namespace Explorer.Tours.Core.Domain
 {
     public class PreferenceTags
     {

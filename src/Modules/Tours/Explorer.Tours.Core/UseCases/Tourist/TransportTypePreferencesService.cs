@@ -1,16 +1,17 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.Exceptions;
-using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.API.Public;
-using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
-using Explorer.Stakeholders.Core.Domain;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.Core.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Explorer.Tours.API.Public.Tourist;
 
-namespace Explorer.Stakeholders.Core.UseCases
+namespace Explorer.Tours.Core.UseCases.Tourist
 {
     public class TransportTypePreferencesService : ITransportTypePreferencesService
     {

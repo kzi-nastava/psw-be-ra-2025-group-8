@@ -1,19 +1,21 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.Core.Domain;
+using Explorer.Tours.Core.Domain;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Explorer.Stakeholders.API.Public;
-using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Public.Tourist;
 
 
 
-namespace Explorer.Stakeholders.Core.UseCases
+namespace Explorer.Tours.Core.UseCases.Tourist
 {
     public class TouristPreferencesService : ITouristPreferencesService
     {

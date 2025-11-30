@@ -15,6 +15,7 @@ using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace Explorer.Tours.Infrastructure;
 
 public static class ToursStartup
@@ -38,6 +39,12 @@ public static class ToursStartup
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
+        services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
+        services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
+        //
+
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -45,6 +52,11 @@ public static class ToursStartup
         services.AddScoped<IPersonEquipmentRepository, PersonEquipmentRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
+        services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
+        services.AddScoped<ITagsRepository, TagsRepository>();
+        services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
 
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));

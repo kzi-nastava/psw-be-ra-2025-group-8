@@ -9,18 +9,17 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Explorer.Stakeholders.API.Public;
-using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.Core.Domain;
-using Explorer.Stakeholders.Infrastructure.Database;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Infrastructure.Database;
 using Explorer.BuildingBlocks.Core.Exceptions;
-using Explorer.Stakeholders.Tests; // za EntityValidationException i NotFoundException
+using Explorer.Tours.Tests; // za EntityValidationException i NotFoundException
 
-public class TransportTypePreferencesTests : IClassFixture<StakeholdersTestFactory>
+public class TransportTypePreferencesTests : IClassFixture<ToursTestFactory>
 {
-    private readonly StakeholdersTestFactory _factory;
-
-    public TransportTypePreferencesTests(StakeholdersTestFactory factory)
+    private readonly ToursTestFactory _factory;
+    public TransportTypePreferencesTests(ToursTestFactory factory)
     {
         _factory = factory;
     }
@@ -43,7 +42,7 @@ public class TransportTypePreferencesTests : IClassFixture<StakeholdersTestFacto
     {
         using var scope = _factory.Services.CreateScope();
         var svc = scope.ServiceProvider.GetRequiredService<ITransportTypePreferencesService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
         var newRatings = new List<TransportTypePreferenceDto>
         {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Explorer.BuildingBlocks.Core.Domain;
 
-namespace Explorer.Stakeholders.Core.Domain
+namespace Explorer.Tours.Core.Domain
 {
     public enum TransportType
     {
@@ -18,13 +18,13 @@ namespace Explorer.Stakeholders.Core.Domain
     public class TransportTypePreferences : Entity
     {
         public long PreferenceId { get; set; }
-        public TransportType Transport {  get; set; }
+        public TransportType Transport { get; set; }
         public int Rating { get; set; }
         public TouristPreferences Preference { get; set; }
 
         public TransportTypePreferences() { }
 
-        public TransportTypePreferences(long preferenceId, TransportType type, int rate) 
+        public TransportTypePreferences(long preferenceId, TransportType type, int rate)
         {
             PreferenceId = preferenceId;
             Transport = type;
