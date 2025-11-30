@@ -45,5 +45,23 @@ public class ToursContext : DbContext
                    .HasForeignKey(pe => pe.EquipmentId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
+        modelBuilder.Entity<ShoppingCart>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.UserId).IsRequired();
+            builder.HasMany(c => c.Items)
+                   .WithOne()
+                   .HasForeignKey("ShoppingCartId")
+                   .OnDelete(DeleteBehavior.Cascade);
+            builder.Ignore(c => c.TotalPrice);
+        });
+
+        modelBuilder.Entity<OrderItem>(builder =>
+        {
+            builder.HasKey(oi => oi.Id);
+            builder.Property(oi => oi.TourId).IsRequired();
+            builder.Property(oi => oi.TourName).IsRequired().HasMaxLength(255);
+            builder.Property(oi => oi.Price).HasColumnType("decimal(18,2)").IsRequired();
+        });
     }
 }
