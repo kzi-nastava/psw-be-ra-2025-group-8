@@ -5,6 +5,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Explorer.BuildingBlocks.Core.UseCases;
 
 namespace Explorer.Stakeholders.Core.UseCases
 {
@@ -12,11 +13,19 @@ namespace Explorer.Stakeholders.Core.UseCases
     {
         private readonly IMessageRepository _messageRepository;
         private readonly IMapper _mapper;
+        private readonly IUserRepository _userRepository;  // ✅ DODAJ
+        private readonly ICrudRepository<Person> _personRepository;  // ✅ DODAJ
 
-        public MessageService(IMessageRepository messageRepository, IMapper mapper)
+        public MessageService(
+            IMessageRepository messageRepository,
+            IMapper mapper,
+            IUserRepository userRepository,  // ✅ DODAJ
+            ICrudRepository<Person> personRepository)  // ✅ DODAJ
         {
             _messageRepository = messageRepository;
             _mapper = mapper;
+            _userRepository = userRepository;  // ✅ DODAJ
+            _personRepository = personRepository;  // ✅ DODAJ
         }
 
         public MessageDto Send(MessageDto dto)
@@ -28,10 +37,7 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public List<MessageDto> GetConversation(long userId1, long userId2)
         {
-            // U testovima pretpostavljamo da je ulogovani korisnik Id = 1
-            const long currentUserId = 1;
-            // Uvek uzimamo 1 kao prvog korisnika, a drugi je onaj koji dolazi iz kontrolera/testa
-            var messages = _messageRepository.GetConversation(currentUserId, userId2);
+            var messages = _messageRepository.GetConversation(userId1, userId2);
             return _mapper.Map<List<MessageDto>>(messages);
         }
 
@@ -51,29 +57,60 @@ namespace Explorer.Stakeholders.Core.UseCases
             return _mapper.Map<MessageDto>(updated);
         }
 
-        // NOVA METODA - Vrati sve konverzacije
+        // ✅ ISPRAVLJENA METODA - Vrati sve konverzacije sa pravim imenima
         public List<ConversationSummaryDto> GetConversations(long userId)
         {
-            // Dohvati sve poruke gde je korisnik sender ili recipient
             var allMessages = _messageRepository.GetAll();
-
             var messages = allMessages
                 .Where(m => !m.IsDeleted && (m.SenderId == userId || m.RecipientId == userId))
                 .OrderByDescending(m => m.TimestampCreated)
                 .ToList();
 
-            // Grupiši po drugom korisniku
             var conversations = messages
                 .GroupBy(m => m.SenderId == userId ? m.RecipientId : m.SenderId)
                 .Select(group =>
                 {
-                    var lastMessage = group.First(); // Već sortirano po TimestampCreated desc
+                    var lastMessage = group.First();
                     var otherUserId = group.Key;
+
+                    // ✅ Pokušaj da učitaš pravo ime korisnika
+                    string userName = $"User {otherUserId}";  // fallback
+                    try
+                    {
+                        var user = _userRepository.GetById(otherUserId);
+                        if (user != null)
+                        {
+                            userName = user.Username;
+
+                            // Pokušaj da učitaš ime i prezime iz Person tabele
+                            try
+                            {
+                                var personId = _userRepository.GetPersonId(otherUserId);
+                                var person = _personRepository.Get(personId);
+                                if (person != null && !string.IsNullOrWhiteSpace(person.Name))
+                                {
+                                    userName = $"{person.Name} {person.Surname}".Trim();
+                                    if (string.IsNullOrWhiteSpace(userName))
+                                    {
+                                        userName = user.Username;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Ako nema Person, koristi Username
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ako ne može da učita korisnika, koristi fallback
+                    }
 
                     return new ConversationSummaryDto
                     {
                         WithUserId = otherUserId,
-                        WithUserName = $"User {otherUserId}", // Privremeno dok ne dodaš user lookup
+                        WithUserName = userName,
                         LastMessage = lastMessage.Content,
                         LastMessageTime = lastMessage.TimestampCreated
                     };
@@ -81,6 +118,21 @@ namespace Explorer.Stakeholders.Core.UseCases
                 .ToList();
 
             return conversations;
+        }
+
+        public void DeleteConversation(long userId, long otherUserId)
+        {
+            var allMessages = _messageRepository.GetAll();
+            var messages = allMessages
+                .Where(m => (m.SenderId == userId && m.RecipientId == otherUserId) ||
+                            (m.SenderId == otherUserId && m.RecipientId == userId))
+                .ToList();
+
+            foreach (var message in messages)
+            {
+                message.Delete();
+                _messageRepository.Update(message);
+            }
         }
     }
 }
