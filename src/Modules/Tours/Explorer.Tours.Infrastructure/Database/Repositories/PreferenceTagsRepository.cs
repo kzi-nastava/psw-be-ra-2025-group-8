@@ -9,14 +9,17 @@ using System.Linq;
 using Explorer.Stakeholders.Core.Domain;
 
 using Microsoft.EntityFrameworkCore;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Infrastructure.Database;
 
-namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
+namespace Explorer.Tours.Infrastructure.Database.Repositories
 {
     public class PreferenceTagsRepository : IPreferenceTagsRepository
     {
-        private readonly StakeholdersContext _db;
+        private readonly ToursContext _db;
 
-        public PreferenceTagsRepository(StakeholdersContext db)
+        public PreferenceTagsRepository(ToursContext db)
         {
             _db = db;
         }
