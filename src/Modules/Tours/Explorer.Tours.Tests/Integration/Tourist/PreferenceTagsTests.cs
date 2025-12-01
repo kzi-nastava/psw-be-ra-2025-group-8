@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Explorer.Stakeholders.API.Public;
-using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.Infrastructure.Database;
-using Explorer.Stakeholders.Tests;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.Infrastructure.Database;
+using Explorer.Tours.Tests;
+using Explorer.Tours.API.Public.Tourist;
 
-public class PreferenceTagsTests : IClassFixture<StakeholdersTestFactory>
+public class PreferenceTagsTests : IClassFixture<ToursTestFactory>
 {
-    private readonly StakeholdersTestFactory _factory;
+    private readonly ToursTestFactory _factory;
 
-    public PreferenceTagsTests(StakeholdersTestFactory factory)
+    public PreferenceTagsTests(ToursTestFactory factory)
     {
         _factory = factory;
     }
@@ -26,7 +27,7 @@ public class PreferenceTagsTests : IClassFixture<StakeholdersTestFactory>
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
         var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
 
@@ -68,7 +69,7 @@ public class PreferenceTagsTests : IClassFixture<StakeholdersTestFactory>
     {
         using var scope = _factory.Services.CreateScope();
         var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
         // add brand new tag
         var newTagDto = new TagDto { Tag = "beach" };
@@ -88,7 +89,7 @@ public class PreferenceTagsTests : IClassFixture<StakeholdersTestFactory>
     {
         using var scope = _factory.Services.CreateScope();
         var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
         var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
         // ensure we have an existing tag -201 linked (-301)

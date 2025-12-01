@@ -1,11 +1,11 @@
-using Explorer.BuildingBlocks.Core.Domain;
+﻿using Explorer.BuildingBlocks.Core.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Explorer.Stakeholders.Core.Domain
+namespace Explorer.Tours.Core.Domain
 {
     public enum DifficultyLevel
     {
@@ -17,7 +17,7 @@ namespace Explorer.Stakeholders.Core.Domain
     public class TouristPreferences : Entity
     {
         public long PersonId { get; set; }
-        public Person Person { get; set; }
+        //public Person Person { get; set; }
         public DifficultyLevel Difficulty { get; set; }
 
         //novo polje za povezivanje
