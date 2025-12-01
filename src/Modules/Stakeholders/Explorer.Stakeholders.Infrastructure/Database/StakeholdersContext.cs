@@ -61,5 +61,9 @@ public class StakeholdersContext : DbContext
         });
 
 
+        modelBuilder.Entity<Rating>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(r => r.UserId);
     }
 }

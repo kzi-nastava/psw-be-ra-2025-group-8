@@ -104,10 +104,5 @@ public class ToursContext : DbContext
             .Property(t => t.Transport)
             .HasConversion<string>();
 
-
-        modelBuilder.Entity<Rating>()
-            .HasOne<User>()
-            .WithMany()
-            .HasForeignKey(r => r.UserId);
     }
 }
