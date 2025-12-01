@@ -31,24 +31,72 @@ namespace Explorer.Tours.Core.UseCases.Tourist
 
         public IEnumerable<TransportTypePreferenceDto> Get(long personId)
         {
+            // 1) Učitaj ili napravi TouristPreferences
             var pref = _touristPreferencesRepository.GetByPersonId(personId);
-            if (pref == null) throw new NotFoundException($"Tourist preferences for person {personId} not found.");
+            if (pref == null)
+            {
+                // ako nema preference, napravimo je sa Beginner
+                pref = _touristPreferencesRepository.Create(
+                    new TouristPreferences(personId, DifficultyLevel.Beginner));
+            }
 
-            var transports = _transportRepository.GetByPreferenceId(pref.Id);
-            return _mapper.Map<IEnumerable<TransportTypePreferenceDto>>(transports);
+            // 2) Učitaj postojeće transport preference
+            var transports = _transportRepository.GetByPreferenceId(pref.Id).ToList();
+
+            // 3) Ako nema 4 reda (Walk, Bicycle, Car, Boat), dopunimo
+            var allTypes = Enum.GetValues(typeof(TransportType))
+                               .Cast<TransportType>()
+                               .ToList();
+
+            var missingTypes = allTypes
+                .Where(t => transports.All(x => x.Transport != t))
+                .ToList();
+
+            if (missingTypes.Any())
+            {
+                var newItems = missingTypes
+                    .Select(t => new TransportTypePreferences(pref.Id, t, 0))
+                    .ToList();
+
+                _transportRepository.CreateRange(newItems);
+                transports.AddRange(newItems);
+            }
+
+            // 4) Mapper radi svoje – ne diramo ga :)
+            var ordered = transports.OrderBy(t => t.Transport).ToList();
+            return _mapper.Map<IEnumerable<TransportTypePreferenceDto>>(ordered);
         }
 
         public void Update(long personId, IEnumerable<TransportTypePreferenceDto> dtos)
         {
+            // 1) Učitaj ili napravi TouristPreferences
             var pref = _touristPreferencesRepository.GetByPersonId(personId);
-            if (pref == null) throw new NotFoundException($"Tourist preferences for person {personId} not found.");
+            if (pref == null)
+            {
+                pref = _touristPreferencesRepository.Create(
+                    new TouristPreferences(personId, DifficultyLevel.Beginner));
+            }
 
+            // 2) Učitaj postojeće transport preference
             var existing = _transportRepository.GetByPreferenceId(pref.Id).ToList();
 
-            var enumCount = Enum.GetValues(typeof(TransportType)).Length;
-            if (existing.Count != enumCount)
+            // 3) Ako nema 4 reda, dopunimo
+            var allTypes = Enum.GetValues(typeof(TransportType))
+                               .Cast<TransportType>()
+                               .ToList();
+
+            var missingTypes = allTypes
+                .Where(t => existing.All(x => x.Transport != t))
+                .ToList();
+
+            if (missingTypes.Any())
             {
-                throw new EntityValidationException("Transport preferences in database are in invalid state (expected all transport types to exist).");
+                var newItems = missingTypes
+                    .Select(t => new TransportTypePreferences(pref.Id, t, 0))
+                    .ToList();
+
+                _transportRepository.CreateRange(newItems);
+                existing.AddRange(newItems);
             }
 
             if (dtos == null || !dtos.Any()) return;
@@ -78,7 +126,10 @@ namespace Explorer.Tours.Core.UseCases.Tourist
                 var existingItem = existing.FirstOrDefault(x => x.Transport == t);
                 if (existingItem == null)
                 {
-                    throw new EntityValidationException($"Transport '{dto.Transport}' does not exist for this preference and cannot be added.");
+                    // Teoretski ne bi trebalo da se desi jer smo gore dopunili,
+                    // ali ako se desi – ovo je jasnija poruka nego 500 internal.
+                    throw new EntityValidationException(
+                        $"Transport '{dto.Transport}' does not exist for this preference and cannot be updated.");
                 }
 
                 existingItem.Rating = dto.Rating;

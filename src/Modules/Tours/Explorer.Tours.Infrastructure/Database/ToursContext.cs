@@ -50,16 +50,29 @@ public class ToursContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<Person>()
-            .HasOne<User>()
-            .WithOne()
-            .HasForeignKey<Person>(s => s.UserId);
+        //modelBuilder.Entity<Person>()
+        //    .HasOne<User>()
+        //    .WithOne()
+        //    .HasForeignKey<Person>(s => s.UserId);
+
+        // TouristPreferences <-> Person (1:1)
+        //modelBuilder.Entity<TouristPreferences>()
+        //    .HasOne<Person>()                          // nemaš navigaciju Person.PersonPreferences, pa ide WithOne()
+        //    .WithOne()
+        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId);
 
         //modelBuilder.Entity<TouristPreferences>()
         //    .HasOne(tp => tp.Person)
         //    .WithOne()
         //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId)
         //    .OnDelete(DeleteBehavior.Cascade);
+
+        // TouristPreferences <-> TransportTypePreferences (1:N)
+        modelBuilder.Entity<TouristPreferences>()
+            .HasMany(tp => tp.TransportTypePreferences)
+            .WithOne(t => t.Preference)
+            .HasForeignKey(t => t.PreferenceId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<TransportTypePreferences>()
             .HasOne(t => t.Preference)
@@ -90,6 +103,8 @@ public class ToursContext : DbContext
         modelBuilder.Entity<TransportTypePreferences>()
             .Property(t => t.Transport)
             .HasConversion<string>();
+
+
         modelBuilder.Entity<Rating>()
             .HasOne<User>()
             .WithMany()
