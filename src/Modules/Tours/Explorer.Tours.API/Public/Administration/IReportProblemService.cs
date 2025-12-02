@@ -13,5 +13,10 @@ namespace Explorer.Tours.API.Public.Administration
         // Author response and tourist resolution
         ReportProblemDto AuthorRespond(int reportId, int authorId, string response);
         ReportProblemDto MarkResolved(int reportId, bool resolved, string? comment);
+
+        // Message operations
+        IssueMessageDto AddMessage(int reportId, int authorId, string content);
+        List<IssueMessageDto> GetMessages(int reportId);
+        ReportProblemDto GetById(int reportId);
     }
 }

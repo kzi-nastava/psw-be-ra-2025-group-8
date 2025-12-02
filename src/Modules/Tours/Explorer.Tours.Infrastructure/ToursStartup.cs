@@ -52,6 +52,7 @@ public static class ToursStartup
         services.AddScoped<IPersonEquipmentRepository, PersonEquipmentRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IReportProblemRepository, ReportProblemRepository>();
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
         services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
