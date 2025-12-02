@@ -15,6 +15,7 @@ namespace Explorer.Tours.Core.Domain
         // Aggregate
         public List<KeyPoint> KeyPoints { get; private set; } = new();
         public double LengthInKilometers { get; private set; }
+        public List<TourEquipment> RequiredEquipment { get; private set; } = new();
 
         // Constructor for creating a new tour (draft, price=0)
         public Tour(string name, string description, int difficulty, List<string> tags, int authorId)
@@ -134,6 +135,25 @@ namespace Explorer.Tours.Core.Domain
             }
 
             LengthInKilometers = Math.Round(total, 3);
+        }
+        // Add equipment required for the tour
+        public void AddRequiredEquipment(long equipmentId)
+        {
+            if (RequiredEquipment.Any(e => e.EquipmentId == equipmentId))
+                throw new InvalidOperationException("Equipment already added to this tour.");
+
+            RequiredEquipment.Add(new TourEquipment(Id, equipmentId));
+        }
+        // Remove equipment from the tour
+        public void RemoveRequiredEquipment(long equipmentId)
+        {
+            var existing = RequiredEquipment
+                .FirstOrDefault(e => e.EquipmentId == equipmentId);
+
+            if (existing == null)
+                throw new InvalidOperationException("Equipment not found on this tour.");
+
+            RequiredEquipment.Remove(existing);
         }
     }
 

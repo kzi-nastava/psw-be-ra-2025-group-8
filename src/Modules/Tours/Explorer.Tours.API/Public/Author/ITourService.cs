@@ -14,5 +14,7 @@ namespace Explorer.Tours.API.Public.Author
         TourDto AddKeyPoint(long tourId, KeyPointDto keyPoint, int authorId);
         TourDto Publish(long tourId, int authorId);
         TourDto Archive(long tourId, int authorId);
+        TourDto AddEquipment(long tourId, long equipmentId, int authorId);
+        TourDto RemoveEquipment(long tourId, long equipmentId, int authorId);
     }
 }

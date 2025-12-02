@@ -128,4 +128,31 @@ public class TourService : ITourService
         var updated = _tourRepository.Update(tour);
         return _mapper.Map<TourDto>(updated);
     }
+
+    public TourDto AddEquipment(long tourId, long equipmentId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        // domen logika unutar agregata
+        tour.AddRequiredEquipment(equipmentId);
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto RemoveEquipment(long tourId, long equipmentId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        tour.RemoveRequiredEquipment(equipmentId);
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
 }

@@ -18,7 +18,9 @@ public class TourRepository : ITourRepository
     private IQueryable<Tour> ToursWithIncludes()
     {
         return _context.Tours
-            .Include(t => t.KeyPoints);
+            .Include(t => t.KeyPoints)
+            .Include(t => t.RequiredEquipment)
+                .ThenInclude(te => te.Equipment);
     }
 
     public Tour Get(long id)
@@ -59,4 +61,6 @@ public class TourRepository : ITourRepository
             .Where(t => t.AuthorId == authorId)
             .ToList();
     }
+
+
 }

@@ -32,11 +32,15 @@ public class ToursProfile : Profile
             // KeyPoints and LengthInKilometers are not set by DTO
             // aggreggate root manages them internally
             .ForMember(dest => dest.KeyPoints, opt => opt.Ignore())
-            .ForMember(dest => dest.LengthInKilometers, opt => opt.Ignore());
+            .ForMember(dest => dest.LengthInKilometers, opt => opt.Ignore())
+            // RequiredEquipment is managed via separate methods
+            .ForMember(dest => dest.RequiredEquipment, opt => opt.Ignore());
 
         // Tour -> TourDto (answer to client)
         CreateMap<Tour, TourDto>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.RequiredEquipment,
+                opt => opt.MapFrom(src => src.RequiredEquipment));
 
 
         //CreateMap<TouristPreferencesDto, TouristPreferences>().ReverseMap();
@@ -72,6 +76,19 @@ public class ToursProfile : Profile
 
         //mapper za preference
         CreateMap<PreferenceTags, PreferenceTagsDto>().ReverseMap();
+
+        // TourEquipment -> TourEquipmentDto
+        CreateMap<TourEquipment, TourEquipmentDto>()
+            .ForMember(dest => dest.EquipmentId, opt => opt.MapFrom(src => src.EquipmentId))
+            .ForMember(dest => dest.EquipmentName, opt => opt.MapFrom(src => src.Equipment.Name));
+
+        // TourEquipmentDto -> TourEquipment (ignoring everything because new equipment is added via method)
+        CreateMap<TourEquipmentDto, TourEquipment>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.TourId, opt => opt.Ignore())
+            .ForMember(dest => dest.Tour, opt => opt.Ignore())
+            .ForMember(dest => dest.EquipmentId, opt => opt.Ignore())
+            .ForMember(dest => dest.Equipment, opt => opt.Ignore());
     }
 
     private static TourStatus MapStatus(string status)

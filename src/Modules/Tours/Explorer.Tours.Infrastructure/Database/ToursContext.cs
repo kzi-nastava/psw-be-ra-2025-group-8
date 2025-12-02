@@ -12,6 +12,7 @@ public class ToursContext : DbContext
     public DbSet<ReportProblem> ReportProblem { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
+    public DbSet<TourEquipment> TourEquipment { get; set; }
     public DbSet<Position> Positions { get; set; }
 
     //Preference
@@ -19,6 +20,7 @@ public class ToursContext : DbContext
     public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
     public DbSet<PreferenceTags> PreferenceTags { get; set; }
     public DbSet<Tags> Tags { get; set; }
+
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -113,24 +115,6 @@ public class ToursContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
-        //modelBuilder.Entity<Person>()
-        //    .HasOne<User>()
-        //    .WithOne()
-        //    .HasForeignKey<Person>(s => s.UserId);
-
-        // TouristPreferences <-> Person (1:1)
-        //modelBuilder.Entity<TouristPreferences>()
-        //    .HasOne<Person>()                          // nemaš navigaciju Person.PersonPreferences, pa ide WithOne()
-        //    .WithOne()
-        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId);
-
-        //modelBuilder.Entity<TouristPreferences>()
-        //    .HasOne(tp => tp.Person)
-        //    .WithOne()
-        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId)
-        //    .OnDelete(DeleteBehavior.Cascade);
-
-        // TouristPreferences <-> TransportTypePreferences (1:N)
         modelBuilder.Entity<TouristPreferences>()
             .HasMany(tp => tp.TransportTypePreferences)
             .WithOne(t => t.Preference)
@@ -166,6 +150,21 @@ public class ToursContext : DbContext
         modelBuilder.Entity<TransportTypePreferences>()
             .Property(t => t.Transport)
             .HasConversion<string>();
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasKey(te => new { te.TourId, te.EquipmentId });
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasOne(te => te.Tour)
+            .WithMany(t => t.RequiredEquipment)
+            .HasForeignKey(te => te.TourId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasOne(te => te.Equipment)
+            .WithMany()
+            .HasForeignKey(te => te.EquipmentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
     }
 
