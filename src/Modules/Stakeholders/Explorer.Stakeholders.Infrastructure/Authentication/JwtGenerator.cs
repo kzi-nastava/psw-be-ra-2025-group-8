@@ -24,7 +24,7 @@ public class JwtGenerator : ITokenGenerator
             new("id", user.Id.ToString()),
             new("username", user.Username),
             new("personId", personId.ToString()),
-            new(ClaimTypes.Role, user.GetPrimaryRoleName())
+            new("role", user.GetPrimaryRoleName())  // Koristi "role" umesto ClaimTypes.Role
         };
             
         var jwt = CreateToken(claims, 60*24);

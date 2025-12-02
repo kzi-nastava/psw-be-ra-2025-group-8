@@ -46,8 +46,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         public ReportProblemDto Update(ReportProblemDto entity)
         {
-            // Since ReportProblem properties are immutable (init-only), 
-            // we need to use the mapper which can handle the construction properly
+            // Since ReportProblem properties are mutable now, we can map and update.
             var domainEntity = _mapper.Map<ReportProblem>(entity);
             var result = _crudRepository.Update(domainEntity);
             return _mapper.Map<ReportProblemDto>(result);
@@ -56,6 +55,24 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public void Delete(long id)
         {
             _crudRepository.Delete(id);
+        }
+
+        // Novi metod: Author odgovara na prijavu (BEZ provere autorstva - samo za test)
+        public ReportProblemDto AuthorRespond(int reportId, int authorId, string response)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.RespondByAuthor(authorId, response);
+            var updated = _crudRepository.Update(report);
+            return _mapper.Map<ReportProblemDto>(updated);
+        }
+
+        // Novi metod: Tourist mark resolved/unresolved
+        public ReportProblemDto MarkResolved(int reportId, bool resolved, string? comment)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.MarkResolved(resolved, comment);
+            var updated = _crudRepository.Update(report);
+            return _mapper.Map<ReportProblemDto>(updated);
         }
     }
 }
