@@ -150,8 +150,8 @@ namespace Explorer.Tours.Core.Domain
             var existing = RequiredEquipment
                 .FirstOrDefault(e => e.EquipmentId == equipmentId);
 
-            if (existing == null)
-                throw new InvalidOperationException("Equipment not found on this tour.");
+            
+            if (existing == null) return;
 
             RequiredEquipment.Remove(existing);
         }

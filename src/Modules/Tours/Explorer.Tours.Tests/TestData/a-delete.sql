@@ -9,6 +9,8 @@ DELETE FROM tours."TouristPreferences";
 -- Tags is independent, but PreferenceTags depends on it (already deleted)
 DELETE FROM tours."Tags";
 
+DELETE FROM tours."TourEquipment";
+
 DELETE FROM tours."Equipment";
 DELETE FROM tours."ReportProblem";
 DELETE FROM tours."Tours";
