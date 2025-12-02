@@ -34,7 +34,7 @@ public class User : Entity
 
 public enum UserRole
 {
-    Administrator = 0,
-    Tourist = 1,
-    Author = 2
-}
+    Administrator,
+    Author,
+    Tourist
+   }
