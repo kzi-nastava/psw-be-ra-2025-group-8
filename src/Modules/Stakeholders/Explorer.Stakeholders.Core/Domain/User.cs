@@ -37,4 +37,4 @@ public enum UserRole
     Administrator,
     Author,
     Tourist
-}
+   }

@@ -9,5 +9,9 @@ namespace Explorer.Tours.API.Public.Administration
         ReportProblemDto Create(ReportProblemDto entity);
         ReportProblemDto Update(ReportProblemDto entity);
         void Delete(long id);
+
+        // Author response and tourist resolution
+        ReportProblemDto AuthorRespond(int reportId, int authorId, string response);
+        ReportProblemDto MarkResolved(int reportId, bool resolved, string? comment);
     }
 }
