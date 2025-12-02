@@ -29,8 +29,18 @@
     <ProjectReference Include="..\..\..\Explorer.API\Explorer.API.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Integration\" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="TestData\a-delete.sql" />
+		<None Remove="TestData\b-blogpost.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="TestData\a-delete.sql">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="TestData\b-blogpost.sql">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
 </Project>
