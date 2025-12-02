@@ -7,17 +7,19 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using Explorer.Stakeholders.Core.Domain;
-using Explorer.Stakeholders.Infrastructure.Database;
+using Explorer.Tours.Infrastructure.Database;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.Core.Domain;
 
 
-namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
+namespace Explorer.Tours.Infrastructure.Database.Repositories
 {
     public class TransportTypePreferencesRepository : ITransportTypePreferencesRepository
     {
-        private readonly StakeholdersContext _dbContext;
+        private readonly ToursContext _dbContext;
 
 
-        public TransportTypePreferencesRepository(StakeholdersContext dbContext)
+        public TransportTypePreferencesRepository(ToursContext dbContext)
         {
             _dbContext = dbContext;
         }

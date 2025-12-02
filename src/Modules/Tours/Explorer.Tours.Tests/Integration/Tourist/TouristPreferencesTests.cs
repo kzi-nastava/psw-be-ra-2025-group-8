@@ -7,17 +7,18 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Explorer.Stakeholders.API.Public;
-using Explorer.Stakeholders.API.Dtos;
-using Explorer.Stakeholders.Core.Domain;
-using Explorer.Stakeholders.Infrastructure.Database;
-using Explorer.Stakeholders.Tests;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.API.Dtos;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Infrastructure.Database;
+using Explorer.Tours.Tests;
+using Explorer.Tours.API.Public.Tourist;
 
-public class TouristPreferencesTests : IClassFixture<StakeholdersTestFactory>
+public class TouristPreferencesTests : IClassFixture<ToursTestFactory>
 {
-    private readonly StakeholdersTestFactory _factory;
+    private readonly ToursTestFactory _factory;
 
-    public TouristPreferencesTests(StakeholdersTestFactory factory)
+    public TouristPreferencesTests(ToursTestFactory factory)
     {
         _factory = factory;
     }
@@ -40,7 +41,7 @@ public class TouristPreferencesTests : IClassFixture<StakeholdersTestFactory>
     {
         using var scope = _factory.Services.CreateScope();
         var svc = scope.ServiceProvider.GetRequiredService<ITouristPreferencesService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
+        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
         var updateDto = new UpdateTouristPreferencesDto { Difficulty = "Professional" };
         var updated = svc.Update(-21, updateDto);

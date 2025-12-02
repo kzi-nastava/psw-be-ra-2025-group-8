@@ -6,14 +6,17 @@ using System.Threading.Tasks;
 using System.Linq;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Infrastructure.Database;
 
-namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
+namespace Explorer.Tours.Infrastructure.Database.Repositories
 {
     public class TagsRepository : ITagsRepository
     {
-        private readonly StakeholdersContext _db;
+        private readonly ToursContext _db;
 
-        public TagsRepository(StakeholdersContext db)
+        public TagsRepository(ToursContext db)
         {
             _db = db;
         }
