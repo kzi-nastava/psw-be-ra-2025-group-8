@@ -1,6 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Author;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,10 +13,12 @@ namespace Explorer.API.Controllers.Administrator.Administration;
 public class ReportProblemController : ControllerBase
 {
     private readonly IReportProblemService _reportProblemService;
+    private readonly ITourService _tourService;
 
-    public ReportProblemController(IReportProblemService reportProblemService)
+    public ReportProblemController(IReportProblemService reportProblemService, ITourService tourService)
     {
         _reportProblemService = reportProblemService;
+        _tourService = tourService;
     }
 
     [Authorize]
@@ -68,19 +71,105 @@ public class ReportProblemController : ControllerBase
         return Ok(result);
     }
 
+    // Dobijanje detalja problema sa porukama (samo turista koji je prijavio, autor ili admin)
+    [Authorize]
+    [HttpGet("{id:long}")]
+    public ActionResult<ReportProblemDto> GetById(long id)
+    {
+        var problem = _reportProblemService.GetById((int)id);
+        if (!CanAccessProblem(problem))
+        {
+            return Forbid();
+        }
+        return Ok(problem);
+    }
+
+    // Dodavanje poruke (omogućeno turistu, autoru i administratoru)
+    [Authorize]
+    [HttpPost("{id:long}/messages")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(IssueMessageDto), 200)]
+    public ActionResult<IssueMessageDto> AddMessage(long id, [FromBody] AddMessageRequest request)
+    {
+        var problem = _reportProblemService.GetById((int)id);
+        if (!CanAccessProblem(problem))
+        {
+            return Forbid();
+        }
+        
+        var authorId = GetUserIdFromToken();
+        var result = _reportProblemService.AddMessage((int)id, authorId, request.Content);
+        return Ok(result);
+    }
+
+    // Dobijanje svih poruka za problem (samo turista koji je prijavio, autor ili admin)
+    [Authorize]
+    [HttpGet("{id:long}/messages")]
+    public ActionResult<List<IssueMessageDto>> GetMessages(long id)
+    {
+        var problem = _reportProblemService.GetById((int)id);
+        if (!CanAccessProblem(problem))
+        {
+            return Forbid();
+        }
+        return Ok(_reportProblemService.GetMessages((int)id));
+    }
+
+    private int GetUserIdFromToken()
+    {
+        if (!TryGetPersonId(out var personId))
+        {
+            throw new UnauthorizedAccessException("Unable to determine person ID from token");
+        }
+        return (int)personId;
+    }
+
     private int GetAuthorIdFromToken()
     {
-        var idClaim = User.FindFirst("id")
-                  ?? User.FindFirst(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirst("personId")
-                  ?? User.FindFirst("sub");
-
-        if (idClaim != null && int.TryParse(idClaim.Value, out int authorId))
+        if (!TryGetPersonId(out var personId))
         {
-            return authorId;
+            throw new UnauthorizedAccessException("Unable to determine person ID from token");
         }
+        return (int)personId;
+    }
 
-        throw new UnauthorizedAccessException("Unable to determine user ID from token");
+    // Provera da li korisnik može da pristupi problemu
+    private bool CanAccessProblem(ReportProblemDto problem)
+    {
+        // PersonId korisnika koji je ulogovan
+        if (!TryGetPersonId(out var personId))
+        {
+            return false;
+        }
+        
+        // Administrator može da pristupi svemu
+        if (User.IsInRole("administrator"))
+        {
+            return true;
+        }
+        
+        // Turista koji je prijavio problem
+        if (problem.TouristId == personId)
+        {
+            return true;
+        }
+        
+        // Autor ture
+        var tour = _tourService.GetByAuthor((int)personId).FirstOrDefault(t => t.Id == problem.TourId);
+        if (tour != null)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+
+    private bool TryGetPersonId(out long personId)
+    {
+        personId = 0;
+        var claim = User.Claims.FirstOrDefault(c => c.Type == "personId");
+        if (claim == null) return false;
+        return long.TryParse(claim.Value, out personId);
     }
 
     public class AuthorResponseRequest
@@ -93,4 +182,10 @@ public class ReportProblemController : ControllerBase
         public bool IsResolved { get; set; }
         public string? Comment { get; set; }
     }
+
+    public class AddMessageRequest
+    {
+        public string Content { get; set; }
+    }
 }
+

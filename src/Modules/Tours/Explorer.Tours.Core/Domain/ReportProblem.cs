@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,9 +26,12 @@ public class ReportProblem : Entity
     public string? TouristResolutionComment { get; set; }
     public DateTime? TouristResolutionTime { get; set; }
 
+    // Poruke u okviru prijave problema
+    public List<IssueMessage> Messages { get; set; } = new List<IssueMessage>();
+
     public ReportProblem(int tourId, int touristId, ReportCategory category, ReportPriority priority, string description)
     {
-        if (tourId <= 0) throw new ArgumentException("Invalid TourId.");
+        if (tourId == 0) throw new ArgumentException("Invalid TourId.");
         if (touristId <= 0) throw new ArgumentException("Invalid TouristId.");
         if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Invalid Description.");
 
@@ -46,7 +49,7 @@ public class ReportProblem : Entity
     // Metoda kojom autor odgovara na prijavu
     public void RespondByAuthor(int authorId, string response)
     {
-        if (authorId <= 0) throw new ArgumentException("Invalid AuthorId.");
+        if (authorId == 0) throw new ArgumentException("Invalid AuthorId.");
         if (string.IsNullOrWhiteSpace(response)) throw new ArgumentException("Invalid response.");
 
         AuthorId = authorId;
@@ -54,12 +57,19 @@ public class ReportProblem : Entity
         AuthorResponseTime = DateTime.UtcNow;
     }
 
-    // Metoda kojom turista označava rešenost/nerešenost
+    // Metoda kojom turista ozna?ava re�enost/nere�enost
     public void MarkResolved(bool resolved, string? comment)
     {
         IsResolved = resolved;
         TouristResolutionComment = comment;
         TouristResolutionTime = DateTime.UtcNow;
+    }
+
+    // Metoda za dodavanje poruke
+    public void AddMessage(int authorId, string content)
+    {
+        var message = new IssueMessage(Id, authorId, content);
+        Messages.Add(message);
     }
 }
 

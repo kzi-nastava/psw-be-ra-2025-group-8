@@ -25,5 +25,8 @@ namespace Explorer.Tours.API.Dtos
         public bool? IsResolved { get; set; }
         public string? TouristResolutionComment { get; set; }
         public DateTime? TouristResolutionTime { get; set; }
+
+        // Messages
+        public List<IssueMessageDto>? Messages { get; set; }
     }
 }

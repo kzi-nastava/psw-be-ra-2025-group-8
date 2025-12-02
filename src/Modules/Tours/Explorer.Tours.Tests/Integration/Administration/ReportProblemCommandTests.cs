@@ -23,7 +23,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
         var newEntity = new ReportProblemDto
         {
-            TourId = 1,
+            TourId = -1, // Use existing negative TourId from test data
             TouristId = 1,
             Category = 0, // Technical
             Priority = 2, // High
@@ -80,7 +80,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         var controller = CreateController(scope);
         var invalidEntity = new ReportProblemDto
         {
-            TourId = 1,
+            TourId = -1, // Valid TourId
             TouristId = 0, // Invalid
             Category = 0,
             Priority = 1,
@@ -99,7 +99,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         var controller = CreateController(scope);
         var invalidEntity = new ReportProblemDto
         {
-            TourId = 1,
+            TourId = -1, // Valid TourId
             TouristId = 1,
             Category = 0,
             Priority = 1,
@@ -120,7 +120,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         var updatedEntity = new ReportProblemDto
         {
             Id = -1,
-            TourId = 1,
+            TourId = -1, // Use negative TourId
             TouristId = 1,
             Category = 1, // Safety
             Priority = 3, // Critical
@@ -156,7 +156,7 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         var updatedEntity = new ReportProblemDto
         {
             Id = -1000,
-            TourId = 1,
+            TourId = -1, // Use negative TourId
             TouristId = 1,
             Category = 0,
             Priority = 1,
@@ -200,7 +200,9 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
 
     private static ReportProblemController CreateController(IServiceScope scope)
     {
-        return new ReportProblemController(scope.ServiceProvider.GetRequiredService<IReportProblemService>())
+        return new ReportProblemController(
+            scope.ServiceProvider.GetRequiredService<IReportProblemService>(),
+            scope.ServiceProvider.GetRequiredService<Explorer.Tours.API.Public.Author.ITourService>())
         {
             ControllerContext = BuildContext("-1")
         };

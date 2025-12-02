@@ -3,6 +3,7 @@ using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,19 @@ namespace Explorer.Tours.Core.UseCases.Administration
     public class ReportProblemService : IReportProblemService
     {
         private readonly ICrudRepository<ReportProblem> _crudRepository;
+        private readonly IReportProblemRepository _reportProblemRepository;
+        private readonly ICrudRepository<Tour> _tourRepository;
         private readonly IMapper _mapper;
 
-        public ReportProblemService(ICrudRepository<ReportProblem> repository, IMapper mapper)
+        public ReportProblemService(
+            ICrudRepository<ReportProblem> repository, 
+            IReportProblemRepository reportProblemRepository,
+            ICrudRepository<Tour> tourRepository, 
+            IMapper mapper)
         {
             _crudRepository = repository;
+            _reportProblemRepository = reportProblemRepository;
+            _tourRepository = tourRepository;
             _mapper = mapper;
         }
 
@@ -73,6 +82,31 @@ namespace Explorer.Tours.Core.UseCases.Administration
             report.MarkResolved(resolved, comment);
             var updated = _crudRepository.Update(report);
             return _mapper.Map<ReportProblemDto>(updated);
+        }
+
+        // Dodavanje poruke u prijavu problema
+        public IssueMessageDto AddMessage(int reportId, int authorId, string content)
+        {
+            var report = _reportProblemRepository.GetWithMessages(reportId);
+            report.AddMessage(authorId, content);
+            var updated = _crudRepository.Update(report);
+
+            var addedMessage = updated.Messages.LastOrDefault();
+            return _mapper.Map<IssueMessageDto>(addedMessage);
+        }
+
+        // Dobijanje svih poruka za prijavu
+        public List<IssueMessageDto> GetMessages(int reportId)
+        {
+            var report = _reportProblemRepository.GetWithMessages(reportId);
+            return _mapper.Map<List<IssueMessageDto>>(report.Messages);
+        }
+
+        // Dobijanje pojedinačne prijave po Id-u
+        public ReportProblemDto GetById(int reportId)
+        {
+            var report = _reportProblemRepository.GetWithMessages(reportId);
+            return _mapper.Map<ReportProblemDto>(report);
         }
     }
 }
