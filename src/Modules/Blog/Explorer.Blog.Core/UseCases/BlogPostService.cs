@@ -89,17 +89,20 @@ public class BlogPostService : IBlogPostService
 
     public List<BlogPostDto> GetVisibleBlogs(long? userId)
     {
-        var publishedAndArchived = _blogPostRepository.GetPublishedAndArchived();
-        
         if (userId.HasValue)
         {
             var authorDrafts = _blogPostRepository.GetForAuthor(userId.Value)
-                .Where(b => b.Status == BlogStatus.Draft);
-            var allVisible = publishedAndArchived.Concat(authorDrafts);
-            return _mapper.Map<List<BlogPostDto>>(allVisible.ToList());
+                .Where(b => b.Status == BlogStatus.Draft)
+                .ToList();
+            
+            var publishedAndArchived = _blogPostRepository.GetPublishedAndArchived().ToList();
+            
+            var allVisible = publishedAndArchived.Concat(authorDrafts).ToList();
+            return _mapper.Map<List<BlogPostDto>>(allVisible);
         }
 
-        return _mapper.Map<List<BlogPostDto>>(publishedAndArchived.ToList());
+        var publishedAndArchivedAnonymous = _blogPostRepository.GetPublishedAndArchived().ToList();
+        return _mapper.Map<List<BlogPostDto>>(publishedAndArchivedAnonymous);
     }
 
     public void Delete(long id)

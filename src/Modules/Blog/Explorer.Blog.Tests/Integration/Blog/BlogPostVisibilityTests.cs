@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Security.Claims;
-using Explorer.API.Controllers.Tourist;
+using Explorer.API.Controllers;
 using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Infrastructure.Database;
@@ -39,6 +39,14 @@ public class BlogPostVisibilityTests : BaseBlogIntegrationTest
         var result = ((ObjectResult)controller.GetVisibleBlogs().Result).Value as List<BlogPostDto>;
 
         result.ShouldNotBeNull();
+        
+        // Debug: print what we got
+        Console.WriteLine($"Total blogs returned: {result.Count}");
+        foreach (var blog in result)
+        {
+            Console.WriteLine($"Blog ID: {blog.Id}, AuthorId: {blog.AuthorId}, Status: {blog.Status}, Title: {blog.Title}");
+        }
+        
         result.ShouldContain(b => b.Status == 0 && b.AuthorId == -21); // Own drafts
         result.ShouldContain(b => b.Status == 1); // Published
         result.ShouldContain(b => b.Status == 2); // Archived
@@ -71,7 +79,7 @@ public class BlogPostVisibilityTests : BaseBlogIntegrationTest
                     new Claim("id", userId.ToString()),
                     new Claim("personId", personId.ToString()),
                     new Claim(ClaimTypes.Role, "tourist")
-                }))
+                }, "Test"))
             }
         };
 

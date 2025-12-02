@@ -4,7 +4,9 @@ VALUES
     (-2, -21, 'Test blog 2', 'Test opis 2', '2024-01-02 00:00:00', NULL, 1),
     (-3, -21, 'Test blog 3', 'Test opis 3', '2024-01-03 00:00:00', '2024-01-04 00:00:00', 2),
     (-4, -21, 'Test blog 4', 'Test opis 4', '2024-01-04 00:00:00', NULL, 1),
-    (-5, -22, 'Test blog 5', 'Test opis 5', '2024-01-05 00:00:00', NULL, 0);
+    (-5, -22, 'Test blog 5', 'Test opis 5', '2024-01-05 00:00:00', NULL, 0),
+    (-6, -21, 'Test blog 6', 'Test opis 6', '2024-01-06 00:00:00', NULL, 0),
+    (-7, -21, 'Test blog 7 - Reserved for visibility', 'Test opis 7', '2024-01-07 00:00:00', NULL, 0);
 
 INSERT INTO blog."BlogImages" ("Id", "BlogPostId", "Url", "Order")
 VALUES

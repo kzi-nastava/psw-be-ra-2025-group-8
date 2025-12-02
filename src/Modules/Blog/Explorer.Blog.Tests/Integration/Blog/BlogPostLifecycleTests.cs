@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Security.Claims;
-using Explorer.API.Controllers.Author;
+using Explorer.API.Controllers;
 using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Infrastructure.Database;
