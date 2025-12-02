@@ -36,10 +36,35 @@ public class BlogPostController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
-    public ActionResult<BlogPostDto> Update(long id, [FromBody] UpdateBlogPostDto dto)
+    public ActionResult<BlogPostDto> UpdateDraft(long id, [FromBody] UpdateBlogPostDto dto)
     {
-        var updated = _blogPostService.Update(id, dto);
+        var authorId = User.PersonId();
+        var updated = _blogPostService.UpdateDraft(id, dto, authorId);
         return Ok(updated);
+    }
+
+    [HttpPut("{id:long}/description")]
+    public ActionResult<BlogPostDto> UpdatePublished(long id, [FromBody] UpdatePublishedBlogPostDto dto)
+    {
+        var authorId = User.PersonId();
+        var updated = _blogPostService.UpdatePublished(id, dto, authorId);
+        return Ok(updated);
+    }
+
+    [HttpPut("{id:long}/publish")]
+    public ActionResult<BlogPostDto> Publish(long id)
+    {
+        var authorId = User.PersonId();
+        var published = _blogPostService.Publish(id, authorId);
+        return Ok(published);
+    }
+
+    [HttpPut("{id:long}/archive")]
+    public ActionResult<BlogPostDto> Archive(long id)
+    {
+        var authorId = User.PersonId();
+        var archived = _blogPostService.Archive(id, authorId);
+        return Ok(archived);
     }
 
     [HttpDelete("{id:long}")]

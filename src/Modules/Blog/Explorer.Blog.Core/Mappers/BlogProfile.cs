@@ -10,7 +10,8 @@ public class BlogProfile : Profile
     {
         CreateMap<BlogImage, BlogImageDto>();
 
-        CreateMap<BlogPost, BlogPostDto>();
+        CreateMap<BlogPost, BlogPostDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => (int)src.Status));
 
         CreateMap<CreateBlogPostDto, BlogPost>();
         CreateMap<UpdateBlogPostDto, BlogPost>();
