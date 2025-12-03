@@ -1,4 +1,5 @@
 ﻿using Explorer.BuildingBlocks.Core.Domain;
+using Explorer.Blog.Core.Domain.Events;
 
 namespace Explorer.Blog.Core.Domain
 {
@@ -11,6 +12,10 @@ namespace Explorer.Blog.Core.Domain
         public DateTime? LastModifiedAt { get; private set; }
         public BlogStatus Status { get; private set; }
         public List<BlogImage> Images { get; private set; }
+        public List<Comment> Comments { get; private set; }
+
+        private readonly List<object> _domainEvents = new List<object>();
+        public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
 
         protected BlogPost() { }
 
@@ -22,7 +27,18 @@ namespace Explorer.Blog.Core.Domain
             CreatedAt = DateTime.UtcNow;
             Status = BlogStatus.Draft;
             Images = images?.ToList() ?? new List<BlogImage>();
+            Comments = new List<Comment>();
             Validate();
+        }
+
+        public void ClearDomainEvents()
+        {
+            _domainEvents.Clear();
+        }
+
+        private void AddDomainEvent(object domainEvent)
+        {
+            _domainEvents.Add(domainEvent);
         }
 
         public void UpdateDraft(string title, string description, IEnumerable<BlogImage>? images)
@@ -63,6 +79,37 @@ namespace Explorer.Blog.Core.Domain
 
             Status = BlogStatus.Archived;
             LastModifiedAt = DateTime.UtcNow;
+        }
+
+        public Comment AddComment(long personId, string text)
+        {
+            // can only be created in state published
+            if (Status != BlogStatus.Published)
+            {
+                throw new InvalidOperationException("Comments can only be added to a Published blog.");
+            }
+
+            var newComment = new Comment(
+                personId,
+                DateTime.UtcNow,
+                text
+            );
+
+            Comments.Add(newComment);
+
+            AddDomainEvent(new CommentCreatedEvent(this.Id, newComment.Id));
+
+            return newComment;
+        }
+
+        public Comment UpdateComment(long commentId, long personId, string newText)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteComment(long commentId, long personId)
+        {
+            throw new NotImplementedException();
         }
 
         private void Validate()

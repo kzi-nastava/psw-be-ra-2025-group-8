@@ -9,6 +9,7 @@ public class BlogContext : DbContext
 
     public DbSet<BlogPost> BlogPosts { get; set; }
     public DbSet<BlogImage> BlogImages { get; set; }
+    public DbSet<Comment> Comments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,5 +18,15 @@ public class BlogContext : DbContext
         modelBuilder.Entity<BlogPost>()
             .Property(b => b.Status)
             .HasConversion<int>();
+
+        // cascade deletion of comments
+        modelBuilder.Entity<BlogPost>()
+            .HasMany(b => b.Comments)
+            .WithOne()
+            .HasForeignKey("BlogPostId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // mapping comment entity
+        modelBuilder.Entity<Comment>().ToTable("Comments");
     }
 }
