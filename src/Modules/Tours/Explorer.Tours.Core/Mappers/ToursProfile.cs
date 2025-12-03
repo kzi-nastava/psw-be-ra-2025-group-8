@@ -82,16 +82,6 @@ public class ToursProfile : Profile
 
         //mapper za preference
         CreateMap<PreferenceTags, PreferenceTagsDto>().ReverseMap();
-<<<<<<< HEAD
-        //mapper za shopping cart i order item
-        CreateMap<ShoppingCart, ShoppingCartDto>()
-               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
-               .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice))
-               .ReverseMap()
-               .ConstructUsing(dto => new ShoppingCart(dto.UserId));
-        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.Price));
-=======
 
         // TourEquipment -> TourEquipmentDto
         CreateMap<TourEquipment, TourEquipmentDto>()
@@ -105,7 +95,14 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Tour, opt => opt.Ignore())
             .ForMember(dest => dest.EquipmentId, opt => opt.Ignore())
             .ForMember(dest => dest.Equipment, opt => opt.Ignore());
->>>>>>> origin/development
+        //mapper za shopping cart i order item
+        CreateMap<ShoppingCart, ShoppingCartDto>()
+               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
+               .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice))
+               .ReverseMap()
+               .ConstructUsing(dto => new ShoppingCart(dto.UserId));
+        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
+                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.Price));
     }
 
     private static TourStatus MapStatus(string status)

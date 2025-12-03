@@ -29,14 +29,14 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
 
-            var result = (ObjectResult)controller.GetCart(-11).Result;
+            var result = (ObjectResult)controller.GetCart(-41).Result;
 
             result.ShouldNotBeNull();
             result.StatusCode.ShouldBe(200);
 
             var cartDto = result.Value as ShoppingCartDto;
             cartDto.ShouldNotBeNull();
-            cartDto.UserId.ShouldBe(-11);
+            cartDto.UserId.ShouldBe(-41);
             cartDto.Items.ShouldNotBeNull();
         }
 

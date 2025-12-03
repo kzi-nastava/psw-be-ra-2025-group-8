@@ -14,15 +14,12 @@ namespace Explorer.Tours.API.Public.Author
         TourDto AddKeyPoint(long tourId, KeyPointDto keyPoint, int authorId);
         TourDto Publish(long tourId, int authorId);
         TourDto Archive(long tourId, int authorId);
-<<<<<<< HEAD
-        //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
-        TourDto GetById(long id);
-=======
         TourDto AddEquipment(long tourId, long equipmentId, int authorId);
         TourDto RemoveEquipment(long tourId, long equipmentId, int authorId);
         TourDto AddTag(long tourId, string tag, int authorId);
         TourDto RemoveTag(long tourId, string tag, int authorId);
         TourDto UpdateTags(long tourId, List<string> tags, int authorId);
->>>>>>> origin/development
+        //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
+        TourDto GetById(long id);
     }
 }

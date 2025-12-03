@@ -3,6 +3,7 @@ using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.ShoppingCart;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Explorer.BuildingBlocks.Core.Exceptions;
 
 namespace Explorer.API.Controllers.Tourist
 {
@@ -23,8 +24,15 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet()]
         public ActionResult<ShoppingCartDto> GetCart(long userId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            return Ok(cart);
+            try
+            {
+                var cart = _shoppingCartService.GetCart(userId);
+                return Ok(cart);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpPost("new")]
         public ActionResult NewCart(long userId)
