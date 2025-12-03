@@ -14,17 +14,15 @@ public class ToursContext : DbContext
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Position> Positions { get; set; }
-<<<<<<< HEAD
-    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
-=======
 
     //Preference
     public DbSet<TouristPreferences> TouristPreferences { get; set; }
     public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
     public DbSet<PreferenceTags> PreferenceTags { get; set; }
     public DbSet<Tags> Tags { get; set; }
->>>>>>> origin/development
+
+    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -118,25 +116,6 @@ public class ToursContext : DbContext
                    .HasForeignKey(pe => pe.EquipmentId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
-<<<<<<< HEAD
-        modelBuilder.Entity<ShoppingCart>(builder =>
-        {
-            builder.HasKey(c => c.Id);
-            builder.Property(c => c.UserId).IsRequired();
-            builder.HasMany(c => c.Items)
-                   .WithOne()
-                   .HasForeignKey("ShoppingCartId")
-                   .OnDelete(DeleteBehavior.Cascade);
-            builder.Ignore(c => c.TotalPrice);
-        });
-
-        modelBuilder.Entity<OrderItem>(builder =>
-        {
-            builder.HasKey(oi => oi.Id);
-            builder.Property(oi => oi.TourId).IsRequired();
-            builder.Property(oi => oi.Price).HasColumnType("decimal(18,2)").IsRequired();
-        });
-=======
 
         //modelBuilder.Entity<Person>()
         //    .HasOne<User>()
@@ -207,7 +186,24 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
->>>>>>> origin/development
+        //za shopping cart i order item
+        modelBuilder.Entity<ShoppingCart>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.UserId).IsRequired();
+            builder.HasMany(c => c.Items)
+                   .WithOne()
+                   .HasForeignKey("ShoppingCartId")
+                   .OnDelete(DeleteBehavior.Cascade);
+            builder.Ignore(c => c.TotalPrice);
+        });
+
+        modelBuilder.Entity<OrderItem>(builder =>
+        {
+            builder.HasKey(oi => oi.Id);
+            builder.Property(oi => oi.TourId).IsRequired();
+            builder.Property(oi => oi.Price).HasColumnType("decimal(18,2)").IsRequired();
+        });
     }
 
 }

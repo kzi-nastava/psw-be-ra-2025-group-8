@@ -41,16 +41,12 @@ public static class ToursStartup
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
-<<<<<<< HEAD
-        services.AddScoped<IShoppingCartService, ShoppingCartService>();
-=======
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
         //
 
->>>>>>> origin/development
     }
 
     private static void SetupInfrastructure(IServiceCollection services)

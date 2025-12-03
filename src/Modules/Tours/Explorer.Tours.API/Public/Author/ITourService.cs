@@ -10,14 +10,11 @@ namespace Explorer.Tours.API.Public.Author
         TourDto Update(TourDto tour);
         List<TourDto> GetByAuthor(int authorId);
         void Delete(long id, int authorId);
-<<<<<<< HEAD
-        //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
-        TourDto Get(long id);
-=======
 
         TourDto AddKeyPoint(long tourId, KeyPointDto keyPoint, int authorId);
         TourDto Publish(long tourId, int authorId);
         TourDto Archive(long tourId, int authorId);
->>>>>>> origin/development
+        //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
+        TourDto GetById(long id);
     }
 }

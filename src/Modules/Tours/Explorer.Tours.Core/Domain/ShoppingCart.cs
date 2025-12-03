@@ -3,7 +3,7 @@ using Explorer.Stakeholders.Core.Domain;
 
 namespace Explorer.Tours.Core.Domain
 {
-    public class ShoppingCart : Entity
+    public class ShoppingCart : AggregateRoot
     {
         private readonly List<OrderItem> _items = new();
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();

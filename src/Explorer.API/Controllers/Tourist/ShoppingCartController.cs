@@ -43,7 +43,7 @@ namespace Explorer.API.Controllers.Tourist
         public IActionResult AddItem([FromQuery] long userId,[FromQuery] long tourId)
         {
             var cart = _shoppingCartService.GetCart(userId);
-            var tour = _tourService.Get(tourId);
+            var tour = _tourService.GetById(tourId);
 
             if (tour == null) return NotFound("Tour not found.");
             var dto = new OrderItemDto

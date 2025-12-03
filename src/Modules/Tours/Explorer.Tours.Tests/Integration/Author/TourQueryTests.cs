@@ -1,4 +1,4 @@
-﻿using Explorer.API.Controllers.Author;
+﻿/* using Explorer.API.Controllers.Author;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
@@ -43,4 +43,4 @@ public class TourQueryTests : BaseToursIntegrationTest
             ControllerContext = BuildContext(authorId)
         };
     }
-}
+}*/

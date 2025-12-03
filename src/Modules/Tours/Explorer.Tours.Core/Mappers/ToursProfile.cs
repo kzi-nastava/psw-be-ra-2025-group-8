@@ -38,15 +38,6 @@ public class ToursProfile : Profile
         // Tour -> TourDto (answer to client)
         CreateMap<Tour, TourDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
-<<<<<<< HEAD
-        CreateMap<ShoppingCart, ShoppingCartDto>()
-               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
-               .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice))
-               .ReverseMap()
-               .ConstructUsing(dto => new ShoppingCart(dto.UserId));
-        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.Price));
-=======
 
 
         //CreateMap<TouristPreferencesDto, TouristPreferences>().ReverseMap();
@@ -82,7 +73,14 @@ public class ToursProfile : Profile
 
         //mapper za preference
         CreateMap<PreferenceTags, PreferenceTagsDto>().ReverseMap();
->>>>>>> origin/development
+        //mapper za shopping cart i order item
+        CreateMap<ShoppingCart, ShoppingCartDto>()
+               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
+               .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice))
+               .ReverseMap()
+               .ConstructUsing(dto => new ShoppingCart(dto.UserId));
+        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
+                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.Price));
     }
 
     private static TourStatus MapStatus(string status)
