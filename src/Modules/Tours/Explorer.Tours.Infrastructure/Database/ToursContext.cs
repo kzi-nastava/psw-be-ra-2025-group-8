@@ -13,6 +13,7 @@ public class ToursContext : DbContext
     public DbSet<IssueMessage> IssueMessages { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
+    public DbSet<TourEquipment> TourEquipment { get; set; }
     public DbSet<Position> Positions { get; set; }
 
     //Preference
@@ -20,6 +21,8 @@ public class ToursContext : DbContext
     public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
     public DbSet<PreferenceTags> PreferenceTags { get; set; }
     public DbSet<Tags> Tags { get; set; }
+    public DbSet<TourTag> TourTags { get; set; }
+
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -52,8 +55,7 @@ public class ToursContext : DbContext
             builder.Property(t => t.AuthorId)
                 .IsRequired();
 
-            builder.Property(t => t.Tags)
-                .HasColumnType("text[]");
+            
 
             // route length
             builder.Property(t => t.LengthInKilometers)
@@ -66,6 +68,21 @@ public class ToursContext : DbContext
                 .HasForeignKey("TourId")           // shadow FK column TourId
                 .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
         });
+
+        modelBuilder.Entity<TourTag>()
+            .HasKey(tt => new { tt.TourId, tt.TagsId });
+
+        modelBuilder.Entity<TourTag>()
+            .HasOne(tt => tt.Tour)
+            .WithMany(t => t.TourTags)
+            .HasForeignKey(tt => tt.TourId)
+            .OnDelete(DeleteBehavior.Cascade);  // tags are not deleted when tour is deleted
+
+        modelBuilder.Entity<TourTag>()
+            .HasOne(tt => tt.Tags)
+            .WithMany(t => t.TourTags)
+            .HasForeignKey(tt => tt.TagsId)
+            .OnDelete(DeleteBehavior.Cascade);  // if tag is deleted (by admin), remove it from all tours
 
         // KEYPOINT CONFIGURATION
         modelBuilder.Entity<KeyPoint>(builder =>
@@ -114,24 +131,6 @@ public class ToursContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade);
         });
 
-        //modelBuilder.Entity<Person>()
-        //    .HasOne<User>()
-        //    .WithOne()
-        //    .HasForeignKey<Person>(s => s.UserId);
-
-        // TouristPreferences <-> Person (1:1)
-        //modelBuilder.Entity<TouristPreferences>()
-        //    .HasOne<Person>()                          // nemaš navigaciju Person.PersonPreferences, pa ide WithOne()
-        //    .WithOne()
-        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId);
-
-        //modelBuilder.Entity<TouristPreferences>()
-        //    .HasOne(tp => tp.Person)
-        //    .WithOne()
-        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId)
-        //    .OnDelete(DeleteBehavior.Cascade);
-
-        // TouristPreferences <-> TransportTypePreferences (1:N)
         modelBuilder.Entity<TouristPreferences>()
             .HasMany(tp => tp.TransportTypePreferences)
             .WithOne(t => t.Preference)
@@ -167,6 +166,21 @@ public class ToursContext : DbContext
         modelBuilder.Entity<TransportTypePreferences>()
             .Property(t => t.Transport)
             .HasConversion<string>();
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasKey(te => new { te.TourId, te.EquipmentId });
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasOne(te => te.Tour)
+            .WithMany(t => t.RequiredEquipment)
+            .HasForeignKey(te => te.TourId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasOne(te => te.Equipment)
+            .WithMany()
+            .HasForeignKey(te => te.EquipmentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ReportProblem <-> IssueMessage (1:N)
         modelBuilder.Entity<ReportProblem>()

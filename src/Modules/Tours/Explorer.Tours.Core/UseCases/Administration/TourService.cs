@@ -12,11 +12,16 @@ public class TourService : ITourService
     private readonly ICrudRepository<Tour> _crudRepository;
     private readonly ITourRepository _tourRepository;
     private readonly IMapper _mapper;
+    private readonly ITagsRepository _tagsRepository;
 
-    public TourService(ICrudRepository<Tour> crudRepository, ITourRepository tourRepository, IMapper mapper)
+    public TourService(ICrudRepository<Tour> crudRepository,
+                   ITourRepository tourRepository,
+                   ITagsRepository tagsRepository,
+                   IMapper mapper)
     {
         _crudRepository = crudRepository;
         _tourRepository = tourRepository;
+        _tagsRepository = tagsRepository;
         _mapper = mapper;
     }
 
@@ -33,7 +38,6 @@ public class TourService : ITourService
             tourDto.Name,
             tourDto.Description,
             tourDto.Difficulty,
-            tourDto.Tags ?? new List<string>(),
             tourDto.AuthorId
         );
 
@@ -59,7 +63,6 @@ public class TourService : ITourService
         existing.Name = tourDto.Name;
         existing.Description = tourDto.Description;
         existing.Difficulty = tourDto.Difficulty;
-        existing.Tags = tourDto.Tags ?? new List<string>();
         existing.Status = Enum.Parse<TourStatus>(tourDto.Status);
         existing.Price = tourDto.Price;
 
@@ -128,4 +131,143 @@ public class TourService : ITourService
         var updated = _tourRepository.Update(tour);
         return _mapper.Map<TourDto>(updated);
     }
+
+    public TourDto AddEquipment(long tourId, long equipmentId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        // domen logika unutar agregata
+        tour.AddRequiredEquipment(equipmentId);
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto RemoveEquipment(long tourId, long equipmentId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        tour.RemoveRequiredEquipment(equipmentId);
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    // TOUR TAGS MANAGEMENT
+    public TourDto AddTag(long tourId, string tag, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId)
+            ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        if (string.IsNullOrWhiteSpace(tag))
+            throw new ArgumentException("Tag name cannot be empty.");
+
+        // normalize
+        string normalized = tag.Trim().ToLowerInvariant();
+
+        // find or create tag
+        var existingTag = _tagsRepository.GetByName(normalized);
+        if (existingTag == null)
+        {
+            existingTag = _tagsRepository.Create(new Tags(tag.Trim()));
+        }
+
+        // add to tour domain logic
+        try
+        {
+            tour.AddTag(existingTag.Id);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException(e.Message);
+        }
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto RemoveTag(long tourId, string tag, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId)
+            ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        if (string.IsNullOrWhiteSpace(tag))
+            throw new ArgumentException("Tag name cannot be empty.");
+
+        string normalized = tag.Trim().ToLowerInvariant();
+        var existingTag = _tagsRepository.GetByName(normalized);
+
+        if (existingTag == null)
+            return _mapper.Map<TourDto>(tour);  // tag ne postoji → nema šta da se briše
+
+        tour.RemoveTag(existingTag.Id);
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto UpdateTags(long tourId, List<string> tags, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId)
+            ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only modify your own tours.");
+
+        if (tags == null) tags = new List<string>();
+
+        // normalize input list
+        var normalizedInput = tags
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(t => t.Trim().ToLowerInvariant())
+            .Distinct()
+            .ToList();
+
+        // current tags on tour
+        var currentTagIds = tour.TourTags.Select(tt => tt.TagsId).ToList();
+
+        // fetch all needed tags from DB or create missing ones
+        var tagEntities = new Dictionary<string, Tags>();
+
+        foreach (var normalized in normalizedInput)
+        {
+            var tagEntity = _tagsRepository.GetByName(normalized);
+            if (tagEntity == null)
+                tagEntity = _tagsRepository.Create(new Tags(normalized));
+
+            tagEntities[normalized] = tagEntity;
+        }
+
+        // REMOVE tags that are no longer in the input list
+        foreach (var tt in tour.TourTags.ToList())
+        {
+            var relatedTag = tagEntities.Values.FirstOrDefault(x => x.Id == tt.TagsId);
+            if (relatedTag == null)
+            {
+                tour.RemoveTag(tt.TagsId);
+            }
+        }
+
+        // ADD missing tags
+        foreach (var tagEntity in tagEntities.Values)
+        {
+            tour.AddTag(tagEntity.Id);
+        }
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
 }
