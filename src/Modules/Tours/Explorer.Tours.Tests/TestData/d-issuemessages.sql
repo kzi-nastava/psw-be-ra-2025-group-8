@@ -1,0 +1,2 @@
+-- No initial data for IssueMessages table
+-- Messages will be created dynamically during tests

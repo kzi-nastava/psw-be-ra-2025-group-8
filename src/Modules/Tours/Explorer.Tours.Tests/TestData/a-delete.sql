@@ -13,6 +13,8 @@ DELETE FROM tours."TourEquipment";
 DELETE FROM tours."TourTags";
 
 DELETE FROM tours."Equipment";
+-- IssueMessages depends on ReportProblem
+DELETE FROM tours."IssueMessages";
 DELETE FROM tours."ReportProblem";
 DELETE FROM tours."Tours";
 DELETE FROM tours."PersonEquipment";

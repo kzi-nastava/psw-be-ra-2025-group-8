@@ -10,6 +10,7 @@ public class ToursContext : DbContext
     public DbSet<Monument> Monument { get; set; }
     public DbSet<Facility> Facilities { get; set; }
     public DbSet<ReportProblem> ReportProblem { get; set; }
+    public DbSet<IssueMessage> IssueMessages { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<TourEquipment> TourEquipment { get; set; }
@@ -181,6 +182,21 @@ public class ToursContext : DbContext
             .HasForeignKey(te => te.EquipmentId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // ReportProblem <-> IssueMessage (1:N)
+        modelBuilder.Entity<ReportProblem>()
+            .HasMany(rp => rp.Messages)
+            .WithOne()
+            .HasForeignKey(m => m.ReportProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<IssueMessage>()
+            .HasKey(m => m.Id);
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.Content).IsRequired();
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.AuthorId).IsRequired();
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.CreatedAt).IsRequired();
     }
 
 }
