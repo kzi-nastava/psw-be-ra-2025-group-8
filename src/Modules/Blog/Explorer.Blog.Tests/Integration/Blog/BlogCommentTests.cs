@@ -72,7 +72,7 @@ public class BlogCommentTests : BaseBlogIntegrationTest
     private const long SecurePublishedBlogId = -4;
 
     [Fact]
-    public void Creates_comment_successfully()//ako pada treba dropovati testnu bazu
+    public void Creates_comment_successfully()//if fail drop test database
     {
         using var scope = Factory.Services.CreateScope();
         var controller = CreateCommentController(scope, userId: -102, personId: TouristPersonId);
@@ -136,7 +136,7 @@ public class BlogCommentTests : BaseBlogIntegrationTest
             scope.ServiceProvider.GetRequiredService<IBlogCommentService>()
         );
 
-        // Simulacija ulogovanog korisnika
+        // simulating logged in user
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -145,7 +145,7 @@ public class BlogCommentTests : BaseBlogIntegrationTest
                 {
                     new Claim("id", userId.ToString()),
                     new Claim("personId", personId.ToString()),
-                    new Claim(ClaimTypes.Role, "tourist") // Nije bitna uloga, bitan je PersonId
+                    new Claim(ClaimTypes.Role, "tourist") // role is irrelevant(tourist or author)
                 }))
             }
         };

@@ -83,7 +83,7 @@ namespace Explorer.Blog.Core.Domain
 
         public Comment AddComment(long personId, string text)
         {
-            // moze se kreirati samo u stanju objavljen
+            // can only be created in state published
             if (Status != BlogStatus.Published)
             {
                 throw new InvalidOperationException("Comments can only be added to a Published blog.");

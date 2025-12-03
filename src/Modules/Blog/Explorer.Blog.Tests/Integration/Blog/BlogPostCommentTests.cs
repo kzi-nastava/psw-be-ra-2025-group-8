@@ -10,7 +10,7 @@ namespace Explorer.Blog.Tests.Unit.Domain
     {
         private BlogPost CreatePublishedBlog()
         {
-            // Simulacija kreiranja i objave bloga
+            // simulate creation and publishing of blog
             var blog = new BlogPost(
                 authorId: 1,
                 title: "Test Blog",

@@ -10,7 +10,7 @@ using System.Linq;
 namespace Explorer.API.Controllers;
 
 [ApiController]
-[Route("api/blogs")] // Globalna ruta za blogove
+[Route("api/blogs")] // global route for blogs
 public class BlogCommentController : ControllerBase
 {
     private readonly IBlogCommentService _blogCommentService;
@@ -34,7 +34,6 @@ public class BlogCommentController : ControllerBase
         }
         catch (KeyNotFoundException)
         {
-            // Blog sa tim ID-jem ne postoji
             return NotFound($"Blog post with ID {blogId} not found.");
         }
     }
@@ -43,7 +42,7 @@ public class BlogCommentController : ControllerBase
     /// Create a new comment on a specific blog post (requires authentication)
     /// </summary>
     [HttpPost("{blogId:long}/comments")]
-    [Authorize(Policy = "personPolicy")] // Ograničavamo samo na ulogovane osobe
+    [Authorize(Policy = "personPolicy")] // restriction for users(toursit or author)
     public ActionResult<CommentDto> Create([FromRoute] long blogId, [FromBody] CommentCreationDto commentData)
     {
         var personId = User.PersonId();
@@ -52,23 +51,22 @@ public class BlogCommentController : ControllerBase
         {
             var created = _blogCommentService.Create(blogId, personId, commentData);
 
-            // 201 Created je standardan odgovor za uspešno kreiranje resursa.
-            // Povezujemo ga sa GET endpointom (iako vraćamo ceo objekat)
+            // 201 Created
             return CreatedAtAction(nameof(GetCommentsForBlog), new { blogId = blogId }, created);
         }
         catch (KeyNotFoundException)
         {
-            // Blog nije pronađen
+            // Blog not found
             return NotFound($"Blog post with ID {blogId} not found.");
         }
         catch (UnauthorizedAccessException e)
         {
-            // Hvatanje domenske greške iz servisa (npr. "Comments can only be added to a Published blog.")
+            // Comments can only be added to a Published blog
             return StatusCode(403, e.Message); // 403 Forbidden
         }
         catch (ArgumentException e)
         {
-            // Hvatanje domenske greške (npr. prazan tekst komentara - validacija iz Comment entiteta)
+            // empty text field
             return BadRequest(e.Message); // 400 Bad Request
         }
     }

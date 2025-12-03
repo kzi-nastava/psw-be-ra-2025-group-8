@@ -3,7 +3,7 @@ using System;
 
 namespace Explorer.Blog.Core.Domain
 {
-    // Comment je entitet unutar BlogPost agregata
+    // Comment is an entity in BlogPost agregate
     public class Comment : Entity
     {
         public long PersonId { get; private set; }

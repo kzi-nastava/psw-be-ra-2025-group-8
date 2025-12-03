@@ -19,14 +19,14 @@ public class BlogContext : DbContext
             .Property(b => b.Status)
             .HasConversion<int>();
 
-        // osiguravamo kaskadno brisanje komentara
+        // cascade deletion of comments
         modelBuilder.Entity<BlogPost>()
             .HasMany(b => b.Comments)
             .WithOne()
             .HasForeignKey("BlogPostId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        // mapiranje comment entiteta
+        // mapping comment entity
         modelBuilder.Entity<Comment>().ToTable("Comments");
     }
 }

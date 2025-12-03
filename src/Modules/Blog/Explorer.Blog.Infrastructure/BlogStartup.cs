@@ -15,8 +15,7 @@ namespace Explorer.Blog.Infrastructure
     {
         public static IServiceCollection ConfigureBlogModule(this IServiceCollection services)
         {
-            // Registruje AutoMapper profil za Blog modul
-            // više nam ne treba BlogProfile tip, pa nema CS0246 greške
+            // register AutoMapper for Blog module
             services.AddAutoMapper(typeof(BlogProfile));
 
             SetupCore(services);
