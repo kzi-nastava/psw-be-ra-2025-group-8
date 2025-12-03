@@ -17,7 +17,6 @@ public class TourAggregateTests
             name: "Test tour",
             description: "Opis ture",
             difficulty: 2,
-            tags: new List<string> { "tag1" },
             authorId: -1);
     }
 
@@ -140,27 +139,14 @@ public class TourAggregateTests
     [Fact]
     public void Publish_succeeds_when_all_rules_satisfied()
     {
-        // Arrange
         var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
 
-        tour.AddKeyPoint(
-            name: "Start",
-            description: "Polazna tačka",
-            imageUrl: "",
-            secret: "",
-            location: new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
 
-        tour.AddKeyPoint(
-            name: "End",
-            description: "Krajnja tačka",
-            imageUrl: "",
-            secret: "",
-            location: new GeoCoordinate(45.1, 19.1));
-
-        // Act
         tour.Publish();
 
-        // Assert
         tour.Status.ShouldBe(TourStatus.Published);
         tour.LengthInKilometers.ShouldBeGreaterThan(0);
     }

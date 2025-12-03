@@ -13,5 +13,6 @@ namespace Explorer.Tours.API.Dtos
         public int AuthorId { get; set; }
         public List<KeyPointDto>? KeyPoints { get; set; }
         public double LengthInKilometers { get; set; }
+        public List<TourEquipmentDto>? RequiredEquipment { get; set; }
     }
 }

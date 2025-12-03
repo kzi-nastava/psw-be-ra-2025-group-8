@@ -18,7 +18,11 @@ public class TourRepository : ITourRepository
     private IQueryable<Tour> ToursWithIncludes()
     {
         return _context.Tours
-            .Include(t => t.KeyPoints);
+            .Include(t => t.KeyPoints)
+            .Include(t => t.RequiredEquipment)
+                .ThenInclude(te => te.Equipment)
+            .Include(t => t.TourTags)                       
+                .ThenInclude(tt => tt.Tags);               
     }
 
     public Tour Get(long id)
@@ -36,7 +40,7 @@ public class TourRepository : ITourRepository
 
     public Tour Update(Tour tour)
     {
-        _context.Tours.Update(tour);
+        _context.Tours.Attach(tour);
         _context.SaveChanges();
         return tour;
     }
@@ -59,6 +63,7 @@ public class TourRepository : ITourRepository
             .Where(t => t.AuthorId == authorId)
             .ToList();
     }
+<<<<<<< HEAD
     //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
     public Tour GetById(long id)
     {
@@ -66,3 +71,8 @@ public class TourRepository : ITourRepository
             .FirstOrDefault(t => t.Id == id);
     }
 }
+=======
+
+
+}
+>>>>>>> origin/development
