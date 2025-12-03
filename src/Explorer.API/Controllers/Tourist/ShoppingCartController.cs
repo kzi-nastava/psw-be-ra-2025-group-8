@@ -54,6 +54,7 @@ namespace Explorer.API.Controllers.Tourist
             _shoppingCartService.AddItem(userId, dto);
             return Ok("Item added to cart.");
         }
+        [HttpDelete("{userId:long}/remove/{tourId:long}")]
         public IActionResult RemoveItem([FromQuery] long userId, [FromQuery] long tourId)
         {
             var cart = _shoppingCartService.GetCart(userId);
@@ -61,7 +62,7 @@ namespace Explorer.API.Controllers.Tourist
             _shoppingCartService.RemoveItem(userId, tourId);
             return Ok("Item removed from cart.");
         }
-
+        [HttpDelete("{userId:long}/clear")]
         public IActionResult ClearCart([FromQuery] long userId)
         {
             var cart = _shoppingCartService.GetCart(userId);
