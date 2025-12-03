@@ -10,6 +10,7 @@ DELETE FROM tours."TouristPreferences";
 DELETE FROM tours."Tags";
 
 DELETE FROM tours."TourEquipment";
+DELETE FROM tours."TourTags";
 
 DELETE FROM tours."Equipment";
 DELETE FROM tours."ReportProblem";

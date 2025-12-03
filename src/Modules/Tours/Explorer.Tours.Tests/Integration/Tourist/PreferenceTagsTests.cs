@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.API.Public.Tourist;
+using Explorer.Tours.Core.Domain;
+using Explorer.Tours.Infrastructure.Database;
+using Explorer.Tours.Tests;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 using Xunit;
-using Explorer.Tours.API.Public;
-using Explorer.Tours.API.Dtos;
-using Explorer.Tours.Infrastructure.Database;
-using Explorer.Tours.Tests;
-using Explorer.Tours.API.Public.Tourist;
 
 public class PreferenceTagsTests : IClassFixture<ToursTestFactory>
 {
@@ -91,15 +92,36 @@ public class PreferenceTagsTests : IClassFixture<ToursTestFactory>
         var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
         var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
+        // 1) Uzmi preference za osobu -21
         var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
-        // ensure we have an existing tag -201 linked (-301)
-        var existingLink = ctx.PreferenceTags.SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == -201);
+
+        // 2) Kreiraj tag (EF ce sam dodeliti ID)
+        var tag = new Tags("mountain");
+        ctx.Tags.Add(tag);
+        ctx.SaveChanges();
+        // sada tag.Id ima stvarnu vrednost (pozitivan broj)
+
+        // 3) Napravi PreferenceTags vezu
+        ctx.PreferenceTags.Add(new PreferenceTags
+        {
+            TouristPreferencesId = pref.Id,
+            TagsId = tag.Id
+        });
+        ctx.SaveChanges();
+
+        // 4) Uveri se da link postoji pre brisanja
+        var existingLink = ctx.PreferenceTags
+            .SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == tag.Id);
         existingLink.ShouldNotBeNull();
 
-        svc.RemoveTagFromPerson(-21, -201);
+        // 5) Akcija — brisanje tag veze
+        svc.RemoveTagFromPerson(-21, tag.Id);
 
-        var after = ctx.PreferenceTags.SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == -201);
+        // 6) Proveri da je veza uklonjena
+        var after = ctx.PreferenceTags
+            .SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == tag.Id);
         after.ShouldBeNull();
     }
+
 }
 
