@@ -31,6 +31,14 @@ public class BlogPostRepository : IBlogPostRepository
             .ToList();
     }
 
+    public IEnumerable<BlogPost> GetPublishedAndArchived()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Where(b => b.Status == BlogStatus.Published || b.Status == BlogStatus.Archived)
+            .ToList();
+    }
+
     public void Add(BlogPost blogPost)
     {
         _dbContext.Set<BlogPost>().Add(blogPost);
@@ -51,7 +59,6 @@ public class BlogPostRepository : IBlogPostRepository
 
         if (blogPost == null) return;
 
-        // EF će automatski obrisati slike (zbog FK i cascade rules)
         _dbContext.BlogPosts.Remove(blogPost);
         _dbContext.SaveChanges();
     }

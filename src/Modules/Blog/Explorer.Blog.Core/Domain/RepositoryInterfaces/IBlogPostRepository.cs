@@ -6,6 +6,7 @@ public interface IBlogPostRepository
 {
     BlogPost? Get(long id);
     IEnumerable<BlogPost> GetForAuthor(long authorId);
+    IEnumerable<BlogPost> GetPublishedAndArchived();
     void Add(BlogPost blogPost);
     void Update(BlogPost blogPost);
     void Delete(long id);
