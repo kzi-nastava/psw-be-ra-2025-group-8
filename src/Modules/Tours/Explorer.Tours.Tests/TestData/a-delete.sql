@@ -4,3 +4,5 @@ DELETE FROM tours."Tours";
 DELETE FROM tours."PersonEquipment";
 DELETE FROM tours."Facilities";
 DELETE FROM tours."Monument";
+DELETE FROM tours."ShoppingCarts";
+DELETE FROM tours."OrderItems";
