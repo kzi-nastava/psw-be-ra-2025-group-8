@@ -17,7 +17,6 @@ public class TourAggregateTests
             name: "Test tour",
             description: "Opis ture",
             difficulty: 2,
-            tags: new List<string> { "tag1" },
             authorId: -1);
     }
 

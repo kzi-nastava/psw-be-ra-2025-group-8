@@ -20,6 +20,7 @@ public class ToursContext : DbContext
     public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
     public DbSet<PreferenceTags> PreferenceTags { get; set; }
     public DbSet<Tags> Tags { get; set; }
+    public DbSet<TourTag> TourTags { get; set; }
 
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
@@ -53,8 +54,7 @@ public class ToursContext : DbContext
             builder.Property(t => t.AuthorId)
                 .IsRequired();
 
-            builder.Property(t => t.Tags)
-                .HasColumnType("text[]");
+            
 
             // route length
             builder.Property(t => t.LengthInKilometers)
@@ -67,6 +67,21 @@ public class ToursContext : DbContext
                 .HasForeignKey("TourId")           // shadow FK column TourId
                 .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
         });
+
+        modelBuilder.Entity<TourTag>()
+            .HasKey(tt => new { tt.TourId, tt.TagsId });
+
+        modelBuilder.Entity<TourTag>()
+            .HasOne(tt => tt.Tour)
+            .WithMany(t => t.TourTags)
+            .HasForeignKey(tt => tt.TourId)
+            .OnDelete(DeleteBehavior.Cascade);  // tags are not deleted when tour is deleted
+
+        modelBuilder.Entity<TourTag>()
+            .HasOne(tt => tt.Tags)
+            .WithMany(t => t.TourTags)
+            .HasForeignKey(tt => tt.TagsId)
+            .OnDelete(DeleteBehavior.Cascade);  // if tag is deleted (by admin), remove it from all tours
 
         // KEYPOINT CONFIGURATION
         modelBuilder.Entity<KeyPoint>(builder =>

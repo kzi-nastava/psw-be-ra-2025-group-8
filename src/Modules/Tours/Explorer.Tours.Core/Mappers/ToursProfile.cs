@@ -34,13 +34,18 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.KeyPoints, opt => opt.Ignore())
             .ForMember(dest => dest.LengthInKilometers, opt => opt.Ignore())
             // RequiredEquipment is managed via separate methods
-            .ForMember(dest => dest.RequiredEquipment, opt => opt.Ignore());
+            .ForMember(dest => dest.RequiredEquipment, opt => opt.Ignore())
+            .ForMember(dest => dest.TourTags, opt => opt.Ignore());
 
         // Tour -> TourDto (answer to client)
         CreateMap<Tour, TourDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.RequiredEquipment,
-                opt => opt.MapFrom(src => src.RequiredEquipment));
+                opt => opt.MapFrom(src => src.RequiredEquipment))
+            .ForMember(dest => dest.Tags,
+                opt => opt.MapFrom(src => src.TourTags
+                    .Select(tt => tt.Tags.Tag)
+                    .ToList()));
 
 
         //CreateMap<TouristPreferencesDto, TouristPreferences>().ReverseMap();
