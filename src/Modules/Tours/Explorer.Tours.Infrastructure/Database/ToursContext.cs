@@ -23,15 +23,44 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
-        // Tour Entity Configuration
-        modelBuilder.Entity<Tour>().HasKey(t => t.Id);
-        modelBuilder.Entity<Tour>().Property(t => t.Name).IsRequired().HasMaxLength(255);
-        modelBuilder.Entity<Tour>().Property(t => t.Description).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Difficulty).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Status).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Price).HasColumnType("decimal(18,2)").IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.AuthorId).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Tags).HasColumnType("text[]");
+        // TOUR CONFIGURATION
+        modelBuilder.Entity<Tour>(builder =>
+        {
+            builder.HasKey(t => t.Id);
+
+            builder.Property(t => t.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(t => t.Description)
+                .IsRequired();
+
+            builder.Property(t => t.Difficulty)
+                .IsRequired();
+
+            builder.Property(t => t.Status)
+                .IsRequired();
+
+            builder.Property(t => t.Price)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(t => t.AuthorId)
+                .IsRequired();
+
+
+
+            // route length
+            builder.Property(t => t.LengthInKilometers)
+                .HasColumnType("double precision")
+                .HasDefaultValue(0.0);  // important because of c-tours.sql insert
+
+            // Tour -> KeyPoints (1 - N)
+            builder.HasMany(t => t.KeyPoints)
+                .WithOne()                         // KeyPoint does not have navigation property to Tour
+                .HasForeignKey("TourId")           // shadow FK column TourId
+                .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
+        });
 
         // TourExecution Entity Configuration
         modelBuilder.Entity<TourExecution>().HasKey(te => te.Id);
@@ -42,15 +71,38 @@ public class ToursContext : DbContext
         modelBuilder.Entity<TourExecution>().Property(te => te.Status).IsRequired();
         modelBuilder.Entity<TourExecution>().Property(te => te.LastActivity).IsRequired();
 
-        // TourKeyPoint Entity Configuration
-        modelBuilder.Entity<KeyPoint>().HasKey(tkp => tkp.Id);
-        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.TourId).IsRequired();
-        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.OrderNum).IsRequired();
-        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.Latitude).IsRequired();
-        modelBuilder.Entity<KeyPoint>().Property(tkp => tkp.Longitude).IsRequired();
-        
-        // Relationship: Tour has many KeyPoints
-        modelBuilder.Entity<KeyPoint>().HasOne<Tour>().WithMany().HasForeignKey(tkp => tkp.TourId).OnDelete(DeleteBehavior.Cascade);
+        // KEYPOINT CONFIGURATION
+        modelBuilder.Entity<KeyPoint>(builder =>
+        {
+            builder.HasKey(kp => kp.Id);
+
+            builder.Property(kp => kp.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(kp => kp.Description)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.ImageUrl)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.Secret)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.Order)
+                .IsRequired();
+
+            builder.OwnsOne(kp => kp.Location, navigation =>
+            {
+                navigation.Property(c => c.Latitude)
+                    .HasColumnName("Latitude")
+                    .IsRequired();
+
+                navigation.Property(c => c.Longitude)
+                    .HasColumnName("Longitude")
+                    .IsRequired();
+            });
+        });
 
         // KeyPointReached Entity Configuration
         modelBuilder.Entity<KeyPointReached>().HasKey(kpr => kpr.Id);

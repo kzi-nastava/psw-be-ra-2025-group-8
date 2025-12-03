@@ -1,6 +1,7 @@
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Explorer.Tours.Infrastructure.Database.Repositories;
 
@@ -15,7 +16,10 @@ public class KeyPointRepository : IKeyPointRepository
 
     public List<KeyPoint> GetByTour(long tourId)
     {
-        return _context.KeyPoints.Where(kp => kp.TourId == tourId).OrderBy(kp => kp.OrderNum).ToList();
+        return _context.KeyPoints
+            .Where(kp => EF.Property<long>(kp, "TourId") == tourId)
+            .OrderBy(kp => kp.Order)
+            .ToList();
     }
 
     public KeyPoint Create(KeyPoint keyPoint)

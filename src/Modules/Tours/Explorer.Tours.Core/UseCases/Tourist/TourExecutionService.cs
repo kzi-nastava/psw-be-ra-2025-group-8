@@ -15,9 +15,16 @@ public class TourExecutionService : ITourExecutionService
     private readonly IKeyPointRepository _keyPointRepository;
     private readonly IKeyPointReachedRepository _keyPointReachedRepository;
     private readonly IMapper _mapper;
-    private const double KEYPOINT_PROXIMITY_METERS = 50.0; // Radius u metrima za proveru blizine
 
-    public TourExecutionService(ITourExecutionRepository tourExecutionRepository, ICrudRepository<TourExecution> crudRepository, IKeyPointRepository keyPointRepository, IKeyPointReachedRepository keyPointReachedRepository,IMapper mapper)
+    // Proximity threshold (meters)
+    private const double KEYPOINT_PROXIMITY_METERS = 60.0;
+
+    public TourExecutionService(
+        ITourExecutionRepository tourExecutionRepository,
+        ICrudRepository<TourExecution> crudRepository,
+        IKeyPointRepository keyPointRepository,
+        IKeyPointReachedRepository keyPointReachedRepository,
+        IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
         _crudRepository = crudRepository;
@@ -43,11 +50,11 @@ public class TourExecutionService : ITourExecutionService
     {
         var status = Enum.Parse<TourExecutionStatus>(tourExecutionDto.Status);
         var tourExecution = new TourExecution(
-        tourExecutionDto.IdTour,
-        tourExecutionDto.Longitude,
-        tourExecutionDto.Latitude,
-        tourExecutionDto.IdTourist,
-        status
+            tourExecutionDto.IdTour,
+            tourExecutionDto.Longitude,
+            tourExecutionDto.Latitude,
+            tourExecutionDto.IdTourist,
+            status
         );
 
         var result = _tourExecutionRepository.Create(tourExecution);
@@ -92,62 +99,66 @@ public class TourExecutionService : ITourExecutionService
 
     public CheckKeyPointResponseDto CheckKeyPoint(CheckKeyPointRequestDto request)
     {
+        // Load TourExecution (throws NotFoundException in repository if missing)
         var tourExecution = _crudRepository.Get(request.TourExecutionId);
-        if (tourExecution == null)
-        throw new KeyNotFoundException($"TourExecution with id {request.TourExecutionId} not found.");
 
+        // Always update LastActivity
         tourExecution.LastActivity = DateTime.UtcNow;
         _crudRepository.Update(tourExecution);
-    
-        var keyPoints = _keyPointRepository.GetByTour(tourExecution.IdTour);
 
+        // Get all keypoints for this tour (ordered by Order)
+        var keyPoints = _keyPointRepository.GetByTour(tourExecution.IdTour);
         if (!keyPoints.Any())
         {
             return new CheckKeyPointResponseDto
-            {
-                KeyPointReached = false,
-                LastActivity = tourExecution.LastActivity
-            };
-        }
+                {
+                    KeyPointReached = false,
+                    LastActivity = tourExecution.LastActivity
+                };
+         }
 
-        var reachedKeyPointOrders = _keyPointReachedRepository.GetReachedKeyPointOrders(request.TourExecutionId);
+        // Already reached orders for this execution
+        var reachedOrders = _keyPointReachedRepository.GetReachedKeyPointOrders(request.TourExecutionId)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
 
-        var nextKeyPoint = keyPoints.FirstOrDefault(kp => !reachedKeyPointOrders.Contains(kp.OrderNum));
-        
+        // Find first not reached keypoint in order (Order property instead of OrderNum)
+        var nextKeyPoint = keyPoints.FirstOrDefault(kp => !reachedOrders.Contains(kp.Order));
         if (nextKeyPoint == null)
         {
             return new CheckKeyPointResponseDto
             {
                 KeyPointReached = false,
-                 LastActivity = tourExecution.LastActivity
+                LastActivity = tourExecution.LastActivity
             };
         }
 
+        // Calculate distance using Haversine (now using Location.Latitude and Location.Longitude)
         var distance = CalculateDistance(
-            request.Latitude, request.Longitude,
-            nextKeyPoint.Latitude, nextKeyPoint.Longitude
-        );
+        request.Latitude, request.Longitude,
+        nextKeyPoint.Location.Latitude, nextKeyPoint.Location.Longitude);
 
         if (distance <= KEYPOINT_PROXIMITY_METERS)
         {
             var keyPointReached = new KeyPointReached(
                 request.TourExecutionId,
-                nextKeyPoint.OrderNum,
-                nextKeyPoint.Latitude,
-                nextKeyPoint.Longitude
+                nextKeyPoint.Order,  // Use Order instead of OrderNum
+                nextKeyPoint.Location.Latitude,
+                nextKeyPoint.Location.Longitude
             );
 
             _keyPointReachedRepository.Create(keyPointReached);
 
             return new CheckKeyPointResponseDto
-            {
-                KeyPointReached = true,
-                KeyPointOrder = nextKeyPoint.OrderNum,
-                ReachedAt = keyPointReached.ReachedAt,
-                LastActivity = tourExecution.LastActivity
-            };
+                {
+                    KeyPointReached = true,
+                    KeyPointOrder = nextKeyPoint.Order,  // Use Order instead of OrderNum
+                    ReachedAt = keyPointReached.ReachedAt,
+                    LastActivity = tourExecution.LastActivity
+                };
         }
-        
+
         return new CheckKeyPointResponseDto
         {
             KeyPointReached = false,
@@ -163,20 +174,15 @@ public class TourExecutionService : ITourExecutionService
 
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
-        const double R = 6371000; // Radijus Zemlje u metrima
+        const double R = 6371000; // meters
         var dLat = ToRadians(lat2 - lat1);
         var dLon = ToRadians(lon2 - lon1);
-
         var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
         Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
         Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        return R * c; // Vraća udaljenost u metrima
+        return R * c;
     }
 
-    private double ToRadians(double degrees)
-    {
-        return degrees * Math.PI / 180.0;
-    }
+    private double ToRadians(double degrees) => degrees * Math.PI / 180.0;
 }
