@@ -72,5 +72,11 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             cart.ClearCart();
             _cartRepository.Update(cart);
         }
+        public void DeleteCart(long userId)
+        {
+            var cart = _cartRepository.GetByUserId(userId);
+            if (cart == null) throw new KeyNotFoundException("Cart not found for this user.");
+            _cartRepository.Delete(cart.Id);
+        }
     }
 }

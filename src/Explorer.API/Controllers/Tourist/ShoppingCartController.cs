@@ -1,12 +1,12 @@
 ﻿using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.ShoppingCart;
-using Explorer.Tours.Core.UseCases.Administration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Tourist
 {
+    //[Authorize(Policy = "shoppingCartPolicy")]
     [Route("api/tours/cart")]
     [ApiController]
     public class ShoppingCartController : ControllerBase
@@ -20,13 +20,13 @@ namespace Explorer.API.Controllers.Tourist
             _tourService = tourService;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet()]
         public ActionResult<ShoppingCartDto> GetCart(long userId)
         {
             var cart = _shoppingCartService.GetCart(userId);
             return Ok(cart);
         }
-        [HttpPost("/new")]
+        [HttpPost("new")]
         public ActionResult NewCart(long userId)
         {
             try
@@ -39,8 +39,8 @@ namespace Explorer.API.Controllers.Tourist
                 return BadRequest(ex.Message);
             }
         }
-        [HttpPost("{userId}/items")]
-        public IActionResult AddItem([FromQuery] long userId, [FromQuery] long tourId)
+        [HttpPost("items")]
+        public IActionResult AddItem([FromQuery] long userId,[FromQuery] long tourId)
         {
             var cart = _shoppingCartService.GetCart(userId);
             var tour = _tourService.Get(tourId);
@@ -54,7 +54,7 @@ namespace Explorer.API.Controllers.Tourist
             _shoppingCartService.AddItem(userId, dto);
             return Ok("Item added to cart.");
         }
-        [HttpDelete("{userId:long}/remove/{tourId:long}")]
+        [HttpDelete("remove")]
         public IActionResult RemoveItem([FromQuery] long userId, [FromQuery] long tourId)
         {
             var cart = _shoppingCartService.GetCart(userId);
@@ -62,7 +62,7 @@ namespace Explorer.API.Controllers.Tourist
             _shoppingCartService.RemoveItem(userId, tourId);
             return Ok("Item removed from cart.");
         }
-        [HttpDelete("{userId:long}/clear")]
+        [HttpDelete("clear")]
         public IActionResult ClearCart([FromQuery] long userId)
         {
             var cart = _shoppingCartService.GetCart(userId);
@@ -70,7 +70,19 @@ namespace Explorer.API.Controllers.Tourist
             _shoppingCartService.ClearCart(userId);
             return Ok("Cart cleared.");
         }
-
+        [HttpDelete("delete")]
+        public IActionResult DeleteCart([FromQuery] long userId)
+        {
+            try
+            {
+                _shoppingCartService.DeleteCart(userId);
+                return Ok("Cart deleted.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
 
     }
 }
