@@ -15,5 +15,18 @@ namespace Explorer.Tours.API.Dtos
         public int Priority { get; set; }
         public string Description { get; set; }
         public DateTime ReportTime { get; set; }
+
+        // Author response
+        public int? AuthorId { get; set; }
+        public string? AuthorResponse { get; set; }
+        public DateTime? AuthorResponseTime { get; set; }
+
+        // Tourist resolution
+        public bool? IsResolved { get; set; }
+        public string? TouristResolutionComment { get; set; }
+        public DateTime? TouristResolutionTime { get; set; }
+
+        // Messages
+        public List<IssueMessageDto>? Messages { get; set; }
     }
 }

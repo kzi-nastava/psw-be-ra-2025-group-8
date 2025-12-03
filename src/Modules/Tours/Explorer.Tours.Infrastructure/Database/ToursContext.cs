@@ -10,11 +10,21 @@ public class ToursContext : DbContext
     public DbSet<Monument> Monument { get; set; }
     public DbSet<Facility> Facilities { get; set; }
     public DbSet<ReportProblem> ReportProblem { get; set; }
+    public DbSet<IssueMessage> IssueMessages { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
     public DbSet<Position> Positions { get; set; }
+<<<<<<< HEAD
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+=======
+
+    //Preference
+    public DbSet<TouristPreferences> TouristPreferences { get; set; }
+    public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
+    public DbSet<PreferenceTags> PreferenceTags { get; set; }
+    public DbSet<Tags> Tags { get; set; }
+>>>>>>> origin/development
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -22,17 +32,80 @@ public class ToursContext : DbContext
     {
         modelBuilder.HasDefaultSchema("tours");
 
-        // Tour Entity Configuration
-        modelBuilder.Entity<Tour>().HasKey(t => t.Id);
-        modelBuilder.Entity<Tour>().Property(t => t.Name).IsRequired().HasMaxLength(255);
-        modelBuilder.Entity<Tour>().Property(t => t.Description).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Difficulty).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Status).IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.Price).HasColumnType("decimal(18,2)").IsRequired();
-        modelBuilder.Entity<Tour>().Property(t => t.AuthorId).IsRequired();
-        modelBuilder.Entity<Tour>()
-           .Property(t => t.Tags)
-           .HasColumnType("text[]");
+        // TOUR CONFIGURATION
+        modelBuilder.Entity<Tour>(builder =>
+        {
+            builder.HasKey(t => t.Id);
+
+            builder.Property(t => t.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(t => t.Description)
+                .IsRequired();
+
+            builder.Property(t => t.Difficulty)
+                .IsRequired();
+
+            builder.Property(t => t.Status)
+                .IsRequired();
+
+            builder.Property(t => t.Price)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(t => t.AuthorId)
+                .IsRequired();
+
+            builder.Property(t => t.Tags)
+                .HasColumnType("text[]");
+
+            // route length
+            builder.Property(t => t.LengthInKilometers)
+                .HasColumnType("double precision")
+                .HasDefaultValue(0.0);  // important because of c-tours.sql insert
+
+            // Tour -> KeyPoints (1 - N)
+            builder.HasMany(t => t.KeyPoints)
+                .WithOne()                         // KeyPoint does not have navigation property to Tour
+                .HasForeignKey("TourId")           // shadow FK column TourId
+                .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
+        });
+
+        // KEYPOINT CONFIGURATION
+        modelBuilder.Entity<KeyPoint>(builder =>
+        {
+            builder.HasKey(kp => kp.Id);
+
+            builder.Property(kp => kp.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(kp => kp.Description)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.ImageUrl)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.Secret)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.Order)
+                .IsRequired();
+
+            builder.OwnsOne(kp => kp.Location, navigation =>
+            {
+                navigation.Property(c => c.Latitude)
+                    .HasColumnName("Latitude")
+                    .IsRequired();
+
+                navigation.Property(c => c.Longitude)
+                    .HasColumnName("Longitude")
+                    .IsRequired();
+            });
+        });
+
+
 
         modelBuilder.Ignore<Person>();
 
@@ -45,6 +118,7 @@ public class ToursContext : DbContext
                    .HasForeignKey(pe => pe.EquipmentId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
+<<<<<<< HEAD
         modelBuilder.Entity<ShoppingCart>(builder =>
         {
             builder.HasKey(c => c.Id);
@@ -62,5 +136,78 @@ public class ToursContext : DbContext
             builder.Property(oi => oi.TourId).IsRequired();
             builder.Property(oi => oi.Price).HasColumnType("decimal(18,2)").IsRequired();
         });
+=======
+
+        //modelBuilder.Entity<Person>()
+        //    .HasOne<User>()
+        //    .WithOne()
+        //    .HasForeignKey<Person>(s => s.UserId);
+
+        // TouristPreferences <-> Person (1:1)
+        //modelBuilder.Entity<TouristPreferences>()
+        //    .HasOne<Person>()                          // nemaš navigaciju Person.PersonPreferences, pa ide WithOne()
+        //    .WithOne()
+        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId);
+
+        //modelBuilder.Entity<TouristPreferences>()
+        //    .HasOne(tp => tp.Person)
+        //    .WithOne()
+        //    .HasForeignKey<TouristPreferences>(tp => tp.PersonId)
+        //    .OnDelete(DeleteBehavior.Cascade);
+
+        // TouristPreferences <-> TransportTypePreferences (1:N)
+        modelBuilder.Entity<TouristPreferences>()
+            .HasMany(tp => tp.TransportTypePreferences)
+            .WithOne(t => t.Preference)
+            .HasForeignKey(t => t.PreferenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TransportTypePreferences>()
+            .HasOne(t => t.Preference)
+            .WithMany(p => p.TransportTypePreferences)
+            .HasForeignKey(t => t.PreferenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PreferenceTags>()
+        .HasKey(pt => new { pt.TouristPreferencesId, pt.TagsId });
+
+        modelBuilder.Entity<PreferenceTags>()
+            .HasOne(pt => pt.TouristPreferences)
+            .WithMany(tp => tp.PreferenceTags)
+            .HasForeignKey(pt => pt.TouristPreferencesId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PreferenceTags>()
+            .HasOne(pt => pt.Tags)
+            .WithMany(t => t.PreferenceTags)
+            .HasForeignKey(pt => pt.TagsId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        //enum konverzije
+        modelBuilder.Entity<TouristPreferences>()
+            .Property(tp => tp.Difficulty)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<TransportTypePreferences>()
+            .Property(t => t.Transport)
+            .HasConversion<string>();
+
+        // ReportProblem <-> IssueMessage (1:N)
+        modelBuilder.Entity<ReportProblem>()
+            .HasMany(rp => rp.Messages)
+            .WithOne()
+            .HasForeignKey(m => m.ReportProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<IssueMessage>()
+            .HasKey(m => m.Id);
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.Content).IsRequired();
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.AuthorId).IsRequired();
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.CreatedAt).IsRequired();
+>>>>>>> origin/development
     }
+
 }

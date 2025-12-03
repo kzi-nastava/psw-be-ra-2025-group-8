@@ -62,7 +62,7 @@ public static class AuthConfiguration
             });
 
             options.AddPolicy("personPolicy", policy => policy.RequireRole("author", "tourist"));
-            
+
             options.AddPolicy("user", policy =>
                 policy.RequireAuthenticatedUser());
             //options.AddPolicy("shoppingCartPolicy", policy => policy.RequireRole("tourist"));

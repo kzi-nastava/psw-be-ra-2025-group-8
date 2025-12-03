@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Explorer.Tours.Core.UseCases.ShoppingCart;
 using Explorer.Tours.API.Public.ShoppingCart;
 
+
 namespace Explorer.Tours.Infrastructure;
 
 public static class ToursStartup
@@ -40,7 +41,16 @@ public static class ToursStartup
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
+<<<<<<< HEAD
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
+=======
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
+        services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
+        services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
+        //
+
+>>>>>>> origin/development
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -48,6 +58,12 @@ public static class ToursStartup
         services.AddScoped<IPersonEquipmentRepository, PersonEquipmentRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IReportProblemRepository, ReportProblemRepository>();
+        //Minja dodao ovo
+        services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
+        services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
+        services.AddScoped<ITagsRepository, TagsRepository>();
+        services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
 
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));
