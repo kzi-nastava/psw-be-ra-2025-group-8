@@ -18,4 +18,10 @@ public class TourRepository : ITourRepository
             .Where(t => t.AuthorId == authorId)
             .ToList();
     }
+    //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
+    public Tour Get(long id)
+    {
+        return _context.Tours
+            .FirstOrDefault(t => t.Id == id);
+    }
 }

@@ -24,7 +24,7 @@ public class ToursProfile : Profile
                .ReverseMap()
                .ConstructUsing(dto => new ShoppingCart(dto.UserId));
         CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.TourName, dto.Price));
+                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.Price));
     }
 
     private static TourStatus MapStatus(string status)

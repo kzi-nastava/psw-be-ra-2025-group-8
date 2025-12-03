@@ -74,4 +74,10 @@ public class TourService : ITourService
         if (tour.Status != TourStatus.Draft) throw new InvalidOperationException("Only draft tours can be deleted.");
         _crudRepository.Delete(id);
     }
+    //Maksim: Dodao sam Get preko ID-a, zato sto su mi potrebni podaci ture za ShoppingCart
+    public TourDto Get(long id)
+    {
+        var tour = _tourRepository.Get(id);
+        return _mapper.Map<TourDto>(tour);
+    }
 }

@@ -12,7 +12,11 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
         {
             _context = context;
         }
-
+        public void CreateCart(ShoppingCart cart)
+        {
+            _context.ShoppingCarts.Add(cart);
+            _context.SaveChanges();
+        }
         public ShoppingCart GetById(long id)
         {
             return _context.ShoppingCarts

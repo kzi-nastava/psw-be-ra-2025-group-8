@@ -3,7 +3,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.ShoppingCart;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
-
+using Explorer.BuildingBlocks.Core.Exceptions;
 namespace Explorer.Tours.Core.UseCases.ShoppingCart
 {
     public class ShoppingCartService : IShoppingCartService
@@ -17,14 +17,24 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             _mapper = mapper;
         }
 
+        public ShoppingCartDto CreateCart(long userId)
+        {
+            var existingCart = _cartRepository.GetByUserId(userId);
+            if (existingCart != null)
+            {
+                throw new InvalidOperationException("Cart already exists for this user.");
+            }
+            var cart = new Domain.ShoppingCart(userId);
+            _cartRepository.Add(cart);
+            return _mapper.Map<ShoppingCartDto>(cart);
+        }
         public ShoppingCartDto GetCart(long userId)
         {
             var cart = _cartRepository.GetByUserId(userId);
 
             if (cart == null)
             {
-                cart = new Domain.ShoppingCart(userId);
-                _cartRepository.Add(cart);
+                throw new NotFoundException("Cart not found for this user.");
             }
 
             return _mapper.Map<ShoppingCartDto>(cart);
@@ -36,7 +46,7 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
 
             if (cart == null)
             {
-                cart = new Domain.ShoppingCart(userId);
+                throw new NotFoundException("Cart not found for this user.");
             }
 
             var item = _mapper.Map<OrderItem>(itemDto);

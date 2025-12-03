@@ -60,7 +60,6 @@ public class ToursContext : DbContext
         {
             builder.HasKey(oi => oi.Id);
             builder.Property(oi => oi.TourId).IsRequired();
-            builder.Property(oi => oi.TourName).IsRequired().HasMaxLength(255);
             builder.Property(oi => oi.Price).HasColumnType("decimal(18,2)").IsRequired();
         });
     }
