@@ -20,6 +20,7 @@ public class BlogPostRepository : IBlogPostRepository
     {
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
+            .Include(b => b.Comments)
             .FirstOrDefault(b => b.Id == id);
     }
 
@@ -27,6 +28,7 @@ public class BlogPostRepository : IBlogPostRepository
     {
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
+            .Include(b => b.Comments)
             .Where(b => b.AuthorId == authorId)
             .ToList();
     }
@@ -35,6 +37,7 @@ public class BlogPostRepository : IBlogPostRepository
     {
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
+            .Include(b => b.Comments)
             .Where(b => b.Status == BlogStatus.Published || b.Status == BlogStatus.Archived)
             .ToList();
     }
