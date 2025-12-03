@@ -15,5 +15,7 @@ public class BlogProfile : Profile
 
         CreateMap<CreateBlogPostDto, BlogPost>();
         CreateMap<UpdateBlogPostDto, BlogPost>();
+
+        CreateMap<Comment, CommentDto>();
     }
 }
