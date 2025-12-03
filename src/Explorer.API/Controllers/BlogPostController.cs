@@ -33,6 +33,18 @@ public class BlogPostController : ControllerBase
     }
 
     /// <summary>
+    /// Get a single blog post by ID
+    /// </summary>
+    [HttpGet("{id:long}")]
+    [AllowAnonymous]
+    public ActionResult<BlogPostDto> GetById(long id)
+    {
+        var userId = User.Identity?.IsAuthenticated == true ? User.PersonId() : (long?)null;
+        var result = _blogPostService.GetById(id, userId);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get only my blog posts (requires authentication)
     /// </summary>
     [HttpGet("my")]

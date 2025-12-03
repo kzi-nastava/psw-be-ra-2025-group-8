@@ -64,6 +64,85 @@ public class BlogPostVisibilityTests : BaseBlogIntegrationTest
         result.ShouldAllBe(p => p.AuthorId == -21);
     }
 
+    [Fact]
+    public void Author_can_view_own_draft_by_id()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateTouristController(scope, userId: -21, personId: -21);
+
+        var result = ((ObjectResult)controller.GetById(-1).Result).Value as BlogPostDto;
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(-1);
+        result.AuthorId.ShouldBe(-21);
+        result.Status.ShouldBe(0); // Draft
+    }
+
+    [Fact]
+    public void Anonymous_user_cannot_view_draft_by_id()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateAnonymousController(scope);
+
+        Should.Throw<UnauthorizedAccessException>(() => 
+            controller.GetById(-1)
+        );
+    }
+
+    [Fact]
+    public void User_cannot_view_other_authors_draft_by_id()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateTouristController(scope, userId: -23, personId: -23);
+
+        Should.Throw<UnauthorizedAccessException>(() => 
+            controller.GetById(-1) // Draft from author -21
+        );
+    }
+
+    [Fact]
+    public void Anyone_can_view_published_blog_by_id()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateAnonymousController(scope);
+
+        var result = ((ObjectResult)controller.GetById(-2).Result).Value as BlogPostDto;
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(-2);
+        result.Status.ShouldBe(1); // Published
+    }
+
+    [Fact]
+    public void Anyone_can_view_archived_blog_by_id()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateAnonymousController(scope);
+
+        var result = ((ObjectResult)controller.GetById(-3).Result).Value as BlogPostDto;
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(-3);
+        result.Status.ShouldBe(2); // Archived
+    }
+
+    private static BlogPostController CreateAnonymousController(IServiceScope scope)
+    {
+        var controller = new BlogPostController(
+            scope.ServiceProvider.GetRequiredService<IBlogPostService>()
+        );
+
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity())
+            }
+        };
+
+        return controller;
+    }
+
     private static BlogPostController CreateTouristController(IServiceScope scope, long userId, long personId)
     {
         var controller = new BlogPostController(

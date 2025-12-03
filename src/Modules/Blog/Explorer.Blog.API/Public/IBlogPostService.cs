@@ -12,5 +12,6 @@ public interface IBlogPostService
     BlogPostDto Archive(long id, long authorId);
     List<BlogPostDto> GetForAuthor(long authorId);
     List<BlogPostDto> GetVisibleBlogs(long? userId);
+    BlogPostDto GetById(long id, long? userId);
     void Delete(long id);
 }

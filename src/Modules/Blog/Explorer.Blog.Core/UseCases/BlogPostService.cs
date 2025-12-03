@@ -105,6 +105,23 @@ public class BlogPostService : IBlogPostService
         return _mapper.Map<List<BlogPostDto>>(publishedAndArchivedAnonymous);
     }
 
+    public BlogPostDto GetById(long id, long? userId)
+    {
+        var blogPost = _blogPostRepository.Get(id);
+        if (blogPost == null) throw new KeyNotFoundException("Blog post not found.");
+
+        // Check visibility rules
+        var isPubliclyVisible = blogPost.Status == BlogStatus.Published || blogPost.Status == BlogStatus.Archived;
+        var isOwnDraft = userId.HasValue && blogPost.Status == BlogStatus.Draft && blogPost.AuthorId == userId.Value;
+
+        if (!isPubliclyVisible && !isOwnDraft)
+        {
+            throw new UnauthorizedAccessException("You do not have permission to view this blog post.");
+        }
+
+        return _mapper.Map<BlogPostDto>(blogPost);
+    }
+
     public void Delete(long id)
     {
         var blogPost = _blogPostRepository.Get(id);
