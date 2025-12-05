@@ -17,6 +17,8 @@ public class StakeholderProfile : Profile
 
         CreateMap<Message, MessageDto>().ReverseMap();
 
+        CreateMap<Notification, NotificationDto>().ReverseMap();
+
         //mapper za klubove, nisam koristio ReverseMap, jer mi ne trebaju sva mapiranja za 2 dto-a i 1 entity
         CreateMap<Club, ClubDto>();
         CreateMap<ClubDto, Club>()
