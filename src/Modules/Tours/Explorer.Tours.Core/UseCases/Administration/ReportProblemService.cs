@@ -17,17 +17,20 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly ICrudRepository<ReportProblem> _crudRepository;
         private readonly IReportProblemRepository _reportProblemRepository;
         private readonly ICrudRepository<Tour> _tourRepository;
+        private readonly IIssueNotificationService _notificationService;
         private readonly IMapper _mapper;
 
         public ReportProblemService(
             ICrudRepository<ReportProblem> repository, 
             IReportProblemRepository reportProblemRepository,
             ICrudRepository<Tour> tourRepository, 
+            IIssueNotificationService notificationService,
             IMapper mapper)
         {
             _crudRepository = repository;
             _reportProblemRepository = reportProblemRepository;
             _tourRepository = tourRepository;
+            _notificationService = notificationService;
             _mapper = mapper;
         }
 
@@ -92,6 +95,17 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var updated = _crudRepository.Update(report);
 
             var addedMessage = updated.Messages.LastOrDefault();
+            
+            // Kreiranje notifikacija preko callback interfejsa
+            var tour = _tourRepository.Get(updated.TourId);
+            _notificationService.NotifyAboutNewMessage(
+                updated.TouristId,
+                tour.AuthorId,
+                reportId,
+                content,
+                authorId
+            );
+            
             return _mapper.Map<IssueMessageDto>(addedMessage);
         }
 

@@ -34,6 +34,8 @@ public static class StakeholdersStartup
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IMeetupService, MeetupService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<BuildingBlocks.Core.UseCases.IIssueNotificationService, IssueNotificationServiceAdapter>();
 
         //za klubove
         services.AddScoped<IClubService, ClubService>();
@@ -46,6 +48,7 @@ public static class StakeholdersStartup
         services.AddScoped<IRatingRepository, RatingDbRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IMeetupRepository, MeetupRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
      
         //za klubove
