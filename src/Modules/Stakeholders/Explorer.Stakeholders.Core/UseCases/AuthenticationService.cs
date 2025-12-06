@@ -13,14 +13,14 @@ public class AuthenticationService : IAuthenticationService
     private readonly ITokenGenerator _tokenGenerator;
     private readonly IUserRepository _userRepository;
     private readonly ICrudRepository<Person> _personRepository;
-    private readonly ITouristPreferencesRepository _touristPreferencesRepository;
+    //private readonly ITouristPreferencesRepository _touristPreferencesRepository;
 
-    public AuthenticationService(IUserRepository userRepository, ICrudRepository<Person> personRepository, ITokenGenerator tokenGenerator, ITouristPreferencesRepository touristPreferencesRepository)
+    public AuthenticationService(IUserRepository userRepository, ICrudRepository<Person> personRepository, ITokenGenerator tokenGenerator)//, ITouristPreferencesRepository touristPreferencesRepository)
     {
         _tokenGenerator = tokenGenerator;
         _userRepository = userRepository;
         _personRepository = personRepository;
-        _touristPreferencesRepository = touristPreferencesRepository;
+        //_touristPreferencesRepository = touristPreferencesRepository;
     }
 
     public AuthenticationTokensDto Login(CredentialsDto credentials)
@@ -51,7 +51,7 @@ public class AuthenticationService : IAuthenticationService
 
         var user = _userRepository.Create(new User(account.Username, account.Password, UserRole.Tourist, true));
         var person = _personRepository.Create(new Person(user.Id, account.Name, account.Surname, account.Email));
-        var touristpreferences = _touristPreferencesRepository.Create(new TouristPreferences(person.Id, DifficultyLevel.Beginner));
+        //var touristpreferences = _touristPreferencesRepository.Create(new TouristPreferences(person.Id, DifficultyLevel.Beginner));
 
         return _tokenGenerator.GenerateAccessToken(user, person.Id);
     }

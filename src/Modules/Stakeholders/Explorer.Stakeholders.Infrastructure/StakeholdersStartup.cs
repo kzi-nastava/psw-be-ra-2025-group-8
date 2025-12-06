@@ -30,11 +30,6 @@ public static class StakeholdersStartup
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
 
-        //Minja dodao ovo
-        services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
-        services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
-        services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
-        //
 
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IMessageService, MessageService>();
@@ -52,11 +47,7 @@ public static class StakeholdersStartup
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IMeetupRepository, MeetupRepository>();
 
-        //Minja dodao ovo
-        services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
-        services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
-        services.AddScoped<ITagsRepository, TagsRepository>();
-        services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
+     
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
 
