@@ -79,4 +79,20 @@ public class TourEquipmentController : ControllerBase
 
         throw new UnauthorizedAccessException("Unable to determine user ID from token");
     }
+
+    // GET: equipment with Required flag
+    [HttpGet("for-tour/{tourId:long}")]
+    public ActionResult<List<EquipmentForTourDto>> GetForTour(long tourId)
+    {
+        var authorId = GetAuthorIdFromToken();
+        return Ok(_tourService.GetEquipmentForTour(tourId, authorId));
+    }
+
+    // PUT: replace entire list
+    [HttpPut("{tourId:long}")]
+    public ActionResult<TourDto> UpdateEquipment(long tourId, [FromBody] UpdateTourEquipmentDto dto)
+    {
+        var authorId = GetAuthorIdFromToken();
+        return Ok(_tourService.UpdateEquipment(tourId, dto.EquipmentIds, authorId));
+    }
 }

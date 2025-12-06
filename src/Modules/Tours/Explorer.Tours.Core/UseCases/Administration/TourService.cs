@@ -13,17 +13,22 @@ public class TourService : ITourService
     private readonly ITourRepository _tourRepository;
     private readonly IMapper _mapper;
     private readonly ITagsRepository _tagsRepository;
+    private readonly ICrudRepository<Equipment> _equipmentRepository;
 
-    public TourService(ICrudRepository<Tour> crudRepository,
-                   ITourRepository tourRepository,
-                   ITagsRepository tagsRepository,
-                   IMapper mapper)
+    public TourService(
+        ICrudRepository<Tour> crudRepository,
+        ITourRepository tourRepository,
+        ITagsRepository tagsRepository,
+        ICrudRepository<Equipment> equipmentRepository,
+        IMapper mapper)
     {
         _crudRepository = crudRepository;
         _tourRepository = tourRepository;
         _tagsRepository = tagsRepository;
+        _equipmentRepository = equipmentRepository;
         _mapper = mapper;
     }
+
 
     public PagedResult<TourDto> GetPaged(int page, int pageSize)
     {
@@ -269,5 +274,37 @@ public class TourService : ITourService
         var updated = _tourRepository.Update(tour);
         return _mapper.Map<TourDto>(updated);
     }
+
+    public List<EquipmentForTourDto> GetEquipmentForTour(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+        var allEquipment = _equipmentRepository.GetPaged(0, int.MaxValue).Results;
+        var requiredIds = tour.RequiredEquipment.Select(e => e.EquipmentId).ToList();
+
+        return allEquipment.Select(e => new EquipmentForTourDto
+        {
+            EquipmentId = e.Id,
+            Name = e.Name,
+            Description = e.Description,
+            IsRequired = requiredIds.Contains(e.Id)
+        }).ToList();
+    }
+
+    public TourDto UpdateEquipment(long tourId, List<long> equipmentIds, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+        tour.RequiredEquipment.Clear(); // reset
+
+        foreach (var eqId in equipmentIds.Distinct())
+            tour.AddRequiredEquipment(eqId); // koristi već postojeću domen logiku!
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
 
 }
