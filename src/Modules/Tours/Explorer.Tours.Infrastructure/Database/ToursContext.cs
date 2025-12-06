@@ -10,13 +10,24 @@ public class ToursContext : DbContext
     public DbSet<Monument> Monument { get; set; }
     public DbSet<Facility> Facilities { get; set; }
     public DbSet<ReportProblem> ReportProblem { get; set; }
+    public DbSet<IssueMessage> IssueMessages { get; set; }
     public DbSet<PersonEquipment> PersonEquipment { get; set; }
     public DbSet<Tour> Tours { get; set; }
+    public DbSet<TourEquipment> TourEquipment { get; set; }
     public DbSet<Position> Positions { get; set; }
     public DbSet<TourExecution> TourExecutions { get; set; }
     public DbSet<KeyPointReached> KeyPointsReached { get; set; }
     public DbSet<KeyPoint> KeyPoints { get; set; }
     
+
+    //Preference
+    public DbSet<TouristPreferences> TouristPreferences { get; set; }
+    public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
+    public DbSet<PreferenceTags> PreferenceTags { get; set; }
+    public DbSet<Tags> Tags { get; set; }
+    public DbSet<TourTag> TourTags { get; set; }
+
+
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -48,7 +59,7 @@ public class ToursContext : DbContext
             builder.Property(t => t.AuthorId)
                 .IsRequired();
 
-
+            
 
             // route length
             builder.Property(t => t.LengthInKilometers)
@@ -62,14 +73,20 @@ public class ToursContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
         });
 
-        // TourExecution Entity Configuration
-        modelBuilder.Entity<TourExecution>().HasKey(te => te.Id);
-        modelBuilder.Entity<TourExecution>().Property(te => te.IdTour).IsRequired();
-        modelBuilder.Entity<TourExecution>().Property(te => te.Longitude).IsRequired();
-        modelBuilder.Entity<TourExecution>().Property(te => te.Latitude).IsRequired();
-        modelBuilder.Entity<TourExecution>().Property(te => te.IdTourist).IsRequired();
-        modelBuilder.Entity<TourExecution>().Property(te => te.Status).IsRequired();
-        modelBuilder.Entity<TourExecution>().Property(te => te.LastActivity).IsRequired();
+        modelBuilder.Entity<TourTag>()
+            .HasKey(tt => new { tt.TourId, tt.TagsId });
+
+        modelBuilder.Entity<TourTag>()
+            .HasOne(tt => tt.Tour)
+            .WithMany(t => t.TourTags)
+            .HasForeignKey(tt => tt.TourId)
+            .OnDelete(DeleteBehavior.Cascade);  // tags are not deleted when tour is deleted
+
+        modelBuilder.Entity<TourTag>()
+            .HasOne(tt => tt.Tags)
+            .WithMany(t => t.TourTags)
+            .HasForeignKey(tt => tt.TagsId)
+            .OnDelete(DeleteBehavior.Cascade);  // if tag is deleted (by admin), remove it from all tours
 
         // KEYPOINT CONFIGURATION
         modelBuilder.Entity<KeyPoint>(builder =>
@@ -104,16 +121,7 @@ public class ToursContext : DbContext
             });
         });
 
-        // KeyPointReached Entity Configuration
-        modelBuilder.Entity<KeyPointReached>().HasKey(kpr => kpr.Id);
-        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.TourExecutionId).IsRequired();
-        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.KeyPointOrder).IsRequired();
-        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.ReachedAt).IsRequired();
-        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.Latitude).IsRequired();
-        modelBuilder.Entity<KeyPointReached>().Property(kpr => kpr.Longitude).IsRequired();
-        
-        // Relationship: TourExecution has many KeyPointReached
-        modelBuilder.Entity<KeyPointReached>().HasOne<TourExecution>().WithMany().HasForeignKey(kpr => kpr.TourExecutionId).OnDelete(DeleteBehavior.Cascade);
+
 
         modelBuilder.Ignore<Person>();
 
@@ -126,5 +134,73 @@ public class ToursContext : DbContext
                    .HasForeignKey(pe => pe.EquipmentId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<TouristPreferences>()
+            .HasMany(tp => tp.TransportTypePreferences)
+            .WithOne(t => t.Preference)
+            .HasForeignKey(t => t.PreferenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TransportTypePreferences>()
+            .HasOne(t => t.Preference)
+            .WithMany(p => p.TransportTypePreferences)
+            .HasForeignKey(t => t.PreferenceId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PreferenceTags>()
+        .HasKey(pt => new { pt.TouristPreferencesId, pt.TagsId });
+
+        modelBuilder.Entity<PreferenceTags>()
+            .HasOne(pt => pt.TouristPreferences)
+            .WithMany(tp => tp.PreferenceTags)
+            .HasForeignKey(pt => pt.TouristPreferencesId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PreferenceTags>()
+            .HasOne(pt => pt.Tags)
+            .WithMany(t => t.PreferenceTags)
+            .HasForeignKey(pt => pt.TagsId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        //enum konverzije
+        modelBuilder.Entity<TouristPreferences>()
+            .Property(tp => tp.Difficulty)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<TransportTypePreferences>()
+            .Property(t => t.Transport)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasKey(te => new { te.TourId, te.EquipmentId });
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasOne(te => te.Tour)
+            .WithMany(t => t.RequiredEquipment)
+            .HasForeignKey(te => te.TourId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TourEquipment>()
+            .HasOne(te => te.Equipment)
+            .WithMany()
+            .HasForeignKey(te => te.EquipmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ReportProblem <-> IssueMessage (1:N)
+        modelBuilder.Entity<ReportProblem>()
+            .HasMany(rp => rp.Messages)
+            .WithOne()
+            .HasForeignKey(m => m.ReportProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<IssueMessage>()
+            .HasKey(m => m.Id);
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.Content).IsRequired();
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.AuthorId).IsRequired();
+        modelBuilder.Entity<IssueMessage>()
+            .Property(m => m.CreatedAt).IsRequired();
     }
+
 }
