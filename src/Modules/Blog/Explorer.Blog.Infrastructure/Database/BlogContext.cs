@@ -7,31 +7,26 @@ namespace Explorer.Blog.Infrastructure.Database
     {
         public BlogContext(DbContextOptions<BlogContext> options) : base(options) { }
 
-        public DbSet<BlogPost> BlogPosts { get; set; }
-        public DbSet<BlogImage> BlogImages { get; set; }
-        public DbSet<BlogVote> BlogVotes { get; set; }
+    public DbSet<BlogPost> BlogPosts { get; set; }
+    public DbSet<BlogImage> BlogImages { get; set; }
+    public DbSet<Comment> Comments { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.HasDefaultSchema("blog");
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasDefaultSchema("blog");
 
-            modelBuilder.Entity<BlogPost>()
-                .HasMany(p => p.Votes)
-                .WithOne()
-                .HasForeignKey(v => v.BlogPostId)
-                .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<BlogPost>()
+            .Property(b => b.Status)
+            .HasConversion<int>();
 
-            modelBuilder.Entity<BlogVote>()
-                .Property(v => v.Value)
-                .IsRequired();
+        // cascade deletion of comments
+        modelBuilder.Entity<BlogPost>()
+            .HasMany(b => b.Comments)
+            .WithOne()
+            .HasForeignKey("BlogPostId")
+            .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<BlogPost>()
-                .Property(p => p.Score)
-                .IsRequired();
-
-            modelBuilder.Entity<BlogPost>()
-                .Property(p => p.IsClosed)
-                .IsRequired();
-        }
+        // mapping comment entity
+        modelBuilder.Entity<Comment>().ToTable("Comments");
     }
 }

@@ -1,10 +1,8 @@
-﻿namespace Explorer.Blog.Core.Domain
+﻿namespace Explorer.Blog.Core.Domain;
+
+public enum BlogStatus
 {
-    public enum BlogStatus
-    {
-        Regular = 0,
-        Active = 1,
-        Famous = 2,
-        Closed = 3
-    }
+    Draft = 0,
+    Published = 1,
+    Archived = 2
 }

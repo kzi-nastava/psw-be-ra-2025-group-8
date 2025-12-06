@@ -1,7 +1,5 @@
 ﻿using Explorer.BuildingBlocks.Core.Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Explorer.Blog.Core.Domain.Events;
 
 namespace Explorer.Blog.Core.Domain
 {
@@ -11,10 +9,13 @@ namespace Explorer.Blog.Core.Domain
         public string Title { get; private set; }
         public string Description { get; private set; }
         public DateTime CreatedAt { get; private set; }
+        public DateTime? LastModifiedAt { get; private set; }
+        public BlogStatus Status { get; private set; }
         public List<BlogImage> Images { get; private set; }
-        public List<BlogVote> Votes { get; private set; }
-        public int Score { get; private set; }
-        public bool IsClosed { get; private set; }
+        public List<Comment> Comments { get; private set; }
+
+        private readonly List<object> _domainEvents = new List<object>();
+        public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
 
         protected BlogPost() { }
 
@@ -24,66 +25,102 @@ namespace Explorer.Blog.Core.Domain
             Title = title;
             Description = description;
             CreatedAt = DateTime.UtcNow;
+            Status = BlogStatus.Draft;
             Images = images?.ToList() ?? new List<BlogImage>();
-
-            Votes = new List<BlogVote>();
-            Score = 0;
-            IsClosed = false;
-
+            Comments = new List<Comment>();
             Validate();
         }
 
-        public void Edit(string title, string description, IEnumerable<BlogImage>? images)
+        public void ClearDomainEvents()
         {
-            if (IsClosed) throw new InvalidOperationException("Closed blog post cannot be edited.");
+            _domainEvents.Clear();
+        }
+
+        private void AddDomainEvent(object domainEvent)
+        {
+            _domainEvents.Add(domainEvent);
+        }
+
+        public void UpdateDraft(string title, string description, IEnumerable<BlogImage>? images)
+        {
+            if (Status != BlogStatus.Draft)
+                throw new InvalidOperationException("Only draft blogs can have title and images updated.");
 
             Title = title;
             Description = description;
             Images = images?.ToList() ?? new List<BlogImage>();
+            LastModifiedAt = DateTime.UtcNow;
             Validate();
         }
 
-        public void AddOrUpdateVote(long userId, int value)
+        public void UpdatePublished(string description)
         {
-            if (IsClosed) throw new InvalidOperationException("Closed blog post cannot be voted on.");
-            if (value != 1 && value != -1) throw new ArgumentException("Vote value must be +1 or -1.");
+            if (Status != BlogStatus.Published)
+                throw new InvalidOperationException("Only published blogs can be updated this way.");
 
-            var existing = Votes.FirstOrDefault(v => v.UserId == userId);
-
-            if (existing is null)
-            {
-                Votes.Add(new BlogVote(userId, value));
-            }
-            else
-            {
-                existing.ChangeValue(value);
-            }
-
-            RecalculateScore();
+            Description = description;
+            LastModifiedAt = DateTime.UtcNow;
+            ValidateDescription();
         }
 
-        public BlogStatus GetStatus(int commentCount)
+        public void Publish()
         {
-            if (Score < -10) return BlogStatus.Closed;
-            if (Score > 500 && commentCount > 30) return BlogStatus.Famous;
-            if (Score > 100 || commentCount > 10) return BlogStatus.Active;
-            return BlogStatus.Regular;
+            if (Status != BlogStatus.Draft)
+                throw new InvalidOperationException("Only draft blogs can be published.");
+
+            Status = BlogStatus.Published;
+            LastModifiedAt = DateTime.UtcNow;
         }
 
-        private void RecalculateScore()
+        public void Archive()
         {
-            Score = Votes.Sum(v => v.Value);
+            if (Status != BlogStatus.Published)
+                throw new InvalidOperationException("Only published blogs can be archived.");
 
-            if (Score < -10)
+            Status = BlogStatus.Archived;
+            LastModifiedAt = DateTime.UtcNow;
+        }
+
+        public Comment AddComment(long personId, string text)
+        {
+            // can only be created in state published
+            if (Status != BlogStatus.Published)
             {
-                IsClosed = true;
+                throw new InvalidOperationException("Comments can only be added to a Published blog.");
             }
+
+            var newComment = new Comment(
+                personId,
+                DateTime.UtcNow,
+                text
+            );
+
+            Comments.Add(newComment);
+
+            AddDomainEvent(new CommentCreatedEvent(this.Id, newComment.Id));
+
+            return newComment;
+        }
+
+        public Comment UpdateComment(long commentId, long personId, string newText)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteComment(long commentId, long personId)
+        {
+            throw new NotImplementedException();
         }
 
         private void Validate()
         {
-            if (AuthorId <= 0) throw new ArgumentException("Invalid AuthorId");
+            if (AuthorId == 0) throw new ArgumentException("Invalid AuthorId");
             if (string.IsNullOrWhiteSpace(Title)) throw new ArgumentException("Invalid Title");
+            ValidateDescription();
+        }
+
+        private void ValidateDescription()
+        {
             if (string.IsNullOrWhiteSpace(Description)) throw new ArgumentException("Invalid Description");
         }
     }
