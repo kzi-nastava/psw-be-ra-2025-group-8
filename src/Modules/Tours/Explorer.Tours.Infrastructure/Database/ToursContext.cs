@@ -15,6 +15,10 @@ public class ToursContext : DbContext
     public DbSet<Tour> Tours { get; set; }
     public DbSet<TourEquipment> TourEquipment { get; set; }
     public DbSet<Position> Positions { get; set; }
+    public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<KeyPointReached> KeyPointsReached { get; set; }
+    public DbSet<KeyPoint> KeyPoints { get; set; }
+    
 
     //Preference
     public DbSet<TouristPreferences> TouristPreferences { get; set; }

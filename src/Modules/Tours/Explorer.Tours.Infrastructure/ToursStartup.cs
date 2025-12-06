@@ -45,6 +45,7 @@ public static class ToursStartup
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
         //
 
+        services.AddScoped<ITourExecutionService, TourExecutionService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -59,9 +60,13 @@ public static class ToursStartup
         services.AddScoped<ITagsRepository, TagsRepository>();
         services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
 
+        services.AddScoped<ITourExecutionRepository, TourExecutionRepository>();
+        services.AddScoped<IKeyPointReachedRepository, KeyPointReachedRepository>();
+        services.AddScoped<IKeyPointRepository, KeyPointRepository>();
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Tour>), typeof(CrudDatabaseRepository<Tour, ToursContext>));
+        services.AddScoped(typeof(ICrudRepository<TourExecution>), typeof(CrudDatabaseRepository<TourExecution, ToursContext>));
         services.AddScoped<ITourRepository, TourRepository>();
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
 

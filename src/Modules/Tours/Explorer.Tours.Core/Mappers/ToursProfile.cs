@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.Domain;
+using static Explorer.Tours.Core.Domain.TourExecution;
 
 namespace Explorer.Tours.Core.Mappers;
 
@@ -13,6 +14,7 @@ public class ToursProfile : Profile
         CreateMap<ReportProblemDto, ReportProblem>().ReverseMap();
         CreateMap<IssueMessageDto, IssueMessage>().ReverseMap();
         CreateMap<FacilityDto, Facility>().ReverseMap();
+        CreateMap<KeyPointReachedDto, KeyPointReached>().ReverseMap();
 
         // KeyPoint <-> KeyPointDto
         CreateMap<KeyPointDto, KeyPoint>()
@@ -95,11 +97,23 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Tour, opt => opt.Ignore())
             .ForMember(dest => dest.EquipmentId, opt => opt.Ignore())
             .ForMember(dest => dest.Equipment, opt => opt.Ignore());
+
+        CreateMap<TourExecutionDto, TourExecution>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => MapTourExecutionStatus(src.Status)));
+
+        CreateMap<TourExecution, TourExecutionDto>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
     }
 
     private static TourStatus MapStatus(string status)
     {
         if (Enum.TryParse<TourStatus>(status, out var parsed)) return parsed;
         return TourStatus.Draft;
+    }
+
+    private static TourExecutionStatus MapTourExecutionStatus(string status)
+    {
+        if (Enum.TryParse<TourExecutionStatus>(status, out var parsed)) return parsed;
+        return TourExecutionStatus.Completed;
     }
 }
