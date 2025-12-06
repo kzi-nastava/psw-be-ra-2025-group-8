@@ -5,54 +5,57 @@ using Explorer.Blog.Core.Domain.RepositoryInterfaces;
 using Explorer.Blog.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace Explorer.Blog.Infrastructure.Database.Repositories;
-
-public class BlogPostRepository : IBlogPostRepository
+namespace Explorer.Blog.Infrastructure.Database.Repositories
 {
-    private readonly BlogContext _dbContext;
-
-    public BlogPostRepository(BlogContext dbContext)
+    public class BlogPostRepository : IBlogPostRepository
     {
-        _dbContext = dbContext;
-    }
+        private readonly BlogContext _dbContext;
 
-    public BlogPost? Get(long id)
-    {
-        return _dbContext.Set<BlogPost>()
-            .Include(b => b.Images)
-            .FirstOrDefault(b => b.Id == id);
-    }
+        public BlogPostRepository(BlogContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
 
-    public IEnumerable<BlogPost> GetForAuthor(long authorId)
-    {
-        return _dbContext.Set<BlogPost>()
-            .Include(b => b.Images)
-            .Where(b => b.AuthorId == authorId)
-            .ToList();
-    }
+        public BlogPost? Get(long id)
+        {
+            return _dbContext.Set<BlogPost>()
+                .Include(b => b.Images)
+                .Include(b => b.Votes)
+                .FirstOrDefault(b => b.Id == id);
+        }
 
-    public void Add(BlogPost blogPost)
-    {
-        _dbContext.Set<BlogPost>().Add(blogPost);
-        _dbContext.SaveChanges();
-    }
+        public IEnumerable<BlogPost> GetForAuthor(long authorId)
+        {
+            return _dbContext.Set<BlogPost>()
+                .Include(b => b.Images)
+                .Include(b => b.Votes)
+                .Where(b => b.AuthorId == authorId)
+                .ToList();
+        }
 
-    public void Update(BlogPost blogPost)
-    {
-        _dbContext.Set<BlogPost>().Update(blogPost);
-        _dbContext.SaveChanges();
-    }
+        public void Add(BlogPost blogPost)
+        {
+            _dbContext.Set<BlogPost>().Add(blogPost);
+            _dbContext.SaveChanges();
+        }
 
-    public void Delete(long id)
-    {
-        var blogPost = _dbContext.BlogPosts
-            .Include(bp => bp.Images)
-            .FirstOrDefault(bp => bp.Id == id);
+        public void Update(BlogPost blogPost)
+        {
+            _dbContext.Set<BlogPost>().Update(blogPost);
+            _dbContext.SaveChanges();
+        }
 
-        if (blogPost == null) return;
+        public void Delete(long id)
+        {
+            var blogPost = _dbContext.BlogPosts
+                .Include(bp => bp.Images)
+                .Include(bp => bp.Votes)
+                .FirstOrDefault(bp => bp.Id == id);
 
-        // EF će automatski obrisati slike (zbog FK i cascade rules)
-        _dbContext.BlogPosts.Remove(blogPost);
-        _dbContext.SaveChanges();
+            if (blogPost == null) return;
+
+            _dbContext.BlogPosts.Remove(blogPost);
+            _dbContext.SaveChanges();
+        }
     }
 }

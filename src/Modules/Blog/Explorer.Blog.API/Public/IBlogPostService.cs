@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 using Explorer.Blog.API.Dtos;
 
-namespace Explorer.Blog.API.Public;
-
-public interface IBlogPostService
+namespace Explorer.Blog.API.Public
 {
-    BlogPostDto Create(CreateBlogPostDto request);
-    BlogPostDto Update(long id, UpdateBlogPostDto request);
-    List<BlogPostDto> GetForAuthor(long authorId);
-    void Delete(long id);
+    public interface IBlogPostService
+    {
+        BlogPostDto Create(CreateBlogPostDto request);
+        BlogPostDto Update(long id, UpdateBlogPostDto request);
+        List<BlogPostDto> GetForAuthor(long authorId);
+        void Delete(long id);
+        BlogPostDto Vote(long blogPostId, long userId, int value);
+    }
 }

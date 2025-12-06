@@ -5,47 +5,56 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
-namespace Explorer.API.Controllers.Tourist;
-
-[Authorize(Policy = "touristPolicy")]
-[Route("api/tourist/blog-posts")]
-[ApiController]
-public class BlogPostController : ControllerBase
+namespace Explorer.API.Controllers.Tourist
 {
-    private readonly IBlogPostService _blogPostService;
-
-    public BlogPostController(IBlogPostService blogPostService)
+    [Authorize(Policy = "touristPolicy")]
+    [Route("api/tourist/blog-posts")]
+    [ApiController]
+    public class BlogPostController : ControllerBase
     {
-        _blogPostService = blogPostService;
-    }
+        private readonly IBlogPostService _blogPostService;
 
-    [HttpGet]
-    public ActionResult<List<BlogPostDto>> GetMyBlogPosts()
-    {
-        var touristId = User.PersonId();
-        var result = _blogPostService.GetForAuthor(touristId);
-        return Ok(result);
-    }
+        public BlogPostController(IBlogPostService blogPostService)
+        {
+            _blogPostService = blogPostService;
+        }
 
-    [HttpPost]
-    public ActionResult<BlogPostDto> Create([FromBody] CreateBlogPostDto dto)
-    {
-        dto.AuthorId = User.PersonId();
-        var created = _blogPostService.Create(dto);
-        return Ok(created);
-    }
+        [HttpGet]
+        public ActionResult<List<BlogPostDto>> GetMyBlogPosts()
+        {
+            var touristId = User.PersonId();
+            var result = _blogPostService.GetForAuthor(touristId);
+            return Ok(result);
+        }
 
-    [HttpPut("{id:long}")]
-    public ActionResult<BlogPostDto> Update(long id, [FromBody] UpdateBlogPostDto dto)
-    {
-        var updated = _blogPostService.Update(id, dto);
-        return Ok(updated);
-    }
+        [HttpPost]
+        public ActionResult<BlogPostDto> Create([FromBody] CreateBlogPostDto dto)
+        {
+            dto.AuthorId = User.PersonId();
+            var created = _blogPostService.Create(dto);
+            return Ok(created);
+        }
 
-    [HttpDelete("{id:long}")]
-    public ActionResult Delete(long id)
-    {
-        _blogPostService.Delete(id);
-        return Ok();
+        [HttpPut("{id:long}")]
+        public ActionResult<BlogPostDto> Update(long id, [FromBody] UpdateBlogPostDto dto)
+        {
+            var updated = _blogPostService.Update(id, dto);
+            return Ok(updated);
+        }
+
+        [HttpDelete("{id:long}")]
+        public ActionResult Delete(long id)
+        {
+            _blogPostService.Delete(id);
+            return Ok();
+        }
+
+        [HttpPost("{id:long}/vote")]
+        public ActionResult<BlogPostDto> Vote(long id, [FromBody] VoteBlogPostDto dto)
+        {
+            var userId = User.PersonId();
+            var result = _blogPostService.Vote(id, userId, dto.Value);
+            return Ok(result);
+        }
     }
 }
