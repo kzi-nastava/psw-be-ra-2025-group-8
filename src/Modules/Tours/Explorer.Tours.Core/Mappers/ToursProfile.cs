@@ -97,7 +97,6 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Tour, opt => opt.Ignore())
             .ForMember(dest => dest.EquipmentId, opt => opt.Ignore())
             .ForMember(dest => dest.Equipment, opt => opt.Ignore());
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
         CreateMap<TourExecutionDto, TourExecution>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => MapTourExecutionStatus(src.Status)));
