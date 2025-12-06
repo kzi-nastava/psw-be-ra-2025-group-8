@@ -36,7 +36,7 @@ public class TourAggregateTests
 
         // Assert
         tour.KeyPoints.Count.ShouldBe(1);
-        tour.LengthInKilometers.ShouldBe(0); // stiil no length with only one point
+        tour.LengthInKilometers.ShouldBe(0); // still no length with only one point
         tour.KeyPoints[0].Order.ShouldBe(1);
     }
 
@@ -94,12 +94,13 @@ public class TourAggregateTests
     {
         // Arrange
         var tour = CreateDraftTour();
-        // has no keypoints
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+        tour.SetTransportTime(TransportType.Walk, 120);
 
-        // Act & Assert
+        // Act & Assert: bez ijedne ključne tačke
         Should.Throw<InvalidOperationException>(() => tour.Publish());
 
-        // Adding another key point - still cannot publish
+        // Dodamo jednu ključnu tačku – i dalje ne sme da se objavi
         tour.AddKeyPoint(
             name: "Only point",
             description: "Jedina tačka",
@@ -137,6 +138,20 @@ public class TourAggregateTests
     }
 
     [Fact]
+    public void Publish_fails_when_no_transport_times_defined()
+    {
+        // Arrange
+        var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
+
+        // Act & Assert
+        Should.Throw<InvalidOperationException>(() => tour.Publish());
+    }
+
+    [Fact]
     public void Publish_succeeds_when_all_rules_satisfied()
     {
         var tour = CreateDraftTour();
@@ -145,10 +160,13 @@ public class TourAggregateTests
         tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
         tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
 
+        tour.SetTransportTime(TransportType.Walk, 120);
+
         tour.Publish();
 
         tour.Status.ShouldBe(TourStatus.Published);
         tour.LengthInKilometers.ShouldBeGreaterThan(0);
+        tour.PublishedAt.ShouldNotBeNull();
     }
 
     [Fact]

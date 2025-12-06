@@ -21,9 +21,11 @@ public class TourRepository : ITourRepository
             .Include(t => t.KeyPoints)
             .Include(t => t.RequiredEquipment)
                 .ThenInclude(te => te.Equipment)
-            .Include(t => t.TourTags)                       
-                .ThenInclude(tt => tt.Tags);               
+            .Include(t => t.TourTags)
+                .ThenInclude(tt => tt.Tags)
+            .Include(t => t.TransportTimes);
     }
+
 
     public Tour Get(long id)
     {

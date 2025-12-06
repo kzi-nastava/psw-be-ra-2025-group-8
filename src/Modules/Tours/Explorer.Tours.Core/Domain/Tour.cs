@@ -16,6 +16,8 @@ namespace Explorer.Tours.Core.Domain
         public double LengthInKilometers { get; private set; }
         public List<TourEquipment> RequiredEquipment { get; private set; } = new();
         public List<TourTag> TourTags { get; private set; } = new();
+        public DateTime? PublishedAt { get; private set; }
+        public List<TourTransportTime> TransportTimes { get; private set; } = new();
 
         // Constructor for creating a new tour (draft, price=0)
         public Tour(string name, string description, int difficulty, int authorId)
@@ -30,6 +32,7 @@ namespace Explorer.Tours.Core.Domain
             KeyPoints = new List<KeyPoint>();
             LengthInKilometers = 0;
             RequiredEquipment = new List<TourEquipment>();
+            TransportTimes = new List<TourTransportTime>();
         }
 
         // For rehydrating an existing tour and tests
@@ -47,6 +50,7 @@ namespace Explorer.Tours.Core.Domain
             KeyPoints = new List<KeyPoint>();
             LengthInKilometers = 0;
             RequiredEquipment = new List<TourEquipment>();
+            TransportTimes = new List<TourTransportTime>();
         }
 
         // EF Core constructor
@@ -55,6 +59,7 @@ namespace Explorer.Tours.Core.Domain
             TourTags = new List<TourTag>();
             KeyPoints = new List<KeyPoint>();
             RequiredEquipment = new List<TourEquipment>();
+            TransportTimes = new List<TourTransportTime>();
         }
 
         // Adding a key point to the tour
@@ -112,6 +117,13 @@ namespace Explorer.Tours.Core.Domain
             if (KeyPoints.Count < 2)
                 throw new InvalidOperationException("Tour must have at least two key points before publishing.");
 
+            if (TransportTimes == null || !TransportTimes.Any())
+                throw new InvalidOperationException("Tour must have at least one transport duration before publishing.");
+
+            if (TransportTimes.Any(t => t.DurationMinutes <= 0))
+                throw new InvalidOperationException("Transport duration must be greater than zero.");
+
+            PublishedAt = DateTime.UtcNow;
             Status = TourStatus.Published;
         }
 
@@ -139,6 +151,7 @@ namespace Explorer.Tours.Core.Domain
 
             LengthInKilometers = Math.Round(total, 3);
         }
+
         // Add equipment required for the tour
         public void AddRequiredEquipment(long equipmentId)
         {
@@ -147,16 +160,42 @@ namespace Explorer.Tours.Core.Domain
 
             RequiredEquipment.Add(new TourEquipment(Id, equipmentId));
         }
+
         // Remove equipment from the tour
         public void RemoveRequiredEquipment(long equipmentId)
         {
             var existing = RequiredEquipment
                 .FirstOrDefault(e => e.EquipmentId == equipmentId);
 
-            
+
             if (existing == null) return;
 
             RequiredEquipment.Remove(existing);
+        }
+
+        public void SetTransportTime(TransportType transport, int minutes)
+        {
+            if (minutes <= 0)
+                throw new ArgumentOutOfRangeException(nameof(minutes), "Duration must be greater than zero.");
+
+            var existing = TransportTimes.FirstOrDefault(t => t.Transport == transport);
+            if (existing != null)
+            {
+                existing.DurationMinutes = minutes;
+            }
+            else
+            {
+                TransportTimes.Add(new TourTransportTime
+                {
+                    Transport = transport,
+                    DurationMinutes = minutes
+                });
+            }
+        }
+
+        public void ClearTransportTimes()
+        {
+            TransportTimes.Clear();
         }
 
         public void AddTag(long tagId)
@@ -184,8 +223,8 @@ namespace Explorer.Tours.Core.Domain
 
     public enum TourStatus
     {
-        Draft,      
-        Published, 
-        Archived    
+        Draft,
+        Published,
+        Archived
     }
 }
