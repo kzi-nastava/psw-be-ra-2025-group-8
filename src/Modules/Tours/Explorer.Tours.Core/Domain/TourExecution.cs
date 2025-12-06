@@ -54,6 +54,7 @@ public class TourExecution : Entity
     }
     public enum TourExecutionStatus
     {
+        InProgress,
         Completed,
         Abandoned
     }
