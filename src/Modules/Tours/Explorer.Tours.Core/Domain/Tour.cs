@@ -143,7 +143,7 @@ namespace Explorer.Tours.Core.Domain
         public void AddRequiredEquipment(long equipmentId)
         {
             if (RequiredEquipment.Any(e => e.EquipmentId == equipmentId))
-                throw new InvalidOperationException("Equipment already added to this tour.");
+                return;
 
             RequiredEquipment.Add(new TourEquipment(Id, equipmentId));
         }
@@ -162,7 +162,7 @@ namespace Explorer.Tours.Core.Domain
         public void AddTag(long tagId)
         {
             if (TourTags.Any(tt => tt.TagsId == tagId))
-                throw new InvalidOperationException("Tag already added to this tour.");
+                return;
 
             TourTags.Add(new TourTag
             {
