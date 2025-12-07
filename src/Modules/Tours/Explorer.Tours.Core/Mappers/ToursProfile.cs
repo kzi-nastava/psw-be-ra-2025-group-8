@@ -45,7 +45,8 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.RequiredEquipment, opt => opt.Ignore())
             .ForMember(dest => dest.TourTags, opt => opt.Ignore())
             .ForMember(dest => dest.TransportTimes, opt => opt.Ignore())
-            .ForMember(dest => dest.PublishedAt, opt => opt.Ignore());
+            .ForMember(dest => dest.PublishedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.ArchivedAt, opt => opt.Ignore());
 
         // Tour -> TourDto (answer to client)
         CreateMap<Tour, TourDto>()
@@ -60,7 +61,9 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.TransportTimes,
                 opt => opt.MapFrom(src => src.TransportTimes))
             .ForMember(dest => dest.PublishedAt,
-                opt => opt.MapFrom(src => src.PublishedAt));
+                opt => opt.MapFrom(src => src.PublishedAt))
+            .ForMember(dest => dest.ArchivedAt,
+                opt => opt.MapFrom(src => src.ArchivedAt));
 
 
 

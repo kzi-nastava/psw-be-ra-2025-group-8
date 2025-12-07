@@ -114,6 +114,17 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
+    // PUT api/author/tour/{id}/reactivate
+    // Reactivating an archived tour
+    [HttpPut("{id:long}/reactivate")]
+    public ActionResult<TourDto> Reactivate(long id) 
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.Reactivate(id, authorId);
+        return Ok(result);
+    }
+
+
     private int GetAuthorIdFromToken()
     {
         var idClaim = User.FindFirst("id")
