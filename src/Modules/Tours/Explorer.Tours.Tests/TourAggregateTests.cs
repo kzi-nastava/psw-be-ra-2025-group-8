@@ -170,15 +170,50 @@ public class TourAggregateTests
     }
 
     [Fact]
-    public void Archive_sets_status_to_archived()
+    public void Archive_sets_status_and_archivedAt_for_published_tour()
     {
-        // Arrange
+        // Arrange – napravimo validnu published turu
         var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
+
+        tour.SetTransportTime(TransportType.Walk, 120);
+        tour.Publish();
 
         // Act
         tour.Archive();
 
         // Assert
         tour.Status.ShouldBe(TourStatus.Archived);
+        tour.ArchivedAt.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void Archive_fails_if_tour_not_published()
+    {
+        var tour = CreateDraftTour();
+
+        Should.Throw<InvalidOperationException>(() => tour.Archive());
+    }
+
+    [Fact]
+    public void Reactivate_moves_status_back_to_published()
+    {
+        var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
+        tour.SetTransportTime(TransportType.Walk, 120);
+
+        tour.Publish();
+        tour.Archive();
+
+        tour.Reactivate();
+
+        tour.Status.ShouldBe(TourStatus.Published);
+    }
+
 }
