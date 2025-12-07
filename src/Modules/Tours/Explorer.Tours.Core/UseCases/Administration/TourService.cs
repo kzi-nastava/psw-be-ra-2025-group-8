@@ -104,7 +104,7 @@ public class TourService : ITourService
             keyPointDto.Name,
             keyPointDto.Description ?? string.Empty,
             keyPointDto.ImageUrl ?? string.Empty,
-            keyPointDto.Secret ?? string.Empty,
+            string.Empty, // Secret is managed separately, not through public DTO
             location
         );
 
