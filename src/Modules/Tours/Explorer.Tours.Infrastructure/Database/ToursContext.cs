@@ -63,6 +63,9 @@ public class ToursContext : DbContext
             builder.Property(t => t.PublishedAt)
                 .IsRequired(false);
 
+            builder.Property(t => t.ArchivedAt)
+                .IsRequired(false);
+
             // route length
             builder.Property(t => t.LengthInKilometers)
                 .HasColumnType("double precision")

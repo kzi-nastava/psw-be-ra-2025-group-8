@@ -15,6 +15,7 @@ namespace Explorer.Tours.API.Dtos
         public double LengthInKilometers { get; set; }
         public List<TourEquipmentDto>? RequiredEquipment { get; set; }
         public DateTime? PublishedAt { get; set; }
+        public DateTime? ArchivedAt { get; set; }
         public List<TourTransportTimeDto>? TransportTimes { get; set; }
     }
 }
