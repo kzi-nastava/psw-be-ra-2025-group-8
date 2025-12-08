@@ -76,7 +76,7 @@ public class BlogCommentController : ControllerBase
     /// </summary>
     [HttpPut("{blogId:long}/comments/{commentId:long}")]
     [Authorize(Policy = "personPolicy")]
-    public ActionResult<CommentDto> Update([FromRoute] long commentId, [FromBody] CommentCreationDto commentData)
+    public ActionResult<CommentDto> Update([FromRoute] long blogId, [FromRoute] long commentId, [FromBody] CommentCreationDto commentData)
     {
         var userId = User.PersonId();
 
@@ -108,7 +108,7 @@ public class BlogCommentController : ControllerBase
     /// </summary>
     [HttpDelete("{blogId:long}/comments/{commentId:long}")]
     [Authorize(Policy = "personPolicy")]
-    public ActionResult Delete([FromRoute] long commentId)
+    public ActionResult Delete([FromRoute] long blogId, [FromRoute] long commentId)
     {
         var userId = User.PersonId();
 
