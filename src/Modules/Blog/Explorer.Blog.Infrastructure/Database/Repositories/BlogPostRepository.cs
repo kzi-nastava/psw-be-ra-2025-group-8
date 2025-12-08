@@ -65,4 +65,12 @@ public class BlogPostRepository : IBlogPostRepository
         _dbContext.BlogPosts.Remove(blogPost);
         _dbContext.SaveChanges();
     }
+
+    public BlogPost? GetByCommentId(long commentId)
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Comments)
+            .Include(b => b.Images)
+            .FirstOrDefault(b => b.Comments.Any(c => c.Id == commentId));
+    }
 }
