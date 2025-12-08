@@ -37,5 +37,11 @@ namespace Explorer.Blog.Core.Domain
             Text = newText;
             LastEditTime = DateTime.UtcNow;
         }
+
+        public bool CanBeModified()
+        {
+            const int modificationLimitMinutes = 15;
+            return (DateTime.UtcNow - CreationTime).TotalMinutes <= modificationLimitMinutes;
+        }
     }
 }

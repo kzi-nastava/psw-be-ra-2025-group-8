@@ -104,12 +104,52 @@ namespace Explorer.Blog.Core.Domain
 
         public Comment UpdateComment(long commentId, long personId, string newText)
         {
-            throw new NotImplementedException();
+            var commentToUpdate = Comments.FirstOrDefault(c => c.Id == commentId);
+
+            if (commentToUpdate == null)
+            {
+                throw new KeyNotFoundException($"Comment with ID {commentId} not found in blog.");
+            }
+
+            if (commentToUpdate.PersonId != personId)
+            {
+                throw new UnauthorizedAccessException("Only the author can update this comment.");
+            }
+
+            if (!commentToUpdate.CanBeModified())
+            {
+                throw new UnauthorizedAccessException("Comment cannot be modified more than 15 minutes after creation.");
+            }
+
+            commentToUpdate.UpdateText(newText);
+
+            AddDomainEvent(new CommentUpdatedEvent(this.Id, commentId));
+
+            return commentToUpdate;
         }
 
         public void DeleteComment(long commentId, long personId)
         {
-            throw new NotImplementedException();
+            var commentToDelete = Comments.FirstOrDefault(c => c.Id == commentId);
+
+            if (commentToDelete == null)
+            {
+                throw new KeyNotFoundException($"Comment with ID {commentId} not found in blog.");
+            }
+
+            if (commentToDelete.PersonId != personId)
+            {
+                throw new UnauthorizedAccessException("Only the author can delete this comment.");
+            }
+
+            if (!commentToDelete.CanBeModified())
+            {
+                throw new UnauthorizedAccessException("Comment cannot be deleted more than 15 minutes after creation.");
+            }
+
+            Comments.Remove(commentToDelete);
+
+            AddDomainEvent(new CommentDeletedEvent(this.Id, commentId));
         }
 
         private void Validate()
