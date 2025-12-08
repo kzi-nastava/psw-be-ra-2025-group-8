@@ -10,7 +10,15 @@ public class ToursProfile : Profile
     {
         CreateMap<EquipmentDto, Equipment>().ReverseMap();
         CreateMap<MonumentDto, Monument>().ReverseMap();
-        CreateMap<ReportProblemDto, ReportProblem>().ReverseMap();
+        
+        // ReportProblem mapiranje sa custom lokom za IsOverdue
+        CreateMap<ReportProblemDto, ReportProblem>();
+        CreateMap<ReportProblem, ReportProblemDto>()
+            .ForMember(dest => dest.IsOverdue, 
+                opt => opt.MapFrom(src => 
+                    (src.IsResolved == null || src.IsResolved == false) && 
+                    (DateTime.UtcNow - src.ReportTime).TotalDays > 5));
+        
         CreateMap<IssueMessageDto, IssueMessage>().ReverseMap();
         CreateMap<FacilityDto, Facility>().ReverseMap();
 
