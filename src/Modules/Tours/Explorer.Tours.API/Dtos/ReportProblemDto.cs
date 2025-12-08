@@ -28,5 +28,8 @@ namespace Explorer.Tours.API.Dtos
 
         // Messages
         public List<IssueMessageDto>? Messages { get; set; }
+
+        // Property koji označava da li je problem star više od 5 dana i nije rešen
+        public bool IsOverdue { get; set; }
     }
 }
