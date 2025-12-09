@@ -10,4 +10,6 @@ public interface IBlogPostRepository
     void Add(BlogPost blogPost);
     void Update(BlogPost blogPost);
     void Delete(long id);
+    BlogPost? GetByCommentId(long commentId);
+    void RemoveComment(long commentId);
 }

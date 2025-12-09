@@ -70,4 +70,62 @@ public class BlogCommentController : ControllerBase
             return BadRequest(e.Message); // 400 Bad Request
         }
     }
+
+    /// <summary>
+    /// Update existing comment (author only, within 15 minutes)
+    /// </summary>
+    [HttpPut("{blogId:long}/comments/{commentId:long}")]
+    [Authorize(Policy = "personPolicy")]
+    public ActionResult<CommentDto> Update([FromRoute] long blogId, [FromRoute] long commentId, [FromBody] CommentCreationDto commentData)
+    {
+        var userId = User.PersonId();
+
+        try
+        {
+            var result = _blogCommentService.Update(userId, commentId, commentData);
+            return Ok(result); // 200 OK
+        }
+        catch (KeyNotFoundException e)
+        {
+            // comment or blog containing that comment is not found
+            return NotFound(e.Message); // 404 Not Found
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            // not author or 15 min threshold passed
+            return StatusCode(403, e.Message); // 403 Forbidden
+        }
+        catch (ArgumentException e)
+        {
+            // empty text
+            return BadRequest(e.Message); // 400 Bad Request
+        }
+    }
+
+    // --- NOVA RUTA ZA BRISANJE (DELETE) ---
+    /// <summary>
+    /// Delete existing comment (author only, within 15 minutes)
+    /// </summary>
+    [HttpDelete("{blogId:long}/comments/{commentId:long}")]
+    [Authorize(Policy = "personPolicy")]
+    public ActionResult Delete([FromRoute] long blogId, [FromRoute] long commentId)
+    {
+        var userId = User.PersonId();
+
+        try
+        {
+            _blogCommentService.Delete(userId, commentId);
+            return NoContent(); // 204 No Content(Success)
+        }
+        catch (KeyNotFoundException e)
+        {
+            // comment or blog containing that comment is not found
+            return NotFound(e.Message); // 404 Not Found
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            // not author or 15 min threshold passed
+            return StatusCode(403, e.Message); // 403 Forbidden
+        }
+    }
 }

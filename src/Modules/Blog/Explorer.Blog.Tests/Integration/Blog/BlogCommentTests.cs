@@ -129,7 +129,6 @@ public class BlogCommentTests : BaseBlogIntegrationTest
         actionResult.ShouldBeOfType<BadRequestObjectResult>();
     }
 
-
     private static BlogCommentController CreateCommentController(IServiceScope scope, long userId, long personId)
     {
         var controller = new BlogCommentController(

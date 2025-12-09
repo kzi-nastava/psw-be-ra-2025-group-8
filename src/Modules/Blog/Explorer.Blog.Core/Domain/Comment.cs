@@ -11,7 +11,7 @@ namespace Explorer.Blog.Core.Domain
         public string Text { get; private set; }
         public DateTime? LastEditTime { get; private set; }
 
-        protected Comment() { }
+        public Comment() { }
 
         public Comment(long personId, DateTime creationTime, string text)
         {
@@ -36,6 +36,12 @@ namespace Explorer.Blog.Core.Domain
             Validate(newText);
             Text = newText;
             LastEditTime = DateTime.UtcNow;
+        }
+
+        public bool CanBeModified()
+        {
+            const int modificationLimitMinutes = 15;
+            return (DateTime.UtcNow - CreationTime).TotalMinutes <= modificationLimitMinutes;
         }
     }
 }
