@@ -48,6 +48,18 @@ public class TourExecutionService : ITourExecutionService
 
     public TourExecutionDto Create(TourExecutionDto tourExecutionDto)
     {
+        // Validation: Check if tourist already has an active TourExecution
+        var activeTourExecutions = _tourExecutionRepository.GetByTourist(tourExecutionDto.IdTourist)
+            .Where(te => te.Status == TourExecutionStatus.InProgress) // Only InProgress tours are considered active
+            .ToList();
+
+        if (activeTourExecutions.Any())
+        {
+            throw new ArgumentException(
+                $"Tourist {tourExecutionDto.IdTourist} already has an active tour execution (ID: {activeTourExecutions.First().Id}). " +
+                "Please complete or abandon the current tour before starting a new one.");
+        }
+
         var status = Enum.Parse<TourExecutionStatus>(tourExecutionDto.Status);
         var tourExecution = new TourExecution(
             tourExecutionDto.IdTour,
