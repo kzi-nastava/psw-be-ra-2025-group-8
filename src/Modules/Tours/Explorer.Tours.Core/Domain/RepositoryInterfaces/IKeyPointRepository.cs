@@ -6,4 +6,5 @@ public interface IKeyPointRepository
 {
     List<KeyPoint> GetByTour(long tourId);
     KeyPoint Create(KeyPoint keyPoint);
+    KeyPoint GetByTourAndOrder(long tourId, int order);
 }

@@ -15,4 +15,5 @@ public interface ITourExecutionService
     void Delete(int id);
     CheckKeyPointResponseDto CheckKeyPoint(CheckKeyPointRequestDto request);
     List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId);
+    KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder);
 }
