@@ -7,6 +7,7 @@ public class TourExecutionDto
     public double Longitude { get; set; }
     public double Latitude { get; set; }
     public int IdTourist { get; set; }
+    public double CompletionPercentage { get; set; }
     public string Status { get; set; }
     public DateTime LastActivity { get; set; }
 }
