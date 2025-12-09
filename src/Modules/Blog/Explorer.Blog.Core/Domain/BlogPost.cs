@@ -13,6 +13,7 @@ namespace Explorer.Blog.Core.Domain
         public BlogStatus Status { get; private set; }
         public List<BlogImage> Images { get; private set; }
         public List<Comment> Comments { get; private set; }
+        public List<Vote> Votes { get; private set; }
 
         private readonly List<object> _domainEvents = new List<object>();
         public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
@@ -28,6 +29,7 @@ namespace Explorer.Blog.Core.Domain
             Status = BlogStatus.Draft;
             Images = images?.ToList() ?? new List<BlogImage>();
             Comments = new List<Comment>();
+            Votes = new List<Vote>();
             Validate();
         }
 
@@ -110,6 +112,59 @@ namespace Explorer.Blog.Core.Domain
         public void DeleteComment(long commentId, long personId)
         {
             throw new NotImplementedException();
+        }
+
+        public Vote AddVote(long personId, VoteType voteType)
+        {
+            // can only vote on published blogs
+            if (Status != BlogStatus.Published)
+            {
+                throw new InvalidOperationException("Votes can only be added to a Published blog.");
+            }
+
+            // check if user already voted
+            var existingVote = Votes.FirstOrDefault(v => v.PersonId == personId);
+            if (existingVote != null)
+            {
+                // if same vote type, remove vote (toggle off)
+                if (existingVote.Type == voteType)
+                {
+                    Votes.Remove(existingVote);
+                    return null;
+                }
+                // if different vote type, change vote
+                existingVote.ChangeVote(voteType);
+                return existingVote;
+            }
+
+            // add new vote
+            var newVote = new Vote(personId, voteType);
+            Votes.Add(newVote);
+            return newVote;
+        }
+
+        public void RemoveVote(long personId)
+        {
+            var vote = Votes.FirstOrDefault(v => v.PersonId == personId);
+            if (vote != null)
+            {
+                Votes.Remove(vote);
+            }
+        }
+
+        public Vote? GetUserVote(long personId)
+        {
+            return Votes.FirstOrDefault(v => v.PersonId == personId);
+        }
+
+        public int GetUpvoteCount()
+        {
+            return Votes.Count(v => v.Type == VoteType.Upvote);
+        }
+
+        public int GetDownvoteCount()
+        {
+            return Votes.Count(v => v.Type == VoteType.Downvote);
         }
 
         private void Validate()

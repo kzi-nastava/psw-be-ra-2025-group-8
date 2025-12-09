@@ -126,4 +126,28 @@ public class BlogPostController : ControllerBase
         _blogPostService.Delete(id);
         return Ok();
     }
+
+    /// <summary>
+    /// Add upvote to a published blog post
+    /// </summary>
+    [HttpPost("{id:long}/upvote")]
+    [Authorize(Policy = "personPolicy")]
+    public ActionResult<BlogPostDto> AddUpvote(long id)
+    {
+        var personId = User.PersonId();
+        var result = _blogPostService.AddUpvote(id, personId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Add downvote to a published blog post
+    /// </summary>
+    [HttpPost("{id:long}/downvote")]
+    [Authorize(Policy = "personPolicy")]
+    public ActionResult<BlogPostDto> AddDownvote(long id)
+    {
+        var personId = User.PersonId();
+        var result = _blogPostService.AddDownvote(id, personId);
+        return Ok(result);
+    }
 }

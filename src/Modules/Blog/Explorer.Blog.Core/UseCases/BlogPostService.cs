@@ -27,7 +27,7 @@ public class BlogPostService : IBlogPostService
         var blogPost = new BlogPost(request.AuthorId, request.Title, request.Description, images);
         _blogPostRepository.Add(blogPost);
 
-        return _mapper.Map<BlogPostDto>(blogPost);
+        return MapBlogPostDto(blogPost, request.AuthorId);
     }
 
     public BlogPostDto UpdateDraft(long id, UpdateBlogPostDto request, long authorId)
@@ -42,7 +42,7 @@ public class BlogPostService : IBlogPostService
         blogPost.UpdateDraft(request.Title, request.Description, images);
         _blogPostRepository.Update(blogPost);
 
-        return _mapper.Map<BlogPostDto>(blogPost);
+        return MapBlogPostDto(blogPost, authorId);
     }
 
     public BlogPostDto UpdatePublished(long id, UpdatePublishedBlogPostDto request, long authorId)
@@ -54,7 +54,7 @@ public class BlogPostService : IBlogPostService
         blogPost.UpdatePublished(request.Description);
         _blogPostRepository.Update(blogPost);
 
-        return _mapper.Map<BlogPostDto>(blogPost);
+        return MapBlogPostDto(blogPost, authorId);
     }
 
     public BlogPostDto Publish(long id, long authorId)
@@ -66,7 +66,7 @@ public class BlogPostService : IBlogPostService
         blogPost.Publish();
         _blogPostRepository.Update(blogPost);
 
-        return _mapper.Map<BlogPostDto>(blogPost);
+        return MapBlogPostDto(blogPost, authorId);
     }
 
     public BlogPostDto Archive(long id, long authorId)
@@ -78,13 +78,13 @@ public class BlogPostService : IBlogPostService
         blogPost.Archive();
         _blogPostRepository.Update(blogPost);
 
-        return _mapper.Map<BlogPostDto>(blogPost);
+        return MapBlogPostDto(blogPost, authorId);
     }
 
     public List<BlogPostDto> GetForAuthor(long authorId)
     {
         var blogPosts = _blogPostRepository.GetForAuthor(authorId);
-        return _mapper.Map<List<BlogPostDto>>(blogPosts.ToList());
+        return blogPosts.Select(bp => MapBlogPostDto(bp, authorId)).ToList();
     }
 
     public List<BlogPostDto> GetVisibleBlogs(long? userId)
@@ -98,11 +98,11 @@ public class BlogPostService : IBlogPostService
             var publishedAndArchived = _blogPostRepository.GetPublishedAndArchived().ToList();
             
             var allVisible = publishedAndArchived.Concat(authorDrafts).ToList();
-            return _mapper.Map<List<BlogPostDto>>(allVisible);
+            return allVisible.Select(bp => MapBlogPostDto(bp, userId)).ToList();
         }
 
         var publishedAndArchivedAnonymous = _blogPostRepository.GetPublishedAndArchived().ToList();
-        return _mapper.Map<List<BlogPostDto>>(publishedAndArchivedAnonymous);
+        return publishedAndArchivedAnonymous.Select(bp => MapBlogPostDto(bp, null)).ToList();
     }
 
     public BlogPostDto GetById(long id, long? userId)
@@ -119,7 +119,7 @@ public class BlogPostService : IBlogPostService
             throw new UnauthorizedAccessException("You do not have permission to view this blog post.");
         }
 
-        return _mapper.Map<BlogPostDto>(blogPost);
+        return MapBlogPostDto(blogPost, userId);
     }
 
     public void Delete(long id)
@@ -128,5 +128,45 @@ public class BlogPostService : IBlogPostService
         if (blogPost == null) throw new KeyNotFoundException("Blog post not found.");
 
         _blogPostRepository.Delete(id);
+    }
+
+    public BlogPostDto AddUpvote(long blogPostId, long personId)
+    {
+        var blogPost = _blogPostRepository.Get(blogPostId);
+        if (blogPost == null) throw new KeyNotFoundException("Blog post not found.");
+
+        blogPost.AddVote(personId, VoteType.Upvote);
+        _blogPostRepository.Update(blogPost);
+
+        return MapBlogPostDto(blogPost, personId);
+    }
+
+    public BlogPostDto AddDownvote(long blogPostId, long personId)
+    {
+        var blogPost = _blogPostRepository.Get(blogPostId);
+        if (blogPost == null) throw new KeyNotFoundException("Blog post not found.");
+
+        blogPost.AddVote(personId, VoteType.Downvote);
+        _blogPostRepository.Update(blogPost);
+
+        return MapBlogPostDto(blogPost, personId);
+    }
+
+    private BlogPostDto MapBlogPostDto(BlogPost blogPost, long? userId)
+    {
+        var dto = _mapper.Map<BlogPostDto>(blogPost);
+        dto.UpvoteCount = blogPost.GetUpvoteCount();
+        dto.DownvoteCount = blogPost.GetDownvoteCount();
+        
+        if (userId.HasValue)
+        {
+            var userVote = blogPost.GetUserVote(userId.Value);
+            if (userVote != null)
+            {
+                dto.UserVote = _mapper.Map<VoteDto>(userVote);
+            }
+        }
+
+        return dto;
     }
 }
