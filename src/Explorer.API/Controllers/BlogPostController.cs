@@ -150,4 +150,28 @@ public class BlogPostController : ControllerBase
         var result = _blogPostService.AddDownvote(id, personId);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Get active blog posts (score > 100 OR comment count > 10)
+    /// </summary>
+    [HttpGet("active")]
+    [AllowAnonymous]
+    public ActionResult<List<BlogPostDto>> GetActive()
+    {
+        var userId = User.Identity?.IsAuthenticated == true ? User.PersonId() : (long?)null;
+        var result = _blogPostService.GetActive(userId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get famous blog posts (score > 500 AND comment count > 30)
+    /// </summary>
+    [HttpGet("famous")]
+    [AllowAnonymous]
+    public ActionResult<List<BlogPostDto>> GetFamous()
+    {
+        var userId = User.Identity?.IsAuthenticated == true ? User.PersonId() : (long?)null;
+        var result = _blogPostService.GetFamous(userId);
+        return Ok(result);
+    }
 }

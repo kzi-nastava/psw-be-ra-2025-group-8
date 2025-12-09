@@ -152,6 +152,18 @@ public class BlogPostService : IBlogPostService
         return MapBlogPostDto(blogPost, personId);
     }
 
+    public List<BlogPostDto> GetActive(long? userId)
+    {
+        var activeBlogs = _blogPostRepository.GetActive().ToList();
+        return activeBlogs.Select(bp => MapBlogPostDto(bp, userId)).ToList();
+    }
+
+    public List<BlogPostDto> GetFamous(long? userId)
+    {
+        var famousBlogs = _blogPostRepository.GetFamous().ToList();
+        return famousBlogs.Select(bp => MapBlogPostDto(bp, userId)).ToList();
+    }
+
     private BlogPostDto MapBlogPostDto(BlogPost blogPost, long? userId)
     {
         var dto = _mapper.Map<BlogPostDto>(blogPost);

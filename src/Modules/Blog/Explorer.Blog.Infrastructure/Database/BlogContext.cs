@@ -20,6 +20,10 @@ public class BlogContext : DbContext
             .Property(b => b.Status)
             .HasConversion<int>();
 
+        modelBuilder.Entity<BlogPost>()
+            .Property(b => b.PopularityStatus)
+            .HasConversion<int>();
+
         // cascade deletion of comments
         modelBuilder.Entity<BlogPost>()
             .HasMany(b => b.Comments)

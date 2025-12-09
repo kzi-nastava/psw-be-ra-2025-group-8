@@ -45,6 +45,26 @@ public class BlogPostRepository : IBlogPostRepository
             .ToList();
     }
 
+    public IEnumerable<BlogPost> GetActive()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.PopularityStatus == BlogPopularityStatus.Active)
+            .ToList();
+    }
+
+    public IEnumerable<BlogPost> GetFamous()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.PopularityStatus == BlogPopularityStatus.Famous)
+            .ToList();
+    }
+
     public void Add(BlogPost blogPost)
     {
         _dbContext.Set<BlogPost>().Add(blogPost);

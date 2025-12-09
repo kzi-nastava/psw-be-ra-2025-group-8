@@ -16,4 +16,6 @@ public interface IBlogPostService
     void Delete(long id);
     BlogPostDto AddUpvote(long blogPostId, long personId);
     BlogPostDto AddDownvote(long blogPostId, long personId);
+    List<BlogPostDto> GetActive(long? userId);
+    List<BlogPostDto> GetFamous(long? userId);
 }
