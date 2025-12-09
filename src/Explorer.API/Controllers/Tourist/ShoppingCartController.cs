@@ -22,7 +22,7 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         [HttpGet()]
-        public ActionResult<ShoppingCartDto> GetCart(long userId)
+        public ActionResult<ShoppingCartDto> GetCart([FromQuery] long userId)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace Explorer.API.Controllers.Tourist
             }
         }
         [HttpPost("new")]
-        public ActionResult NewCart(long userId)
+        public ActionResult NewCart([FromQuery] long userId)
         {
             try
             {
