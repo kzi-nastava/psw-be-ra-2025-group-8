@@ -19,6 +19,7 @@ namespace Explorer.Tours.API.Public.Author
         TourDto AddTag(long tourId, string tag, int authorId);
         TourDto RemoveTag(long tourId, string tag, int authorId);
         TourDto UpdateTags(long tourId, List<string> tags, int authorId);
+        TourDto UpdateTransportTimes(long tourId, List<TourTransportTimeDto> times, int authorId);
         TourDto UpdateEquipment(long tourId, List<long> equipmentIds, int authorId);
         List<EquipmentForTourDto> GetEquipmentForTour(long tourId, int authorId);
     }

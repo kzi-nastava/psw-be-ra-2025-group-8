@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+
 
 namespace Explorer.Tours.Core.UseCases.Administration;
 
@@ -102,7 +104,7 @@ public class TourService : ITourService
             keyPointDto.Name,
             keyPointDto.Description ?? string.Empty,
             keyPointDto.ImageUrl ?? string.Empty,
-            keyPointDto.Secret ?? string.Empty,
+            string.Empty, // Secret is managed separately, not through public DTO
             location
         );
 
@@ -306,5 +308,34 @@ public class TourService : ITourService
         return _mapper.Map<TourDto>(updated);
     }
 
+    public TourDto UpdateTransportTimes(long tourId, List<TourTransportTimeDto> times, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+        // Delete existing transport times and add new ones
+        tour.ClearTransportTimes();
+
+        if (times != null)
+        {
+            foreach (var dto in times)
+            {
+                if (!Enum.TryParse<TransportType>(dto.Transport, true, out var transport))
+                {
+                    throw new EntityValidationException($"Invalid transport value: '{dto.Transport}'.");
+                }
+
+                if (dto.DurationMinutes <= 0)
+                {
+                    throw new EntityValidationException("Duration must be a positive number of minutes.");
+                }
+
+                tour.SetTransportTime(transport, dto.DurationMinutes);
+            }
+        }
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
 
 }
