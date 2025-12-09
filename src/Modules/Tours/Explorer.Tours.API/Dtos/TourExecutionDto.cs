@@ -8,7 +8,6 @@ public class TourExecutionDto
     public double Latitude { get; set; }
     public double CompletionPercentage { get; set; }
     public int IdTourist { get; set; }
-    public double CompletionPercentage { get; set; }
     public string Status { get; set; }
     public DateTime LastActivity { get; set; }
 }

@@ -65,7 +65,6 @@ public class TourExecutionService : ITourExecutionService
             tourExecutionDto.IdTour,
             tourExecutionDto.Longitude,
             tourExecutionDto.Latitude,
-            tourExecutionDto.CompletionPercentage,
             tourExecutionDto.IdTourist,
             status,
             tourExecutionDto.CompletionPercentage

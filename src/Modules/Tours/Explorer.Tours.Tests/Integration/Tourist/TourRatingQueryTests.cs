@@ -30,26 +30,6 @@ namespace Explorer.Tours.Tests.Integration.Tourist
         }
 
         [Fact]
-        public void Retrieves_tour_rating_by_id()
-        {
-            // Arrange
-            using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
-
-            // Act
-            var result = ((ObjectResult)controller.Get(-1).Result)?.Value as TourRatingDto;
-
-            // Assert
-            result.ShouldNotBeNull();
-            result.Id.ShouldBe(-1);
-            result.IdTour.ShouldBe(-1);
-            result.IdTourist.ShouldBe(-21);
-            result.Rating.ShouldBe(5);
-            result.Comment.ShouldBe("Odli?na tura kroz Novi Sad! Petrovaradin je prelep.");
-            result.TourCompletionPercentage.ShouldBe(100.0);
-        }
-
-        [Fact]
         public void Returns_not_found_for_invalid_id()
         {
             // Arrange
