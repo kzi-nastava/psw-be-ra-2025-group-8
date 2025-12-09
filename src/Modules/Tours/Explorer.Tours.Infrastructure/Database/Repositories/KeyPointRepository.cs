@@ -22,6 +22,12 @@ public class KeyPointRepository : IKeyPointRepository
             .ToList();
     }
 
+    public KeyPoint GetByTourAndOrder(long tourId, int order)
+    {
+        return _context.KeyPoints
+            .FirstOrDefault(kp => EF.Property<long>(kp, "TourId") == tourId && kp.Order == order);
+    }
+
     public KeyPoint Create(KeyPoint keyPoint)
     {
         _context.KeyPoints.Add(keyPoint);

@@ -28,27 +28,40 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Longitude,
                 opt => opt.MapFrom(src => src.Location.Longitude));
 
+        // Transport times <-> DTO
+        CreateMap<TourTransportTime, TourTransportTimeDto>()
+            .ForMember(dest => dest.Transport,
+                opt => opt.MapFrom(src => src.Transport.ToString()));
+
         // TourDto -> Tour (create/update existing data)
         CreateMap<TourDto, Tour>()
             .ForMember(dest => dest.Status,
                 opt => opt.MapFrom(src => MapStatus(src.Status)))
             // KeyPoints and LengthInKilometers are not set by DTO
-            // aggreggate root manages them internally
+            // aggregate root manages them internally
             .ForMember(dest => dest.KeyPoints, opt => opt.Ignore())
             .ForMember(dest => dest.LengthInKilometers, opt => opt.Ignore())
-            // RequiredEquipment is managed via separate methods
+            // RequiredEquipment and tags are managed via separate methods
             .ForMember(dest => dest.RequiredEquipment, opt => opt.Ignore())
-            .ForMember(dest => dest.TourTags, opt => opt.Ignore());
+            .ForMember(dest => dest.TourTags, opt => opt.Ignore())
+            .ForMember(dest => dest.TransportTimes, opt => opt.Ignore())
+            .ForMember(dest => dest.PublishedAt, opt => opt.Ignore());
 
         // Tour -> TourDto (answer to client)
         CreateMap<Tour, TourDto>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.Status,
+                opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.RequiredEquipment,
                 opt => opt.MapFrom(src => src.RequiredEquipment))
             .ForMember(dest => dest.Tags,
                 opt => opt.MapFrom(src => src.TourTags
                     .Select(tt => tt.Tags.Tag)
-                    .ToList()));
+                    .ToList()))
+            .ForMember(dest => dest.TransportTimes,
+                opt => opt.MapFrom(src => src.TransportTimes))
+            .ForMember(dest => dest.PublishedAt,
+                opt => opt.MapFrom(src => src.PublishedAt));
+
 
 
         //CreateMap<TouristPreferencesDto, TouristPreferences>().ReverseMap();

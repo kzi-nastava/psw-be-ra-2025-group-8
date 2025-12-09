@@ -114,6 +114,36 @@ public class TourExecutionController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{tourExecutionId:long}/keypoint/{order:int}/secret")]
+    public ActionResult<KeyPointSecretDto> GetKeyPointSecret(long tourExecutionId, int order)
+    {
+        try
+        {
+            // Security check: verify TourExecution belongs to logged-in tourist
+            var touristId = GetTouristIdFromToken();
+        
+            var tourExecution = _tourExecutionService.Get((int)tourExecutionId);
+            if (tourExecution == null)
+                return NotFound(new { message = "TourExecution not found" });
+      
+            if (tourExecution.IdTourist != touristId)
+                return Forbid(); // 403 - not your tour execution
+
+            // Get secret (will throw exception if not unlocked)
+            var result = _tourExecutionService.GetKeyPointSecret(tourExecutionId, order);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // KeyPoint not reached yet
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     private int GetTouristIdFromToken()
     {
         var idClaim = User.FindFirst("id")
