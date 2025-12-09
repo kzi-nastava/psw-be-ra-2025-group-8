@@ -60,8 +60,16 @@ public class TourExecutionController : ControllerBase
     [HttpPost]
     public ActionResult<TourExecutionDto> Create([FromBody] TourExecutionDto tourExecution)
     {
-        var result = _tourExecutionService.Create(tourExecution);
-        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+        try
+        {
+            var result = _tourExecutionService.Create(tourExecution);
+            return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+        }
+        catch (ArgumentException ex)
+        {
+            // Tourist already has active tour or invalid input
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
@@ -142,6 +150,20 @@ public class TourExecutionController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("my-active-tour")]
+    public ActionResult<TourExecutionDto> GetMyActiveTour()
+    {
+        var touristId = GetTouristIdFromToken();
+
+        var executions = _tourExecutionService.GetByTourist(touristId);
+        var activeTour = executions.FirstOrDefault(te => te.Status == "InProgress");
+    
+        if (activeTour == null)
+            return NotFound(new { message = "No active tour found" });
+        
+        return Ok(activeTour);
     }
 
     private int GetTouristIdFromToken()
