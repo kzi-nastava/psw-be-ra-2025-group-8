@@ -111,7 +111,7 @@ public class BlogCommentService : IBlogCommentService
         {
             // domain logic implemented
             blogPost.DeleteComment(commentId, userId);
-
+            _blogPostRepository.RemoveComment(commentId);
             _blogPostRepository.Update(blogPost);
         }
         catch (KeyNotFoundException)

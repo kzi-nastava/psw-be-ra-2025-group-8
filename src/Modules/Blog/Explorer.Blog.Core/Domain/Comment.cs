@@ -11,7 +11,7 @@ namespace Explorer.Blog.Core.Domain
         public string Text { get; private set; }
         public DateTime? LastEditTime { get; private set; }
 
-        protected Comment() { }
+        public Comment() { }
 
         public Comment(long personId, DateTime creationTime, string text)
         {

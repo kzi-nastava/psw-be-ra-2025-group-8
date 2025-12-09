@@ -73,4 +73,19 @@ public class BlogPostRepository : IBlogPostRepository
             .Include(b => b.Images)
             .FirstOrDefault(b => b.Comments.Any(c => c.Id == commentId));
     }
+
+    public void RemoveComment(long commentId)
+    {
+        // finds comment that we want to delete
+        var commentToDelete = _dbContext.Comments.Find(commentId);
+
+        if (commentToDelete != null)
+        {
+            // deletes it from dbContext
+            _dbContext.Comments.Remove(commentToDelete);
+
+            // saves changes(Data base will run DELETE script)
+            _dbContext.SaveChanges();
+        }
+    }
 }

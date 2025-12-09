@@ -11,4 +11,5 @@ public interface IBlogPostRepository
     void Update(BlogPost blogPost);
     void Delete(long id);
     BlogPost? GetByCommentId(long commentId);
+    void RemoveComment(long commentId);
 }
