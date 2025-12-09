@@ -4,6 +4,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Explorer.API.Controllers.Tourist;
 
@@ -99,7 +100,32 @@ public class TourExecutionController : ControllerBase
     [HttpGet("{tourExecutionId:long}/reached-keypoints")]
     public ActionResult<List<KeyPointReachedDto>> GetReachedKeyPoints(long tourExecutionId)
     {
-        var result = _tourExecutionService.GetReachedKeyPoints(tourExecutionId);
+        // Security check: verify TourExecution belongs to logged-in tourist
+        var touristId = GetTouristIdFromToken();
+        
+        var tourExecution = _tourExecutionService.Get((int)tourExecutionId);
+        if (tourExecution == null)
+            return NotFound(new { message = "TourExecution not found" });
+        
+        if (tourExecution.IdTourist != touristId)
+            return Forbid(); // 403 - not your tour execution
+        
+      var result = _tourExecutionService.GetReachedKeyPoints(tourExecutionId);
         return Ok(result);
+    }
+
+    private int GetTouristIdFromToken()
+    {
+        var idClaim = User.FindFirst("id")
+                        ?? User.FindFirst(ClaimTypes.NameIdentifier)
+                        ?? User.FindFirst("personId")
+                        ?? User.FindFirst("sub");
+
+        if (idClaim != null && int.TryParse(idClaim.Value, out int touristId))
+        {
+            return touristId;
+        }
+
+        throw new UnauthorizedAccessException("Unable to determine tourist ID from token");
     }
 }

@@ -4,38 +4,38 @@ namespace Explorer.Tours.Core.Domain;
 
 public class KeyPoint : Entity
 {
-    public long TourId { get; private set; }
-    public int OrderNum { get; private set; }
-    public double Latitude { get; private set; }
-    public double Longitude { get; private set; }
-    public string? Name { get; private set; }
-    public string? Description { get; private set; }
+    public string Name { get; private set; }
+    public string Description { get; private set; }
+    public string ImageUrl { get; private set; }
+    public string Secret { get; private set; }
+    public int Order { get; internal set; }   // keypoint order within the tour
+    public GeoCoordinate Location { get; private set; }
 
-    public KeyPoint(long tourId, int orderNum, double latitude, double longitude, string? name = null, string? description = null)
+    private KeyPoint() { } // For EF
+
+    public KeyPoint(string name, string description, string imageUrl, string secret, GeoCoordinate location, int order)
     {
-        TourId = tourId;
-        OrderNum = orderNum;
-        Latitude = latitude;
-        Longitude = longitude;
-        Name = name;
-        Description = description;
-        Validate();
+        SetName(name);
+        Description = description ?? string.Empty;
+        ImageUrl = imageUrl ?? string.Empty;
+        Secret = secret ?? string.Empty;
+        Location = location ?? throw new ArgumentNullException(nameof(location));
+        Order = order;
     }
 
-    private KeyPoint() { }
-
-    private void Validate()
+    public void UpdateBasicInfo(string name, string description, string imageUrl, string secret)
     {
-        if (TourId <= 0)
-            throw new ArgumentException("TourId must be a positive integer");
+        SetName(name);
+        Description = description ?? string.Empty;
+        ImageUrl = imageUrl ?? string.Empty;
+        Secret = secret ?? string.Empty;
+    }
 
-        if (OrderNum < 0)
-            throw new ArgumentException("OrderNum cannot be negative");
+    private void SetName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Key point name is required.", nameof(name));
 
-        if (Latitude < -90 || Latitude > 90)
-            throw new ArgumentException("Latitude must be between -90 and 90");
-
-        if (Longitude < -180 || Longitude > 180)
-            throw new ArgumentException("Longitude must be between -180 and 180");
+        Name = name.Trim();
     }
 }

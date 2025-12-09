@@ -1,5 +1,7 @@
-﻿using Explorer.BuildingBlocks.Tests;
+﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.BuildingBlocks.Tests;
 using Explorer.Tours.Infrastructure.Database;
+using Explorer.Tours.Tests.TestHelpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +14,9 @@ public class ToursTestFactory : BaseTestFactory<ToursContext>
         var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ToursContext>));
         services.Remove(descriptor!);
         services.AddDbContext<ToursContext>(SetupTestContext());
+
+        // Registruj mock notification service za testove
+        services.AddScoped<IIssueNotificationService, MockIssueNotificationService>();
 
         return services;
     }

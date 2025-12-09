@@ -30,15 +30,12 @@ public static class StakeholdersStartup
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
 
-        //Minja dodao ovo
-        services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
-        services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
-        services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
-        //
 
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IMeetupService, MeetupService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<BuildingBlocks.Core.UseCases.IIssueNotificationService, IssueNotificationServiceAdapter>();
 
         //za klubove
         services.AddScoped<IClubService, ClubService>();
@@ -51,12 +48,9 @@ public static class StakeholdersStartup
         services.AddScoped<IRatingRepository, RatingDbRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IMeetupRepository, MeetupRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
-        //Minja dodao ovo
-        services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
-        services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
-        services.AddScoped<ITagsRepository, TagsRepository>();
-        services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
+     
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
 
