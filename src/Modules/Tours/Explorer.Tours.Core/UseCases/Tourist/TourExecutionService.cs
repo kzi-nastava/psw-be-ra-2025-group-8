@@ -66,7 +66,8 @@ public class TourExecutionService : ITourExecutionService
             tourExecutionDto.Longitude,
             tourExecutionDto.Latitude,
             tourExecutionDto.IdTourist,
-            status
+            status,
+            tourExecutionDto.CompletionPercentage
         );
 
         var result = _tourExecutionRepository.Create(tourExecution);
@@ -81,6 +82,7 @@ public class TourExecutionService : ITourExecutionService
 
         existing.UpdatePosition(tourExecutionDto.Longitude, tourExecutionDto.Latitude);
         existing.UpdateStatus(Enum.Parse<TourExecutionStatus>(tourExecutionDto.Status));
+        existing.UpdateCompletionPercentage(tourExecutionDto.CompletionPercentage);
 
         var result = _tourExecutionRepository.Update(existing);
         return _mapper.Map<TourExecutionDto>(result);

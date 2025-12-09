@@ -35,13 +35,28 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
             
-            // Koristi postojeći test podatak (-1)
+            // Prvo kreiraj test podatak
+            var createTourExecution = new TourExecutionDto
+            {
+                IdTour = 1,
+                Longitude = 19.0000,
+                Latitude = 44.0000,
+                IdTourist = 1,
+                CompletionPercentage = 50.0,
+                Status = "InProgress"
+            };
+            var created = ((ObjectResult)controller.Create(createTourExecution).Result)?.Value as TourExecutionDto;
+
             // Act
-            var result = ((ObjectResult)controller.Get(-1).Result)?.Value as TourExecutionDto;
+            var result = ((ObjectResult)controller.Get(created!.Id).Result)?.Value as TourExecutionDto;
 
             // Assert
             result.ShouldNotBeNull();
-            result!.Id.ShouldBe(-1);
+            result!.Id.ShouldBe(created.Id);
+            result.IdTour.ShouldBe(1);
+            result.IdTourist.ShouldBe(1);
+            result.CompletionPercentage.ShouldBe(50.0);
+            result.Status.ShouldBe("InProgress");
         }
 
         [Fact]
@@ -80,15 +95,15 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
 
-            // Act - koristi test tour ID (-10)
-            var result = ((ObjectResult)controller.GetByTour(-10).Result)?.Value as List<TourExecutionDto>;
+            // Act
+            var result = ((ObjectResult)controller.GetByTour(1).Result)?.Value as List<TourExecutionDto>;
 
             // Assert
             result.ShouldNotBeNull();
             // Ako ima rezultata, proveri da li su za ispravan tour
             if (result!.Count > 0)
             {
-                result.All(te => te.IdTour == -10).ShouldBeTrue();
+                result.All(te => te.IdTour == 1).ShouldBeTrue();
             }
         }
 
@@ -98,9 +113,21 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             // Arrange
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
+            
+            // Prvo kreiraj test podatak
+            var createTourExecution = new TourExecutionDto
+            {
+                IdTour = 1,
+                Longitude = 19.0000,
+                Latitude = 44.0000,
+                IdTourist = 1,
+                CompletionPercentage = 33.3,
+                Status = "InProgress"
+            };
+            var created = ((ObjectResult)controller.Create(createTourExecution).Result)?.Value as TourExecutionDto;
 
-            // Act - koristi postojeće test podatke
-            var actionResult = controller.GetByTouristAndTour(1, -10);
+            // Act
+            var actionResult = controller.GetByTouristAndTour(1, 1);
 
             // Assert
             if (actionResult.Result is ObjectResult objectResult)
@@ -108,6 +135,8 @@ namespace Explorer.Tours.Tests.Integration.Tourist
                 var tourExecution = objectResult.Value as TourExecutionDto;
                 tourExecution.ShouldNotBeNull();
                 tourExecution!.IdTourist.ShouldBe(1);
+                tourExecution.IdTour.ShouldBe(1);
+                tourExecution.CompletionPercentage.ShouldBeGreaterThanOrEqualTo(0);
             }
             else if (actionResult.Result is NotFoundResult)
             {
