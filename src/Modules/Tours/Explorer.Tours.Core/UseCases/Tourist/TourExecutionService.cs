@@ -48,6 +48,18 @@ public class TourExecutionService : ITourExecutionService
 
     public TourExecutionDto Create(TourExecutionDto tourExecutionDto)
     {
+        // Validation: Check if tourist already has an active TourExecution
+        var activeTourExecutions = _tourExecutionRepository.GetByTourist(tourExecutionDto.IdTourist)
+            .Where(te => te.Status == TourExecutionStatus.InProgress) // Only InProgress tours are considered active
+            .ToList();
+
+        if (activeTourExecutions.Any())
+        {
+            throw new ArgumentException(
+                $"Tourist {tourExecutionDto.IdTourist} already has an active tour execution (ID: {activeTourExecutions.First().Id}). " +
+                "Please complete or abandon the current tour before starting a new one.");
+        }
+
         var status = Enum.Parse<TourExecutionStatus>(tourExecutionDto.Status);
         var tourExecution = new TourExecution(
             tourExecutionDto.IdTour,
@@ -55,7 +67,8 @@ public class TourExecutionService : ITourExecutionService
             tourExecutionDto.Latitude,
             tourExecutionDto.CompletionPercentage,
             tourExecutionDto.IdTourist,
-            status
+            status,
+            tourExecutionDto.CompletionPercentage
         );
 
         var result = _tourExecutionRepository.Create(tourExecution);
@@ -172,6 +185,34 @@ public class TourExecutionService : ITourExecutionService
     {
         var reachedKeyPoints = _keyPointReachedRepository.GetByTourExecution(tourExecutionId);
         return reachedKeyPoints.Select(_mapper.Map<KeyPointReachedDto>).ToList();
+    }
+
+    public KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder)
+    {
+        // 1. Load TourExecution
+        var tourExecution = _crudRepository.Get(tourExecutionId);
+        if (tourExecution == null)
+            throw new KeyNotFoundException($"TourExecution with id {tourExecutionId} not found.");
+
+        // 2. Check if KeyPoint has been reached
+        var reachedKeyPoints = _keyPointReachedRepository.GetByTourExecution(tourExecutionId);
+        var keyPointReached = reachedKeyPoints.FirstOrDefault(kpr => kpr.KeyPointOrder == keyPointOrder);
+        
+        if (keyPointReached == null)
+            throw new InvalidOperationException($"KeyPoint {keyPointOrder} has not been reached yet. Complete the keypoint to unlock the secret.");
+
+        // 3. Get KeyPoint with secret
+        var keyPoint = _keyPointRepository.GetByTourAndOrder(tourExecution.IdTour, keyPointOrder);
+        if (keyPoint == null)
+            throw new KeyNotFoundException($"KeyPoint with order {keyPointOrder} not found for this tour.");
+
+        // 4. Return secret
+        return new KeyPointSecretDto
+        {
+            Order = keyPointOrder,
+            Secret = keyPoint.Secret,
+            UnlockedAt = keyPointReached.ReachedAt
+        };
     }
 
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
