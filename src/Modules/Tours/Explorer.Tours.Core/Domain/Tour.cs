@@ -17,6 +17,7 @@ namespace Explorer.Tours.Core.Domain
         public List<TourEquipment> RequiredEquipment { get; private set; } = new();
         public List<TourTag> TourTags { get; private set; } = new();
         public DateTime? PublishedAt { get; private set; }
+        public DateTime? ArchivedAt { get; private set; }
         public List<TourTransportTime> TransportTimes { get; private set; } = new();
 
         // Constructor for creating a new tour (draft, price=0)
@@ -33,6 +34,9 @@ namespace Explorer.Tours.Core.Domain
             LengthInKilometers = 0;
             RequiredEquipment = new List<TourEquipment>();
             TransportTimes = new List<TourTransportTime>();
+
+            PublishedAt = null;
+            ArchivedAt = null;
         }
 
         // For rehydrating an existing tour and tests
@@ -51,6 +55,9 @@ namespace Explorer.Tours.Core.Domain
             LengthInKilometers = 0;
             RequiredEquipment = new List<TourEquipment>();
             TransportTimes = new List<TourTransportTime>();
+
+            PublishedAt = null;
+            ArchivedAt = null;
         }
 
         // EF Core constructor
@@ -129,8 +136,22 @@ namespace Explorer.Tours.Core.Domain
 
         public void Archive()
         {
+            if (Status != TourStatus.Published)
+                throw new InvalidOperationException("Only published tours can be archived.");
+
+            ArchivedAt = DateTime.UtcNow;
             Status = TourStatus.Archived;
         }
+
+        public void Reactivate()
+        {
+            if (Status != TourStatus.Archived)
+                throw new InvalidOperationException("Only archived tours can be reactivated.");
+
+            Status = TourStatus.Published;
+        }
+
+
 
         // Calculate total length based on key points
         private void RecalculateLength()

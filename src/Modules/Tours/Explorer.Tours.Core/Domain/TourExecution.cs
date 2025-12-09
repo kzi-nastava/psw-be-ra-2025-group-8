@@ -7,8 +7,8 @@ public class TourExecution : Entity
     public int IdTour { get; set; }
     public double Longitude { get; set; }
     public double Latitude { get; set; }
-    public int IdTourist { get; set; }
     public double CompletionPercentage { get; set; }
+    public int IdTourist { get; set; }
     public TourExecutionStatus Status { get; set; }
     public DateTime LastActivity { get; set; }
 
@@ -17,6 +17,7 @@ public class TourExecution : Entity
         IdTour = idTour;
         Longitude = longitude;
         Latitude = latitude;
+        CompletionPercentage = completionPercentage;
         IdTourist = idTourist;
         Status = status;
         CompletionPercentage = completionPercentage;
@@ -56,6 +57,9 @@ public class TourExecution : Entity
 
         if (Longitude < -180 || Longitude > 180)
             throw new ArgumentException("Longitude must be between -180 and 180");
+
+        if (CompletionPercentage < 0 || CompletionPercentage > 100)
+            throw new ArgumentException("CompletionPercentage must be between 0 and 100");
 
         if (IdTour <= 0)
             throw new ArgumentException("IdTour must be a positive integer");

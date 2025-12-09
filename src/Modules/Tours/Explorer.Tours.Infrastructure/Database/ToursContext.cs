@@ -19,6 +19,7 @@ public class ToursContext : DbContext
     public DbSet<KeyPointReached> KeyPointsReached { get; set; }
     public DbSet<KeyPoint> KeyPoints { get; set; }
     public DbSet<TourTransportTime> TourTransportTimes { get; set; }
+    public DbSet<TourRating> TourRatings { get; set; }
 
 
     //Preference
@@ -61,6 +62,9 @@ public class ToursContext : DbContext
                 .IsRequired();
 
             builder.Property(t => t.PublishedAt)
+                .IsRequired(false);
+
+            builder.Property(t => t.ArchivedAt)
                 .IsRequired(false);
 
             // route length
