@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
-using Explorer.Stakeholders.API.Public;
+using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
@@ -17,18 +19,21 @@ public class TouristTourService : ITouristTourService
 {
     private readonly ITourRepository _tourRepository;
     private readonly ITourRatingService _tourRatingService;
-    private readonly IPersonService _personService;
+    private readonly ICrudRepository<Person> _personRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
     public TouristTourService(
         ITourRepository tourRepository,
         ITourRatingService tourRatingService,
-        IPersonService personService,
+        ICrudRepository<Person> personRepository,
+        IUserRepository userRepository,
         IMapper mapper)
     {
         _tourRepository = tourRepository;
         _tourRatingService = tourRatingService;
-        _personService = personService;
+        _personRepository = personRepository;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -112,12 +117,14 @@ public class TouristTourService : ITouristTourService
 
         return ratings.Select(r =>
         {
-            var person = _personService.GetByUserId(r.IdTourist);
+            var personId = _userRepository.GetPersonId(r.IdTourist);
+            var person = _personRepository.Get(personId);
+
             return new TourReviewDto
             {
                 Rating = r.Rating,
                 Comment = r.Comment,
-                AuthorName = $"{person.Name} {person.Surname}",
+                AuthorName = person != null ? $"{person.Name} {person.Surname}" : "Unknown Tourist",
                 CreatedAt = r.CreatedAt
             };
         }).ToList();
