@@ -3,5 +3,7 @@ namespace Explorer.BuildingBlocks.Core.UseCases
     public interface IIssueNotificationService
     {
         void NotifyAboutNewMessage(long touristId, long tourAuthorId, long reportProblemId, string messageContent, int messageSenderId);
+        void NotifyAuthorAboutNewProblem(long tourAuthorId, long touristId, long reportProblemId, string problemDescription);
+        void NotifyTouristAboutAuthorResponse(long touristId, long tourAuthorId, long reportProblemId, string response);
     }
 }

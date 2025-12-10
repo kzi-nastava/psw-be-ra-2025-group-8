@@ -53,6 +53,16 @@ namespace Explorer.Tours.Core.UseCases.Administration
             );
 
             var result = _crudRepository.Create(domainEntity);
+  
+            // Notify author about new problem
+            var tour = _tourRepository.Get(result.TourId);
+          _notificationService.NotifyAuthorAboutNewProblem(
+      tour.AuthorId,
+     result.TouristId,
+         result.Id,
+     result.Description
+          );
+  
             return _mapper.Map<ReportProblemDto>(result);
         }
 
@@ -73,8 +83,18 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public ReportProblemDto AuthorRespond(int reportId, int authorId, string response)
         {
             var report = _crudRepository.Get(reportId);
-            report.RespondByAuthor(authorId, response);
-            var updated = _crudRepository.Update(report);
+     report.RespondByAuthor(authorId, response);
+    var updated = _crudRepository.Update(report);
+   
+     // Notify tourist about author response
+         var tour = _tourRepository.Get(updated.TourId);
+   _notificationService.NotifyTouristAboutAuthorResponse(
+        updated.TouristId,
+        tour.AuthorId,
+           updated.Id,
+           response
+       );
+      
             return _mapper.Map<ReportProblemDto>(updated);
         }
 
