@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
@@ -17,13 +18,13 @@ public class TouristTourService : ITouristTourService
 {
     private readonly ITourRepository _tourRepository;
     private readonly ITourRatingService _tourRatingService;
-    private readonly IPersonService _profileProvider;
+    private readonly IInternalPersonService _profileProvider;
     private readonly IMapper _mapper;
 
     public TouristTourService(
         ITourRepository tourRepository,
         ITourRatingService tourRatingService,
-        IPersonService profileProvider,
+        IInternalPersonService profileProvider,
         IMapper mapper)
     {
         _tourRepository = tourRepository;
@@ -47,7 +48,7 @@ public class TouristTourService : ITouristTourService
         var tour = _tourRepository.Get(id);
 
         if (tour == null || tour.Status != TourStatus.Published)
-            throw new KeyNotFoundException("Tour not found or not published.");
+            return null;
 
         var dto = MapDetails(tour);
         dto.Reviews = MapReviews(id, out var avg);

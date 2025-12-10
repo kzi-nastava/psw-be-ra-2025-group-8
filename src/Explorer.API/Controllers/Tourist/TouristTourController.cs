@@ -23,7 +23,9 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet("{id}")]
         public IActionResult GetPublishedTour(long id)
         {
-            return Ok(_touristTourService.GetPublishedTourDetails(id));
+            var result = _touristTourService.GetPublishedTourDetails(id);
+            if (result == null) return NotFound("Tour not found or not published.");
+            return Ok(result);
         }
     }
 }

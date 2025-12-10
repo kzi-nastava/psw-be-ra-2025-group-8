@@ -25,8 +25,8 @@ namespace Explorer.Tours.Tests.Integration.Tourist
 
             // Assert
             result.ShouldNotBeNull();
-            result.Results.Count.ShouldBe(6);
-            result.TotalCount.ShouldBe(6);
+            result.Results.Count.ShouldBe(7);
+            result.TotalCount.ShouldBe(7);
         }
 
         [Fact]
@@ -55,7 +55,7 @@ namespace Explorer.Tours.Tests.Integration.Tourist
 
             // Assert
             result.ShouldNotBeNull();
-            result.Count.ShouldBe(2);
+            result.Count.ShouldBe(3);
             result.All(tr => tr.IdTourist == -21).ShouldBeTrue();
         }
 

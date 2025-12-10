@@ -1,14 +1,12 @@
 ﻿using Explorer.API.Controllers.Tourist;
+using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.UseCases.Tourist;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Xunit;
 
 namespace Explorer.Tours.Tests.Integration.Tourist
 {
@@ -26,18 +24,21 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
             // Publish tour -10 (Test Tour1)
-            var tour = db.Tours.Find(-10L);
+            var tour = db.Tours.Find(-10L)!;
             tour.Status = Core.Domain.TourStatus.Published;
             db.SaveChanges();
 
             // Act
-            var actionResult = controller.GetPublishedTours();
-            var objectResult = actionResult as ObjectResult;
-            var result = objectResult?.Value as List<object>;
+            var actionResult = controller.GetPublishedTours(); // ActionResult<List<TouristTourPreviewDto>>
+            var okResult = actionResult as OkObjectResult;
+            okResult.ShouldNotBeNull();
+
+            var result = okResult.Value as List<TouristTourPreviewDto>;
 
             // Assert
             result.ShouldNotBeNull();
             result.Count.ShouldBe(1);
+            result[0].Id.ShouldBe(-10);
         }
 
         [Fact]
@@ -49,19 +50,19 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
             // Publish Test Tour1 (-10)
-            var tour = db.Tours.Find(-10L);
+            var tour = db.Tours.Find(-10L)!;
             tour.Status = Core.Domain.TourStatus.Published;
             db.SaveChanges();
 
             // Act
-            var actionResult = controller.GetPublishedTour(-10);
-            var objectResult = actionResult as ObjectResult;
-            var result = objectResult?.Value;
+            var actionResult = controller.GetPublishedTour(-10); // ActionResult<TouristTourDetailsDto>
+            var okResult = actionResult as OkObjectResult;
+            okResult.ShouldNotBeNull();
+
+            var dto = okResult.Value as TouristTourDetailsDto;
 
             // Assert
-            result.ShouldNotBeNull();
-
-            dynamic dto = result!;
+            dto.ShouldNotBeNull();
             dto.Id.ShouldBe(-10);
             dto.FirstKeyPoint.ShouldNotBeNull();
             dto.FirstKeyPoint.Name.ShouldBe("Trg Slobode");
@@ -78,20 +79,21 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
             // Publish Test Tour1 (-10)
-            var tour = db.Tours.Find(-10L);
+            var tour = db.Tours.Find(-10L)!;
             tour.Status = Core.Domain.TourStatus.Published;
             db.SaveChanges();
 
             // Act
             var actionResult = controller.GetPublishedTour(-10);
-            var objectResult = actionResult as ObjectResult;
-            var result = objectResult?.Value;
+            var okResult = actionResult as OkObjectResult;
+            okResult.ShouldNotBeNull();
+
+            var dto = okResult.Value as TouristTourDetailsDto;
 
             // Assert
-            result.ShouldNotBeNull();
-            dynamic dto = result!;
-            ((IEnumerable<string>)dto.Tags).ShouldContain("mountain");
-            ((IEnumerable<string>)dto.Tags).ShouldContain("food");
+            dto.ShouldNotBeNull();
+            dto.Tags.ShouldContain("mountain");
+            dto.Tags.ShouldContain("food");
         }
 
         [Fact]
@@ -102,20 +104,20 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             var controller = CreateController(scope);
             var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-            // Publish Test Tour1 (-10)
-            var tour = db.Tours.Find(-10L);
+            var tour = db.Tours.Find(-10L)!;
             tour.Status = Core.Domain.TourStatus.Published;
             db.SaveChanges();
 
             // Act
             var actionResult = controller.GetPublishedTour(-10);
-            var objectResult = actionResult as ObjectResult;
-            var result = objectResult?.Value;
+            var okResult = actionResult as OkObjectResult;
+            okResult.ShouldNotBeNull();
+
+            var dto = okResult.Value as TouristTourDetailsDto;
 
             // Assert
-            result.ShouldNotBeNull();
-            dynamic dto = result!;
-            dto.AverageRating.ShouldBeGreaterThan(0); // jer postoje rating zapisi u seed-u
+            dto.ShouldNotBeNull();
+            dto.AverageRating.ShouldBeGreaterThan(0);
         }
 
         [Fact]
@@ -126,21 +128,21 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             var controller = CreateController(scope);
             var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-            // Publish Test Tour1 (-10)
-            var tour = db.Tours.Find(-10L);
+            var tour = db.Tours.Find(-10L)!;
             tour.Status = Core.Domain.TourStatus.Published;
             db.SaveChanges();
 
             // Act
             var actionResult = controller.GetPublishedTour(-10);
-            var objectResult = actionResult as ObjectResult;
-            var result = objectResult?.Value;
+            var okResult = actionResult as OkObjectResult;
+            okResult.ShouldNotBeNull();
+
+            var dto = okResult.Value as TouristTourDetailsDto;
 
             // Assert
-            result.ShouldNotBeNull();
-            dynamic dto = result!;
+            dto.ShouldNotBeNull();
             dto.Reviews.Count.ShouldBeGreaterThan(0);
-            dto.Reviews[0].AuthorName.ShouldNotBeNull(); // jer vučemo Person.Name + Surname
+            dto.Reviews[0].AuthorName.ShouldNotBeNull();
         }
 
         [Fact]
@@ -150,13 +152,13 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
 
-            // Act
+            // Act – tour -10 je DRAFT po seed-u
             var actionResult = controller.GetPublishedTour(-10);
-            var result = actionResult as NotFoundObjectResult;
+            var notFound = actionResult as NotFoundObjectResult;
 
             // Assert
-            result.ShouldNotBeNull();
-            result.StatusCode.ShouldBe(404);
+            notFound.ShouldNotBeNull();
+            notFound.StatusCode.ShouldBe(404);
         }
 
         private static TouristTourController CreateController(IServiceScope scope)

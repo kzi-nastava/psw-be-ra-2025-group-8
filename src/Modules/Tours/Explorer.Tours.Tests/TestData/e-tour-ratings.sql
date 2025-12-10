@@ -26,3 +26,7 @@ VALUES (-5, -3, -23, 2, 'Nisam stigao da završim turu, razočaran sam.', '2024-
 INSERT INTO tours."TourRatings"(
     "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
 VALUES (-6, -3, -23, 4, NULL, '2024-01-20 12:00:00', 90.0);
+
+INSERT INTO tours."TourRatings"(
+    "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES (-100, -10, -21, 5, 'Odlična test tura', '2024-01-21 12:00:00', 100.0);
