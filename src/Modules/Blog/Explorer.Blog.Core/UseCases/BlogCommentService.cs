@@ -62,4 +62,67 @@ public class BlogCommentService : IBlogCommentService
             blogPost.Comments.OrderByDescending(c => c.CreationTime).ToList()
         );
     }
+
+    public CommentDto Update(long userId, long commentId, CommentCreationDto commentData)
+    {
+        var blogPost = _blogPostRepository.GetByCommentId(commentId);
+
+        if (blogPost == null)
+            throw new KeyNotFoundException($"Blog Post for comment ID {commentId} not found.");
+
+        try
+        {
+            // domain logic implemeted
+            var updatedComment = blogPost.UpdateComment(
+                commentId,
+                userId,
+                commentData.Text
+            );
+
+            _blogPostRepository.Update(blogPost);
+
+            return _mapper.Map<CommentDto>(updatedComment);
+        }
+        catch (KeyNotFoundException)
+        {
+            // comment not found
+            throw;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // not author or passed 15 min threshold
+            throw;
+        }
+        catch (ArgumentException)
+        {
+            // empty comment
+            throw;
+        }
+    }
+
+    public void Delete(long userId, long commentId)
+    {
+        var blogPost = _blogPostRepository.GetByCommentId(commentId);
+
+        if (blogPost == null)
+            throw new KeyNotFoundException($"Blog Post for comment ID {commentId} not found.");
+
+        try
+        {
+            // domain logic implemented
+            blogPost.DeleteComment(commentId, userId);
+            _blogPostRepository.RemoveComment(commentId);
+            _blogPostRepository.Update(blogPost);
+        }
+        catch (KeyNotFoundException)
+        {
+            // comment not found
+            throw;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // not author or passed 15 min threshold
+            throw;
+        }
+    }
 }

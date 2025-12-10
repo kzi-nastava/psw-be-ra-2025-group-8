@@ -20,6 +20,25 @@ namespace Explorer.Blog.Tests.Unit.Domain
             blog.Publish();
             return blog;
         }
+        private Comment CreateComment(long personId, DateTime creationTime)
+        {
+            return new Comment(
+                personId: personId,
+                creationTime: creationTime,
+                text: "Originalni tekst komentara"
+            );
+        }
+
+        private BlogPost CreatePublishedBlogWithComment(long commentAuthorId, DateTime creationTime)
+        {
+            var blog = CreatePublishedBlog();
+
+            var comment = CreateComment(commentAuthorId, creationTime);
+
+            blog.Comments.Add(comment);
+
+            return blog;
+        }
 
         [Fact]
         public void Can_add_comment_to_published_blog()
@@ -85,6 +104,136 @@ namespace Explorer.Blog.Tests.Unit.Domain
             });
 
             Assert.Empty(blog.Comments);
+        }
+    
+        [Fact]
+        public void Can_update_comment_within_15_minutes_and_if_author()
+        {
+            // Arrange
+            long authorId = 5;
+            var creationTime = DateTime.UtcNow.AddMinutes(-5);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+            var newText = "Ažurirani tekst komentara.";
+
+            // Act
+            blog.UpdateComment(commentId, authorId, newText);
+
+            // Assert
+            var updatedComment = blog.Comments.First();
+            Assert.Equal(newText, updatedComment.Text);
+            Assert.NotNull(updatedComment.LastEditTime);
+            Assert.True(updatedComment.LastEditTime > updatedComment.CreationTime);
+        }
+
+        [Fact]
+        public void Cannot_update_comment_if_not_author()
+        {
+            // Arrange
+            long authorId = 5;
+            long nonAuthorId = 6;
+            var creationTime = DateTime.UtcNow.AddMinutes(-5);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+
+            // Act & Assert
+            Assert.Throws<UnauthorizedAccessException>(() =>
+            {
+                blog.UpdateComment(commentId, nonAuthorId, "Neuspešna izmena");
+            });
+
+            // Assert
+            Assert.Equal("Originalni tekst komentara", blog.Comments.First().Text);
+        }
+
+        [Fact]
+        public void Cannot_update_comment_after_15_minutes()
+        {
+            // Arrange
+            long authorId = 5;
+            var creationTime = DateTime.UtcNow.AddMinutes(-20);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+
+            // Act & Assert
+            Assert.Throws<UnauthorizedAccessException>(() =>
+            {
+                blog.UpdateComment(commentId, authorId, "Prekasna izmena");
+            });
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void Cannot_update_comment_with_empty_text(string emptyText)
+        {
+            // Arrange
+            long authorId = 5;
+            var creationTime = DateTime.UtcNow.AddMinutes(-5);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() =>
+            {
+                blog.UpdateComment(commentId, authorId, emptyText);
+            });
+        }
+
+        [Fact]
+        public void Can_delete_comment_within_15_minutes_and_if_author()
+        {
+            // Arrange
+            long authorId = 5;
+            var creationTime = DateTime.UtcNow.AddMinutes(-5);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+
+            // Act
+            blog.DeleteComment(commentId, authorId);
+
+            // Assert
+            Assert.Empty(blog.Comments);
+        }
+
+        [Fact]
+        public void Cannot_delete_comment_if_not_author()
+        {
+            // Arrange
+            long authorId = 5;
+            long nonAuthorId = 6;
+            var creationTime = DateTime.UtcNow.AddMinutes(-5);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+
+            // Act & Assert
+            Assert.Throws<UnauthorizedAccessException>(() =>
+            {
+                blog.DeleteComment(commentId, nonAuthorId);
+            });
+
+            // Assert
+            Assert.Single(blog.Comments);
+        }
+
+        [Fact]
+        public void Cannot_delete_comment_after_15_minutes()
+        {
+            // Arrange
+            long authorId = 5;
+            var creationTime = DateTime.UtcNow.AddMinutes(-20);
+            var blog = CreatePublishedBlogWithComment(authorId, creationTime);
+            var commentId = blog.Comments.First().Id;
+
+            // Act & Assert
+            Assert.Throws<UnauthorizedAccessException>(() =>
+            {
+                blog.DeleteComment(commentId, authorId);
+            });
+
+            // Assert
+            Assert.Single(blog.Comments);
         }
     }
 }
