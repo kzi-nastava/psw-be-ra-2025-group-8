@@ -18,24 +18,21 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly ICrudRepository<ReportProblem> _crudRepository;
         private readonly IReportProblemRepository _reportProblemRepository;
         private readonly ICrudRepository<Tour> _tourRepository;
-        private readonly ICrudRepository<Person> _personRepository;
-    private readonly IIssueNotificationService _notificationService;
-private readonly IMapper _mapper;
+        private readonly IIssueNotificationService _notificationService;
+        private readonly IMapper _mapper;
 
         public ReportProblemService(
             ICrudRepository<ReportProblem> repository, 
             IReportProblemRepository reportProblemRepository,
-        ICrudRepository<Tour> tourRepository,
-            ICrudRepository<Person> personRepository,
-   IIssueNotificationService notificationService,
-      IMapper mapper)
- {
-        _crudRepository = repository;
-  _reportProblemRepository = reportProblemRepository;
-       _tourRepository = tourRepository;
-      _personRepository = personRepository;
- _notificationService = notificationService;
- _mapper = mapper;
+            ICrudRepository<Tour> tourRepository,
+            IIssueNotificationService notificationService,
+            IMapper mapper)
+        {
+            _crudRepository = repository;
+            _reportProblemRepository = reportProblemRepository;
+            _tourRepository = tourRepository;
+            _notificationService = notificationService;
+            _mapper = mapper;
         }
 
         public PagedResult<ReportProblemDto> GetPaged(int page, int pageSize)
@@ -60,14 +57,12 @@ private readonly IMapper _mapper;
   
             try
             {
-                // Konverzija PersonId → UserId pre slanja notifikacije
+                // Tour.AuthorId and ReportProblem.TouristId are already UserIds - no conversion needed
                 var tour = _tourRepository.Get(result.TourId);
-                var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
-                var tourist = _personRepository.Get(result.TouristId); // PersonId → Person
    
                 _notificationService.NotifyAuthorAboutNewProblem(
-                    author.UserId,   // UserId autora
-                    tourist.UserId,  // UserId turiste
+                    tour.AuthorId,       // UserId autora (directly from Tour)
+                    result.TouristId,    // UserId turiste (directly from ReportProblem)
                     result.Id,
                     result.Description
                 );
@@ -102,14 +97,12 @@ private readonly IMapper _mapper;
    
             try
             {
-                // Konverzija PersonId → UserId pre slanja notifikacije
+                // Tour.AuthorId and ReportProblem.TouristId are already UserIds
                 var tour = _tourRepository.Get(updated.TourId);
-                var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
-                var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
       
                 _notificationService.NotifyTouristAboutAuthorResponse(
-                    tourist.UserId,  // UserId turiste
-                    author.UserId,   // UserId autora
+                    updated.TouristId,  // UserId turiste (directly from ReportProblem)
+                    tour.AuthorId,      // UserId autora (directly from Tour)
                     updated.Id,
                     response
                 );
@@ -142,17 +135,15 @@ private readonly IMapper _mapper;
         
             try
             {
-                // Konverzija PersonId → UserId pre slanja notifikacije
+                // Tour.AuthorId and ReportProblem.TouristId are already UserIds
                 var tour = _tourRepository.Get(updated.TourId);
-                var tourAuthor = _personRepository.Get(tour.AuthorId);  // PersonId → Person
-                var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
       
                 _notificationService.NotifyAboutNewMessage(
-                    tourist.UserId,   // UserId turiste
-                    tourAuthor.UserId,   // UserId autora
+                    updated.TouristId,   // UserId turiste (directly from ReportProblem)
+                    tour.AuthorId,       // UserId autora (directly from Tour)
                     reportId,
                     content,
-                    authorId             // PersonId pošiljaoca poruke
+                    authorId             // UserId pošiljaoca poruke
                 );
             }
             catch (Exception)
