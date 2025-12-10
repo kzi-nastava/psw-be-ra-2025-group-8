@@ -10,4 +10,5 @@ public interface ITourRepository
     void Delete(long id);
 
     List<Tour> GetByAuthor(int authorId);
+    List<Tour> GetAll();
 }
