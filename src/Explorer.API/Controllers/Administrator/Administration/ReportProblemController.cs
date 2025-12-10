@@ -123,27 +123,27 @@ public class ReportProblemController : ControllerBase
 
     private int GetUserIdFromToken()
     {
-        if (!TryGetPersonId(out var personId))
+        if (!TryGetUserId(out var userId))
         {
-            throw new UnauthorizedAccessException("Unable to determine person ID from token");
+            throw new UnauthorizedAccessException("Unable to determine user ID from token");
         }
-        return (int)personId;
+        return (int)userId;
     }
 
     private int GetAuthorIdFromToken()
     {
-        if (!TryGetPersonId(out var personId))
+        if (!TryGetUserId(out var userId))
         {
-            throw new UnauthorizedAccessException("Unable to determine person ID from token");
+            throw new UnauthorizedAccessException("Unable to determine user ID from token");
         }
-        return (int)personId;
+        return (int)userId;
     }
 
     // Provera da li korisnik može da pristupi problemu
     private bool CanAccessProblem(ReportProblemDto problem)
     {
-        // PersonId korisnika koji je ulogovan
-        if (!TryGetPersonId(out var personId))
+        // UserId korisnika koji je ulogovan
+        if (!TryGetUserId(out var userId))
         {
             return false;
         }
@@ -155,13 +155,13 @@ public class ReportProblemController : ControllerBase
         }
         
         // Turista koji je prijavio problem
-        if (problem.TouristId == personId)
+        if (problem.TouristId == userId)
         {
             return true;
         }
         
         // Autor ture
-        var tour = _tourService.GetByAuthor((int)personId).FirstOrDefault(t => t.Id == problem.TourId);
+        var tour = _tourService.GetByAuthor((int)userId).FirstOrDefault(t => t.Id == problem.TourId);
         if (tour != null)
         {
             return true;
@@ -170,12 +170,12 @@ public class ReportProblemController : ControllerBase
         return false;
     }
 
-    private bool TryGetPersonId(out long personId)
+    private bool TryGetUserId(out long userId)
     {
-        personId = 0;
-        var claim = User.Claims.FirstOrDefault(c => c.Type == "personId");
+        userId = 0;
+        var claim = User.Claims.FirstOrDefault(c => c.Type == "id" || c.Type == ClaimTypes.NameIdentifier);
         if (claim == null) return false;
-        return long.TryParse(claim.Value, out personId);
+        return long.TryParse(claim.Value, out userId);
     }
 
     public class AuthorResponseRequest

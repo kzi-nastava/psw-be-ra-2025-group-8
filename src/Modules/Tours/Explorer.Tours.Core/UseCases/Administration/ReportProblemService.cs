@@ -58,19 +58,26 @@ private readonly IMapper _mapper;
 
             var result = _crudRepository.Create(domainEntity);
   
-      // Konverzija PersonId → UserId pre slanja notifikacije
-       var tour = _tourRepository.Get(result.TourId);
-  var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
-         var tourist = _personRepository.Get(result.TouristId); // PersonId → Person
+            try
+            {
+                // Konverzija PersonId → UserId pre slanja notifikacije
+                var tour = _tourRepository.Get(result.TourId);
+                var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
+                var tourist = _personRepository.Get(result.TouristId); // PersonId → Person
    
-   _notificationService.NotifyAuthorAboutNewProblem(
-    author.UserId,   // UserId autora
-    tourist.UserId,  // UserId turiste
-    result.Id,
-    result.Description
-   );
+                _notificationService.NotifyAuthorAboutNewProblem(
+                    author.UserId,   // UserId autora
+                    tourist.UserId,  // UserId turiste
+                    result.Id,
+                    result.Description
+                );
+            }
+            catch (Exception)
+            {
+                // Notification failed, but report is already created - silent fail
+            }
   
-  return _mapper.Map<ReportProblemDto>(result);
+            return _mapper.Map<ReportProblemDto>(result);
         }
 
         public ReportProblemDto Update(ReportProblemDto entity)
@@ -88,25 +95,32 @@ private readonly IMapper _mapper;
 
         // Novi metod: Author odgovara na prijavu (BEZ provere autorstva - samo za test)
         public ReportProblemDto AuthorRespond(int reportId, int authorId, string response)
-  {
-          var report = _crudRepository.Get(reportId);
-  report.RespondByAuthor(authorId, response);
-  var updated = _crudRepository.Update(report);
+        {
+            var report = _crudRepository.Get(reportId);
+            report.RespondByAuthor(authorId, response);
+            var updated = _crudRepository.Update(report);
    
-     // Konverzija PersonId → UserId pre slanja notifikacije
-     var tour = _tourRepository.Get(updated.TourId);
-   var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
-        var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
+            try
+            {
+                // Konverzija PersonId → UserId pre slanja notifikacije
+                var tour = _tourRepository.Get(updated.TourId);
+                var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
+                var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
       
- _notificationService.NotifyTouristAboutAuthorResponse(
-  tourist.UserId,  // UserId turiste
-        author.UserId,   // UserId autora
-     updated.Id,
-    response
-     );
+                _notificationService.NotifyTouristAboutAuthorResponse(
+                    tourist.UserId,  // UserId turiste
+                    author.UserId,   // UserId autora
+                    updated.Id,
+                    response
+                );
+            }
+            catch (Exception)
+            {
+                // Notification failed - silent fail
+            }
       
-return _mapper.Map<ReportProblemDto>(updated);
- }
+            return _mapper.Map<ReportProblemDto>(updated);
+        }
 
         // Novi metod: Tourist mark resolved/unresolved
         public ReportProblemDto MarkResolved(int reportId, bool resolved, string? comment)
@@ -118,29 +132,36 @@ return _mapper.Map<ReportProblemDto>(updated);
         }
 
         // Dodavanje poruke u prijavu problema
-     public IssueMessageDto AddMessage(int reportId, int authorId, string content)
-   {
- var report = _reportProblemRepository.GetWithMessages(reportId);
-    report.AddMessage(authorId, content);
-  var updated = _crudRepository.Update(report);
+        public IssueMessageDto AddMessage(int reportId, int authorId, string content)
+        {
+            var report = _reportProblemRepository.GetWithMessages(reportId);
+            report.AddMessage(authorId, content);
+            var updated = _crudRepository.Update(report);
 
-  var addedMessage = updated.Messages.LastOrDefault();
+            var addedMessage = updated.Messages.LastOrDefault();
         
-        // Konverzija PersonId → UserId pre slanja notifikacije
-      var tour = _tourRepository.Get(updated.TourId);
-    var tourAuthor = _personRepository.Get(tour.AuthorId);  // PersonId → Person
-            var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
+            try
+            {
+                // Konverzija PersonId → UserId pre slanja notifikacije
+                var tour = _tourRepository.Get(updated.TourId);
+                var tourAuthor = _personRepository.Get(tour.AuthorId);  // PersonId → Person
+                var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
       
-  _notificationService.NotifyAboutNewMessage(
-    tourist.UserId,   // UserId turiste
-    tourAuthor.UserId,   // UserId autora
-  reportId,
-   content,
-  authorId             // PersonId pošiljaoca poruke
-            );
+                _notificationService.NotifyAboutNewMessage(
+                    tourist.UserId,   // UserId turiste
+                    tourAuthor.UserId,   // UserId autora
+                    reportId,
+                    content,
+                    authorId             // PersonId pošiljaoca poruke
+                );
+            }
+            catch (Exception)
+            {
+                // Notification failed - silent fail
+            }
   
-  return _mapper.Map<IssueMessageDto>(addedMessage);
- }
+            return _mapper.Map<IssueMessageDto>(addedMessage);
+        }
 
         // Dobijanje svih poruka za prijavu
         public List<IssueMessageDto> GetMessages(int reportId)
