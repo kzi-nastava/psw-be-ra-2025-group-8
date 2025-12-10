@@ -4,6 +4,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.Core.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,21 +18,24 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly ICrudRepository<ReportProblem> _crudRepository;
         private readonly IReportProblemRepository _reportProblemRepository;
         private readonly ICrudRepository<Tour> _tourRepository;
-        private readonly IIssueNotificationService _notificationService;
-        private readonly IMapper _mapper;
+        private readonly ICrudRepository<Person> _personRepository;
+    private readonly IIssueNotificationService _notificationService;
+private readonly IMapper _mapper;
 
         public ReportProblemService(
             ICrudRepository<ReportProblem> repository, 
             IReportProblemRepository reportProblemRepository,
-            ICrudRepository<Tour> tourRepository, 
-            IIssueNotificationService notificationService,
-            IMapper mapper)
-        {
-            _crudRepository = repository;
-            _reportProblemRepository = reportProblemRepository;
-            _tourRepository = tourRepository;
-            _notificationService = notificationService;
-            _mapper = mapper;
+        ICrudRepository<Tour> tourRepository,
+            ICrudRepository<Person> personRepository,
+   IIssueNotificationService notificationService,
+      IMapper mapper)
+ {
+        _crudRepository = repository;
+  _reportProblemRepository = reportProblemRepository;
+       _tourRepository = tourRepository;
+      _personRepository = personRepository;
+ _notificationService = notificationService;
+ _mapper = mapper;
         }
 
         public PagedResult<ReportProblemDto> GetPaged(int page, int pageSize)
@@ -54,16 +58,19 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
             var result = _crudRepository.Create(domainEntity);
   
-            // Notify author about new problem
-            var tour = _tourRepository.Get(result.TourId);
-          _notificationService.NotifyAuthorAboutNewProblem(
-      tour.AuthorId,
-     result.TouristId,
-         result.Id,
-     result.Description
-          );
+      // Konverzija PersonId → UserId pre slanja notifikacije
+       var tour = _tourRepository.Get(result.TourId);
+  var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
+         var tourist = _personRepository.Get(result.TouristId); // PersonId → Person
+   
+   _notificationService.NotifyAuthorAboutNewProblem(
+    author.UserId,   // UserId autora
+    tourist.UserId,  // UserId turiste
+    result.Id,
+    result.Description
+   );
   
-            return _mapper.Map<ReportProblemDto>(result);
+  return _mapper.Map<ReportProblemDto>(result);
         }
 
         public ReportProblemDto Update(ReportProblemDto entity)
@@ -81,22 +88,25 @@ namespace Explorer.Tours.Core.UseCases.Administration
 
         // Novi metod: Author odgovara na prijavu (BEZ provere autorstva - samo za test)
         public ReportProblemDto AuthorRespond(int reportId, int authorId, string response)
-        {
-            var report = _crudRepository.Get(reportId);
-     report.RespondByAuthor(authorId, response);
-    var updated = _crudRepository.Update(report);
+  {
+          var report = _crudRepository.Get(reportId);
+  report.RespondByAuthor(authorId, response);
+  var updated = _crudRepository.Update(report);
    
-     // Notify tourist about author response
-         var tour = _tourRepository.Get(updated.TourId);
-   _notificationService.NotifyTouristAboutAuthorResponse(
-        updated.TouristId,
-        tour.AuthorId,
-           updated.Id,
-           response
-       );
+     // Konverzija PersonId → UserId pre slanja notifikacije
+     var tour = _tourRepository.Get(updated.TourId);
+   var author = _personRepository.Get(tour.AuthorId);  // PersonId → Person
+        var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
       
-            return _mapper.Map<ReportProblemDto>(updated);
-        }
+ _notificationService.NotifyTouristAboutAuthorResponse(
+  tourist.UserId,  // UserId turiste
+        author.UserId,   // UserId autora
+     updated.Id,
+    response
+     );
+      
+return _mapper.Map<ReportProblemDto>(updated);
+ }
 
         // Novi metod: Tourist mark resolved/unresolved
         public ReportProblemDto MarkResolved(int reportId, bool resolved, string? comment)
@@ -108,26 +118,29 @@ namespace Explorer.Tours.Core.UseCases.Administration
         }
 
         // Dodavanje poruke u prijavu problema
-        public IssueMessageDto AddMessage(int reportId, int authorId, string content)
-        {
-            var report = _reportProblemRepository.GetWithMessages(reportId);
-            report.AddMessage(authorId, content);
-            var updated = _crudRepository.Update(report);
+     public IssueMessageDto AddMessage(int reportId, int authorId, string content)
+   {
+ var report = _reportProblemRepository.GetWithMessages(reportId);
+    report.AddMessage(authorId, content);
+  var updated = _crudRepository.Update(report);
 
-            var addedMessage = updated.Messages.LastOrDefault();
-            
-            // Kreiranje notifikacija preko callback interfejsa
-            var tour = _tourRepository.Get(updated.TourId);
-            _notificationService.NotifyAboutNewMessage(
-                updated.TouristId,
-                tour.AuthorId,
-                reportId,
-                content,
-                authorId
+  var addedMessage = updated.Messages.LastOrDefault();
+        
+        // Konverzija PersonId → UserId pre slanja notifikacije
+      var tour = _tourRepository.Get(updated.TourId);
+    var tourAuthor = _personRepository.Get(tour.AuthorId);  // PersonId → Person
+            var tourist = _personRepository.Get(updated.TouristId); // PersonId → Person
+      
+  _notificationService.NotifyAboutNewMessage(
+    tourist.UserId,   // UserId turiste
+    tourAuthor.UserId,   // UserId autora
+  reportId,
+   content,
+  authorId             // PersonId pošiljaoca poruke
             );
-            
-            return _mapper.Map<IssueMessageDto>(addedMessage);
-        }
+  
+  return _mapper.Map<IssueMessageDto>(addedMessage);
+ }
 
         // Dobijanje svih poruka za prijavu
         public List<IssueMessageDto> GetMessages(int reportId)

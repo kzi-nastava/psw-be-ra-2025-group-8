@@ -48,13 +48,19 @@ public class ReportProblemController : ControllerBase
         return Ok();
     }
 
-    // Autor odgovara na problem
-    [Authorize(Policy = "authorPolicy")]
+    // Autor ili administrator odgovara na problem
+    [Authorize(Policy = "authorAdminPolicy")]
     [HttpPost("respond/{id:long}")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(ReportProblemDto), 200)]
     public ActionResult<ReportProblemDto> AuthorRespond(long id, [FromBody] AuthorResponseRequest request)
     {
+        var problem = _reportProblemService.GetById((int)id);
+        if (!CanAccessProblem(problem))
+        {
+            return Forbid();
+        }
+   
         var authorId = GetAuthorIdFromToken();
         var result = _reportProblemService.AuthorRespond((int)id, authorId, request.Response);
         return Ok(result);
