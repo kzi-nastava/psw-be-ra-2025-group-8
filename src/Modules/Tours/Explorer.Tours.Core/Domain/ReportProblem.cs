@@ -71,6 +71,13 @@ public class ReportProblem : Entity
         var message = new IssueMessage(Id, authorId, content);
         Messages.Add(message);
     }
+
+    // Provera da li je problem star više od 5 dana i nije rešen
+    public bool IsOverdue()
+    {
+        var daysSinceReport = (DateTime.UtcNow - ReportTime).TotalDays;
+        return daysSinceReport > 5 && IsResolved != true;
+    }
 }
 
 public enum ReportCategory

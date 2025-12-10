@@ -8,5 +8,15 @@ namespace Explorer.Tours.Tests.TestHelpers
         {
             // Mock implementation - ne radi ništa u testovima
         }
+
+        public void NotifyAuthorAboutNewProblem(long tourAuthorId, long touristId, long reportProblemId, string problemDescription)
+        {
+            // Mock implementation - ne radi ništa u testovima
+        }
+
+        public void NotifyTouristAboutAuthorResponse(long touristId, long tourAuthorId, long reportProblemId, string response)
+        {
+            // Mock implementation - ne radi ništa u testovima
+        }
     }
 }
