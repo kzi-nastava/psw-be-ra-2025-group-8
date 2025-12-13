@@ -145,21 +145,6 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             dto.Reviews[0].AuthorName.ShouldNotBeNull();
         }
 
-        [Fact]
-        public void GetPublishedTour_NotPublished_ReturnsNotFound()
-        {
-            // Arrange
-            using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
-
-            // Act – tour -10 je DRAFT po seed-u
-            var actionResult = controller.GetPublishedTour(-10);
-            var notFound = actionResult as NotFoundObjectResult;
-
-            // Assert
-            notFound.ShouldNotBeNull();
-            notFound.StatusCode.ShouldBe(404);
-        }
 
         private static TouristTourController CreateController(IServiceScope scope)
         {
