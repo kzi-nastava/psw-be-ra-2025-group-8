@@ -13,6 +13,7 @@ namespace Explorer.Tours.API.Dtos
         public string Description { get; set; }
         public int Difficulty { get; set; }
         public decimal Price { get; set; }
+        public string Author { get; set; }
         public double LengthInKilometers { get; set; }
 
         public KeyPointPreviewDto FirstKeyPoint { get; set; }

@@ -53,6 +53,7 @@ public class TouristTourService : ITouristTourService
         var dto = MapDetails(tour);
         dto.Reviews = MapReviews(id, out var avg);
         dto.AverageRating = avg;
+        dto.FirstKeyPoint = MapFirstKeyPoint(tour);
 
         return dto;
     }
@@ -72,7 +73,8 @@ public class TouristTourService : ITouristTourService
             Tags = tour.TourTags.Select(tt => tt.Tags.Tag).ToList(),
             RequiredEquipment = tour.RequiredEquipment.Select(eq => eq.Equipment.Name).ToList(),
             FirstKeyPoint = MapFirstKeyPoint(tour),
-            AverageRating = CalculateAverage(tour.Id)
+            AverageRating = CalculateAverage(tour.Id),
+            Author = _profileProvider.GetByUserId(tour.AuthorId).Name
         };
     }
 
@@ -88,7 +90,7 @@ public class TouristTourService : ITouristTourService
             LengthInKilometers = tour.LengthInKilometers,
             Tags = tour.TourTags.Select(tt => tt.Tags.Tag).ToList(),
             RequiredEquipment = tour.RequiredEquipment.Select(eq => eq.Equipment.Name).ToList(),
-            FirstKeyPoint = MapFirstKeyPoint(tour),
+            Author = _profileProvider.GetByUserId(tour.AuthorId).Name
         };
     }
 
