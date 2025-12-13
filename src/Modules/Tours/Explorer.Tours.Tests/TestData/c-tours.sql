@@ -6,6 +6,6 @@ VALUES
     (-10, 'Test Tour1', 'Opis test ture1', 2, 0, 0, -1, 0),
     (-11, 'Test Tour2', 'Opis test ture2', 3, 0, 0, -1, 0),
     (-12, 'Other Author Tour', 'Tura drugog autora', 1, 0, 0, -2, 0),
-    (-13, 'Test tour for preview 1', 'Tura drugog autora', 1, 1, 0, -2, 0),
-    (-14, 'Test tour for preview 2', 'Tura drugog autora', 1, 1, 0, -2, 0);
+    (-13, 'Test tour for preview 1', 'Tura drugog autora', 1, 1, 0, -12, 0),
+    (-14, 'Test tour for preview 2', 'Tura drugog autora', 1, 1, 0, -12, 0);
 
