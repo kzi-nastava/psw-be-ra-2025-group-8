@@ -20,12 +20,13 @@ namespace Explorer.API.Controllers.Stakeholders
 
         private long GetCurrentUserId()
         {
-            var personIdClaim = User.Claims.FirstOrDefault(c => c.Type == "personId");
-            if (personIdClaim == null || !long.TryParse(personIdClaim.Value, out var personId))
+            // ?ita 'id' claim koji sadrži UserId (ne personId!)
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out var userId))
             {
                 throw new UnauthorizedAccessException("Unable to determine user ID from token");
             }
-            return personId;
+            return userId;
         }
 
         [HttpGet]

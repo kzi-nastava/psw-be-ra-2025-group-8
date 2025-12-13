@@ -24,8 +24,8 @@ public class JwtGenerator : ITokenGenerator
             new("id", user.Id.ToString()),
             new("username", user.Username),
             new("personId", personId.ToString()),
-            // KLJUČNO: standardni role-claim, kao na main grani
-            new(ClaimTypes.Role, user.GetPrimaryRoleName())
+            // Koristimo string literal "role" umesto ClaimTypes.Role da dobijemo kratak claim name
+            new("role", user.GetPrimaryRoleName())
         };
 
         var jwt = CreateToken(claims, 60 * 24);
