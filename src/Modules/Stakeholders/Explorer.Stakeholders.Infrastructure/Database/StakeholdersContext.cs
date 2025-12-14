@@ -14,6 +14,8 @@ public class StakeholdersContext : DbContext
     public DbSet<Meetup> Meetups { get; set; }
     public DbSet<Club> Clubs { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Follower> Followers { get; set; }
+    public DbSet<FollowerMessage> FollowerMessages { get; set; }
 
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
@@ -25,6 +27,14 @@ public class StakeholdersContext : DbContext
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
         
         modelBuilder.Entity<Notification>().HasIndex(n => n.UserId);
+  
+        // Follower indexes
+        modelBuilder.Entity<Follower>().HasIndex(f => f.UserId);
+        modelBuilder.Entity<Follower>().HasIndex(f => f.FollowingUserId);
+        modelBuilder.Entity<Follower>().HasIndex(f => new { f.UserId, f.FollowingUserId }).IsUnique();
+
+        // FollowerMessage indexes
+        modelBuilder.Entity<FollowerMessage>().HasIndex(m => m.SenderId);
 
         ConfigureStakeholder(modelBuilder);
     }
