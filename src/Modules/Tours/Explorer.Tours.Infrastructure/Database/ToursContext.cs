@@ -20,6 +20,7 @@ public class ToursContext : DbContext
     public DbSet<KeyPoint> KeyPoints { get; set; }
     public DbSet<TourTransportTime> TourTransportTimes { get; set; }
     public DbSet<TourRating> TourRatings { get; set; }
+    public DbSet<TourRatingImage> TourRatingImages { get; set; }
 
 
     //Preference
@@ -221,6 +222,25 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
+
+        // TourRatingImage CONFIGURATION
+        modelBuilder.Entity<TourRatingImage>(builder =>
+        {
+            builder.HasKey(tri => tri.Id);
+
+            builder.Property(tri => tri.Id)
+                .ValueGeneratedOnAdd();
+
+            builder.Property(tri => tri.TourRatingId)
+                .IsRequired();
+
+            builder.Property(tri => tri.Url)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            builder.Property(tri => tri.UploadedAt)
+                .IsRequired();
+        });
     }
 
 }
