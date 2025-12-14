@@ -4,6 +4,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.Core.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         public ReportProblemService(
             ICrudRepository<ReportProblem> repository, 
             IReportProblemRepository reportProblemRepository,
-            ICrudRepository<Tour> tourRepository, 
+            ICrudRepository<Tour> tourRepository,
             IIssueNotificationService notificationService,
             IMapper mapper)
         {
@@ -53,6 +54,24 @@ namespace Explorer.Tours.Core.UseCases.Administration
             );
 
             var result = _crudRepository.Create(domainEntity);
+  
+            try
+            {
+                // Tour.AuthorId and ReportProblem.TouristId are already UserIds - no conversion needed
+                var tour = _tourRepository.Get(result.TourId);
+   
+                _notificationService.NotifyAuthorAboutNewProblem(
+                    tour.AuthorId,       // UserId autora (directly from Tour)
+                    result.TouristId,    // UserId turiste (directly from ReportProblem)
+                    result.Id,
+                    result.Description
+                );
+            }
+            catch (Exception)
+            {
+                // Notification failed, but report is already created - silent fail
+            }
+  
             return _mapper.Map<ReportProblemDto>(result);
         }
 
@@ -75,6 +94,24 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var report = _crudRepository.Get(reportId);
             report.RespondByAuthor(authorId, response);
             var updated = _crudRepository.Update(report);
+   
+            try
+            {
+                // Tour.AuthorId and ReportProblem.TouristId are already UserIds
+                var tour = _tourRepository.Get(updated.TourId);
+      
+                _notificationService.NotifyTouristAboutAuthorResponse(
+                    updated.TouristId,  // UserId turiste (directly from ReportProblem)
+                    tour.AuthorId,      // UserId autora (directly from Tour)
+                    updated.Id,
+                    response
+                );
+            }
+            catch (Exception)
+            {
+                // Notification failed - silent fail
+            }
+      
             return _mapper.Map<ReportProblemDto>(updated);
         }
 
@@ -95,17 +132,25 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var updated = _crudRepository.Update(report);
 
             var addedMessage = updated.Messages.LastOrDefault();
-            
-            // Kreiranje notifikacija preko callback interfejsa
-            var tour = _tourRepository.Get(updated.TourId);
-            _notificationService.NotifyAboutNewMessage(
-                updated.TouristId,
-                tour.AuthorId,
-                reportId,
-                content,
-                authorId
-            );
-            
+        
+            try
+            {
+                // Tour.AuthorId and ReportProblem.TouristId are already UserIds
+                var tour = _tourRepository.Get(updated.TourId);
+      
+                _notificationService.NotifyAboutNewMessage(
+                    updated.TouristId,   // UserId turiste (directly from ReportProblem)
+                    tour.AuthorId,       // UserId autora (directly from Tour)
+                    reportId,
+                    content,
+                    authorId             // UserId pošiljaoca poruke
+                );
+            }
+            catch (Exception)
+            {
+                // Notification failed - silent fail
+            }
+  
             return _mapper.Map<IssueMessageDto>(addedMessage);
         }
 

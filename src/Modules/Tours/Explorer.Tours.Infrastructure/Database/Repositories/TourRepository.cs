@@ -66,5 +66,10 @@ public class TourRepository : ITourRepository
             .ToList();
     }
 
+    public List<Tour> GetAll()
+    {
+        return ToursWithIncludes().ToList();
+    }
+
 
 }
