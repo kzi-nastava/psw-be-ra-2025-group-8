@@ -122,5 +122,53 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var report = _reportProblemRepository.GetWithMessages(reportId);
             return _mapper.Map<ReportProblemDto>(report);
         }
+        // Administrator postavlja rok za rešavanje
+        public ReportProblemDto SetDeadline(int reportId, DateTime deadline)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.SetDeadline(deadline);
+            var updated = _crudRepository.Update(report);
+
+            // Pošalji notifikaciju autoru ture
+            var tour = _tourRepository.Get(updated.TourId);
+            _notificationService.NotifyAboutNewMessage(
+                updated.TouristId,           // Pošiljalac može biti turistički ID, ali ovde je OK koristiti turistu jer sistem zna oba korisnika
+                tour.AuthorId,               // Autor dobija obaveštenje
+                reportId,
+                $"Administrator je postavio rok za rešavanje problema do {deadline:dd.MM.yyyy. HH:mm}.",
+                0                            // 0 = sistem / administrator
+            );
+
+            return _mapper.Map<ReportProblemDto>(updated);
+        }
+
+        // Administrator zatvara problem bez kazne
+        public ReportProblemDto CloseIssueByAdmin(int reportId)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.CloseOrPenalize(false);
+            var updated = _crudRepository.Update(report);
+
+            return _mapper.Map<ReportProblemDto>(updated);
+        }
+
+        // Administrator penalizuje autora (npr. zatvara turu)
+        public ReportProblemDto PenalizeAuthor(int reportId)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.CloseOrPenalize(true);
+            var updated = _crudRepository.Update(report);
+
+            // Moguće: deaktivacija ture (ugasi turu)
+            var tour = _tourRepository.Get(updated.TourId);
+            if (tour != null)
+            {
+                tour.Status = TourStatus.Archived; // ili 0 ako je enum int
+                _tourRepository.Update(tour);
+            }
+
+            return _mapper.Map<ReportProblemDto>(updated);
+        }
+
     }
 }

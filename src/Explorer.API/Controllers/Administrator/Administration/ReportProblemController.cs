@@ -115,6 +115,53 @@ public class ReportProblemController : ControllerBase
         return Ok(_reportProblemService.GetMessages((int)id));
     }
 
+    // -----------------------------------------
+    //  ADMINISTRATORSKE AKCIJE
+    // -----------------------------------------
+
+    // Administrator postavlja rok za rešavanje problema
+    [Authorize(Roles = "administrator")]
+    [HttpPost("{id:long}/deadline")]
+    [ProducesResponseType(typeof(ReportProblemDto), 200)]
+    public ActionResult<ReportProblemDto> SetDeadline(long id, [FromBody] SetDeadlineRequest request)
+    {
+        if (request.Deadline <= DateTime.UtcNow)
+        {
+            return BadRequest("Deadline mora biti u budućnosti.");
+        }
+
+        var result = _reportProblemService.SetDeadline((int)id, request.Deadline);
+        return Ok(result);
+    }
+
+    // Administrator zatvara problem bez kazne
+    [Authorize(Roles = "administrator")]
+    [HttpPut("{id:long}/close")]
+    [ProducesResponseType(typeof(ReportProblemDto), 200)]
+    public ActionResult<ReportProblemDto> CloseIssue(long id)
+    {
+        var result = _reportProblemService.CloseIssueByAdmin((int)id);
+        return Ok(result);
+    }
+
+    // Administrator penalizuje autora (npr. arhivira turu)
+    [Authorize(Roles = "administrator")]
+    [HttpPut("{id:long}/penalize")]
+    [ProducesResponseType(typeof(ReportProblemDto), 200)]
+    public ActionResult<ReportProblemDto> PenalizeAuthor(long id)
+    {
+        var result = _reportProblemService.PenalizeAuthor((int)id);
+        return Ok(result);
+    }
+
+    // DTO za unos roka
+    public class SetDeadlineRequest
+    {
+        public DateTime Deadline { get; set; }
+    }
+
+
+
     private int GetUserIdFromToken()
     {
         if (!TryGetPersonId(out var personId))

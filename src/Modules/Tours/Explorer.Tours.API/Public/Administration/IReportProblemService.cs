@@ -18,5 +18,10 @@ namespace Explorer.Tours.API.Public.Administration
         IssueMessageDto AddMessage(int reportId, int authorId, string content);
         List<IssueMessageDto> GetMessages(int reportId);
         ReportProblemDto GetById(int reportId);
+
+        //Deadline operations
+        ReportProblemDto SetDeadline(int reportId, DateTime deadline);
+        ReportProblemDto CloseIssueByAdmin(int reportId);
+        ReportProblemDto PenalizeAuthor(int reportId);
     }
 }

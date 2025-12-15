@@ -18,7 +18,12 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.IsOverdue, 
                 opt => opt.MapFrom(src => 
                     (src.IsResolved == null || src.IsResolved == false) && 
-                    (DateTime.UtcNow - src.ReportTime).TotalDays > 5));
+                    (DateTime.UtcNow - src.ReportTime).TotalDays > 5))
+            //Maksim: za svaki slucaj
+            .ForMember(dest => dest.Deadline, opt => opt.MapFrom(src => src.Deadline))
+            .ForMember(dest => dest.IsClosedByAdmin, opt => opt.MapFrom(src => src.IsClosedByAdmin))
+            .ForMember(dest => dest.IsAuthorPenalized, opt => opt.MapFrom(src => src.IsAuthorPenalized));
+                
         
         CreateMap<IssueMessageDto, IssueMessage>().ReverseMap();
         CreateMap<FacilityDto, Facility>().ReverseMap();

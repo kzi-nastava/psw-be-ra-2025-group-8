@@ -25,6 +25,10 @@ public class ReportProblem : Entity
     public bool? IsResolved { get; set; }
     public string? TouristResolutionComment { get; set; }
     public DateTime? TouristResolutionTime { get; set; }
+    // Novi podaci za rok i status rokova
+    public DateTime? Deadline { get; set; }
+    public bool? IsClosedByAdmin { get; set; }
+    public bool? IsAuthorPenalized { get; set; }
 
     // Poruke u okviru prijave problema
     public List<IssueMessage> Messages { get; set; } = new List<IssueMessage>();
@@ -70,6 +74,21 @@ public class ReportProblem : Entity
     {
         var message = new IssueMessage(Id, authorId, content);
         Messages.Add(message);
+    }
+    // Administrator postavlja rok za rešavanje
+    public void SetDeadline(DateTime deadline)
+    {
+        if (deadline <= DateTime.UtcNow)
+            throw new ArgumentException("Deadline must be in the future.");
+
+        Deadline = deadline;
+    }
+
+    // Administrator zatvara problem ili penalizuje autora
+    public void CloseOrPenalize(bool penalizeAuthor)
+    {
+        IsClosedByAdmin = true;
+        IsAuthorPenalized = penalizeAuthor;
     }
 }
 
