@@ -20,10 +20,14 @@ public class StakeholderProfile : Profile
         CreateMap<Notification, NotificationDto>().ReverseMap();
 
         //mapper za klubove, nisam koristio ReverseMap, jer mi ne trebaju sva mapiranja za 2 dto-a i 1 entity
-        CreateMap<Club, ClubDto>();
+        CreateMap<Club, ClubDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+
+        // map DTO -> domain only for full DTOs (used in Update) - do not construct new Club with invalid owner
         CreateMap<ClubDto, Club>()
             .ConstructUsing(dto => new Club(dto.OwnerId, dto.Name, dto.Description, dto.ImageUrls));
-        CreateMap<CreateClubDto, Club>()
-            .ConstructUsing(dto => new Club(0, dto.Name, dto.Description, dto.ImageUrls));
+
+        // Remove construct using for CreateClubDto to avoid creating Club with OwnerId = 0
+        CreateMap<CreateClubDto, Club>();
     }
 }

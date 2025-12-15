@@ -73,5 +73,38 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new UnauthorizedAccessException("Only the owner can delete the club");
             _clubRepository.Delete(id);
         }
+
+        // owner actions
+        public void Invite(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            club.InviteMember(ownerId, touristId);
+            _clubRepository.Update(club);
+        }
+
+        public void Expel(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            club.ExpelMember(ownerId, touristId);
+            _clubRepository.Update(club);
+        }
+
+        public void Close(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the owner can close the club.");
+            club.Close();
+            _clubRepository.Update(club);
+        }
+
+        public void Activate(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the owner can activate the club.");
+            club.Activate();
+            _clubRepository.Update(club);
+        }
     }
 }

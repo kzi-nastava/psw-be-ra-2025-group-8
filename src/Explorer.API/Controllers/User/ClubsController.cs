@@ -71,6 +71,45 @@ namespace Explorer.API.Controllers.User
             return Ok();
         }
 
+        // ------ OWNER ACTIONS ------
+        // Invite a tourist (owner only)
+        public class InviteDto { public long TouristId { get; set; } }
+
+        [HttpPost("{id:long}/invite")]
+        public ActionResult Invite(long id, [FromBody] InviteDto dto)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Invite(id, ownerId, dto.TouristId);
+            return Ok();
+        }
+
+        // Expel a tourist (owner only)
+        public class ExpelDto { public long TouristId { get; set; } }
+
+        [HttpPost("{id:long}/expel")]
+        public ActionResult Expel(long id, [FromBody] ExpelDto dto)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Expel(id, ownerId, dto.TouristId);
+            return Ok();
+        }
+
+        [HttpPost("{id:long}/close")]
+        public ActionResult Close(long id)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Close(id, ownerId);
+            return Ok();
+        }
+
+        [HttpPost("{id:long}/activate")]
+        public ActionResult Activate(long id)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Activate(id, ownerId);
+            return Ok();
+        }
+
         private int ExtractUserId()
         {
             var claim = User.Claims.FirstOrDefault(c =>
