@@ -41,6 +41,7 @@ namespace Explorer.Stakeholders.Core.Domain
     public enum NotificationType
     {
         IssueMessage = 0,
-        General = 1
+        General = 1,
+        FollowerMessage = 2  // New: Messages sent to followers
     }
 }
