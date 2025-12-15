@@ -14,7 +14,7 @@ public class FollowerMessage : Entity
 
     public FollowerMessage(long senderId, string content, ResourceType? attachmentType = null, long? attachmentResourceId = null)
     {
-        if (senderId <= 0)
+        if (senderId == 0)
             throw new ArgumentException("Invalid sender ID.");
   
         if (string.IsNullOrWhiteSpace(content))

@@ -10,11 +10,11 @@ public class Follower : Entity
 
     public Follower(long userId, long followingUserId)
     {
+        if (userId == 0 || followingUserId == 0)
+            throw new ArgumentException("Invalid user IDs.");
+
         if (userId == followingUserId)
             throw new ArgumentException("User cannot follow themselves.");
-      
-        if (userId <= 0 || followingUserId <= 0)
-         throw new ArgumentException("Invalid user IDs.");
 
         UserId = userId;
         FollowingUserId = followingUserId;
