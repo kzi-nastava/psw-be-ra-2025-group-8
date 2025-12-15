@@ -9,11 +9,13 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
     public class ShoppingCartService : IShoppingCartService
     {
         private readonly IShoppingCartRepository _cartRepository;
+        private readonly ITourRepository _tourRepository;
         private readonly IMapper _mapper;
 
-        public ShoppingCartService(IShoppingCartRepository cartRepository, IMapper mapper)
+        public ShoppingCartService(IShoppingCartRepository cartRepository, ITourRepository tourRepository, IMapper mapper)
         {
             _cartRepository = cartRepository;
+            _tourRepository = tourRepository;
             _mapper = mapper;
         }
 
@@ -36,8 +38,9 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             {
                 throw new NotFoundException("Cart not found for this user.");
             }
-
-            return _mapper.Map<ShoppingCartDto>(cart);
+            var dto = _mapper.Map<ShoppingCartDto>(cart);
+            dto.TotalPrice = CalculateTotalPrice(cart);
+            return dto;
         }
 
         public void AddItem(long userId, OrderItemDto itemDto)
@@ -78,5 +81,25 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             if (cart == null) throw new KeyNotFoundException("Cart not found for this user.");
             _cartRepository.Delete(cart.Id);
         }
+        private decimal CalculateTotalPrice(Domain.ShoppingCart cart)
+        {
+            if (cart.Items == null || !cart.Items.Any())
+                return 0;
+
+            decimal total = 0;
+
+            foreach (var item in cart.Items)
+            {
+                var tour = _tourRepository.Get(item.TourId);
+                if (tour != null)
+                {
+                    total += tour.Price;
+                }
+            }
+
+            return total;
+        }
+
+
     }
 }

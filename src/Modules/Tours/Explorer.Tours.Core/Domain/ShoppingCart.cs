@@ -7,8 +7,7 @@ namespace Explorer.Tours.Core.Domain
     {
         private readonly List<OrderItem> _items = new();
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
-        public long UserId { get; private set; }    
-        public decimal TotalPrice => _items.Sum(i => i.Price);
+        public long UserId { get; private set; }
 
         private ShoppingCart() { }
 

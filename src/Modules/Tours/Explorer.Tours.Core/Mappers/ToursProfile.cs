@@ -97,12 +97,9 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Equipment, opt => opt.Ignore());
         //mapper za shopping cart i order item
         CreateMap<ShoppingCart, ShoppingCartDto>()
-               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
-               .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice))
-               .ReverseMap()
-               .ConstructUsing(dto => new ShoppingCart(dto.UserId));
+               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
         CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId, dto.Price));
+                .ConstructUsing(dto => new OrderItem(dto.TourId));
     }
 
     private static TourStatus MapStatus(string status)

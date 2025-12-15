@@ -3,7 +3,6 @@
     public class OrderItemDto
     {
         public long TourId { get; set; }
-        public decimal Price { get; set; }
     }
 
     public class ShoppingCartDto

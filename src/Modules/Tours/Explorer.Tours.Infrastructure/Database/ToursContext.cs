@@ -209,14 +209,12 @@ public class ToursContext : DbContext
                    .WithOne()
                    .HasForeignKey("ShoppingCartId")
                    .OnDelete(DeleteBehavior.Cascade);
-            builder.Ignore(c => c.TotalPrice);
         });
 
         modelBuilder.Entity<OrderItem>(builder =>
         {
             builder.HasKey(oi => oi.Id);
             builder.Property(oi => oi.TourId).IsRequired();
-            builder.Property(oi => oi.Price).HasColumnType("decimal(18,2)").IsRequired();
         });
     }
 

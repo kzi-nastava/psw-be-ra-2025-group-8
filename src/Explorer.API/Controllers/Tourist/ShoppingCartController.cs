@@ -56,8 +56,7 @@ namespace Explorer.API.Controllers.Tourist
             if (tour == null) return NotFound("Tour not found.");
             var dto = new OrderItemDto
             {
-                TourId = tourId,
-                Price = tour.Price
+                TourId = tourId
             };
             _shoppingCartService.AddItem(userId, dto);
             return Ok("Item added to cart.");
