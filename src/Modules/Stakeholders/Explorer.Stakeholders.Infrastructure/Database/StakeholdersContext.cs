@@ -13,6 +13,8 @@ public class StakeholdersContext : DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<Meetup> Meetups { get; set; }
     public DbSet<Club> Clubs { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<ClubJoinRequest> ClubJoinRequests { get; set; }
 
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
@@ -22,6 +24,11 @@ public class StakeholdersContext : DbContext
         modelBuilder.HasDefaultSchema("stakeholders");
 
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+        
+        modelBuilder.Entity<Notification>().HasIndex(n => n.UserId);
+
+        modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.ClubId);
+        modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.TouristId);
 
         ConfigureStakeholder(modelBuilder);
     }

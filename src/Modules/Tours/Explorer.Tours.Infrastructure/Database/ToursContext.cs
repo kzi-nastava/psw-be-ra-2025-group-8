@@ -15,6 +15,12 @@ public class ToursContext : DbContext
     public DbSet<Tour> Tours { get; set; }
     public DbSet<TourEquipment> TourEquipment { get; set; }
     public DbSet<Position> Positions { get; set; }
+    public DbSet<TourExecution> TourExecutions { get; set; }
+    public DbSet<KeyPointReached> KeyPointsReached { get; set; }
+    public DbSet<KeyPoint> KeyPoints { get; set; }
+    public DbSet<TourTransportTime> TourTransportTimes { get; set; }
+    public DbSet<TourRating> TourRatings { get; set; }
+
 
     //Preference
     public DbSet<TouristPreferences> TouristPreferences { get; set; }
@@ -58,7 +64,11 @@ public class ToursContext : DbContext
             builder.Property(t => t.AuthorId)
                 .IsRequired();
 
-            
+            builder.Property(t => t.PublishedAt)
+                .IsRequired(false);
+
+            builder.Property(t => t.ArchivedAt)
+                .IsRequired(false);
 
             // route length
             builder.Property(t => t.LengthInKilometers)
@@ -70,6 +80,20 @@ public class ToursContext : DbContext
                 .WithOne()                         // KeyPoint does not have navigation property to Tour
                 .HasForeignKey("TourId")           // shadow FK column TourId
                 .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
+        });
+
+        // TourTransportTime CONFIGURATION
+        modelBuilder.Entity<TourTransportTime>(builder =>
+        {
+            builder.HasKey(tt => new { tt.TourId, tt.Transport });
+
+            builder.Property(tt => tt.DurationMinutes)
+                .IsRequired();
+
+            builder.HasOne(tt => tt.Tour)
+                .WithMany(t => t.TransportTimes)
+                .HasForeignKey(tt => tt.TourId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<TourTag>()

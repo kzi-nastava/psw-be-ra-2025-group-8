@@ -1,9 +1,9 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.PersonalEquipment;
 using Explorer.Tours.API.Public.Tourist;
-using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
@@ -48,6 +48,9 @@ public static class ToursStartup
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
         //
 
+        services.AddScoped<ITourExecutionService, TourExecutionService>();
+        services.AddScoped<ITourRatingService, TourRatingService>();
+        services.AddScoped<ITouristTourService, TouristTourService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -62,11 +65,17 @@ public static class ToursStartup
         services.AddScoped<ITagsRepository, TagsRepository>();
         services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
 
+        services.AddScoped<ITourExecutionRepository, TourExecutionRepository>();
+        services.AddScoped<IKeyPointReachedRepository, KeyPointReachedRepository>();
+        services.AddScoped<IKeyPointRepository, KeyPointRepository>();
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Tour>), typeof(CrudDatabaseRepository<Tour, ToursContext>));
+        services.AddScoped(typeof(ICrudRepository<TourExecution>), typeof(CrudDatabaseRepository<TourExecution, ToursContext>));
         services.AddScoped<ITourRepository, TourRepository>();
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
+        services.AddScoped<ITourRatingRepository, TourRatingRepository>();
+
         services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         services.AddDbContext<ToursContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("tours"),

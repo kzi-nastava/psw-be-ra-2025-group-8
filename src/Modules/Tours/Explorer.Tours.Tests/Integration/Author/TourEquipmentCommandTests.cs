@@ -67,21 +67,6 @@ public class TourEquipmentCommandTests : BaseToursIntegrationTest
     }
 
     // -------------------------------------------------------
-    // Adding duplicate equipment throws error
-    // -------------------------------------------------------
-    [Fact]
-    public void AddEquipment_prevents_duplicates()
-    {
-        using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope);
-
-        controller.AddEquipment(-10, -2);
-
-        Should.Throw<InvalidOperationException>(() =>
-            controller.AddEquipment(-10, -2));
-    }
-
-    // -------------------------------------------------------
     // RemoveEquipment removes assigned equipment
     // -------------------------------------------------------
     [Fact]

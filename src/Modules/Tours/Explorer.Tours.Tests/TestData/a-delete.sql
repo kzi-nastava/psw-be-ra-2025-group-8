@@ -3,6 +3,8 @@
 DELETE FROM tours."ShoppingCarts";
 DELETE FROM tours."OrderItems";
 -- PreferenceTags depends on TouristPreferences and Tags
+
+DELETE FROM tours."TourRatings";
 DELETE FROM tours."PreferenceTags";
 -- TransportTypePreferences depends on TouristPreferences  
 DELETE FROM tours."TransportTypePreferences";
@@ -15,11 +17,14 @@ DELETE FROM tours."Tags";
 DELETE FROM tours."TourEquipment";
 DELETE FROM tours."TourTags";
 
+DELETE FROM tours."KeyPointsReached";   
+DELETE FROM tours."PersonEquipment";   
+DELETE FROM tours."TourExecutions"; 
+DELETE FROM tours."KeyPoints";      
 DELETE FROM tours."Equipment";
 -- IssueMessages depends on ReportProblem
 DELETE FROM tours."IssueMessages";
 DELETE FROM tours."ReportProblem";
 DELETE FROM tours."Tours";
-DELETE FROM tours."PersonEquipment";
 DELETE FROM tours."Facilities";
 DELETE FROM tours."Monument";

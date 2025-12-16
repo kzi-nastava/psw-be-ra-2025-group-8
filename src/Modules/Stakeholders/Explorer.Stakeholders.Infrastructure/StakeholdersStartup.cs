@@ -1,5 +1,6 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
@@ -28,12 +29,15 @@ public static class StakeholdersStartup
     {
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IInternalPersonService, PersonService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
 
 
         services.AddScoped<IRatingService, RatingService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IMeetupService, MeetupService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<BuildingBlocks.Core.UseCases.IIssueNotificationService, IssueNotificationServiceAdapter>();
 
         //za klubove
         services.AddScoped<IClubService, ClubService>();
@@ -46,10 +50,12 @@ public static class StakeholdersStartup
         services.AddScoped<IRatingRepository, RatingDbRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
         services.AddScoped<IMeetupRepository, MeetupRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
      
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
+        services.AddScoped<IClubJoinRequestRepository, ClubJoinRequestRepository>();
 
 
         services.AddDbContext<StakeholdersContext>(opt =>

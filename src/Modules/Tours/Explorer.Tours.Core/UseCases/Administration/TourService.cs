@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+
 
 namespace Explorer.Tours.Core.UseCases.Administration;
 
@@ -13,17 +15,22 @@ public class TourService : ITourService
     private readonly ITourRepository _tourRepository;
     private readonly IMapper _mapper;
     private readonly ITagsRepository _tagsRepository;
+    private readonly ICrudRepository<Equipment> _equipmentRepository;
 
-    public TourService(ICrudRepository<Tour> crudRepository,
-                   ITourRepository tourRepository,
-                   ITagsRepository tagsRepository,
-                   IMapper mapper)
+    public TourService(
+        ICrudRepository<Tour> crudRepository,
+        ITourRepository tourRepository,
+        ITagsRepository tagsRepository,
+        ICrudRepository<Equipment> equipmentRepository,
+        IMapper mapper)
     {
         _crudRepository = crudRepository;
         _tourRepository = tourRepository;
         _tagsRepository = tagsRepository;
+        _equipmentRepository = equipmentRepository;
         _mapper = mapper;
     }
+
 
     public PagedResult<TourDto> GetPaged(int page, int pageSize)
     {
@@ -97,7 +104,7 @@ public class TourService : ITourService
             keyPointDto.Name,
             keyPointDto.Description ?? string.Empty,
             keyPointDto.ImageUrl ?? string.Empty,
-            keyPointDto.Secret ?? string.Empty,
+            string.Empty, // Secret is managed separately, not through public DTO
             location
         );
 
@@ -131,6 +138,20 @@ public class TourService : ITourService
         var updated = _tourRepository.Update(tour);
         return _mapper.Map<TourDto>(updated);
     }
+
+    public TourDto Reactivate(long tourId, int authorId)  
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only reactivate your own tours.");
+
+        tour.Reactivate();
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
 
     public TourDto AddEquipment(long tourId, long equipmentId, int authorId)
     {
@@ -269,6 +290,68 @@ public class TourService : ITourService
         var updated = _tourRepository.Update(tour);
         return _mapper.Map<TourDto>(updated);
     }
+
+    public List<EquipmentForTourDto> GetEquipmentForTour(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+        var allEquipment = _equipmentRepository.GetPaged(0, int.MaxValue).Results;
+        var requiredIds = tour.RequiredEquipment.Select(e => e.EquipmentId).ToList();
+
+        return allEquipment.Select(e => new EquipmentForTourDto
+        {
+            EquipmentId = e.Id,
+            Name = e.Name,
+            Description = e.Description,
+            IsRequired = requiredIds.Contains(e.Id)
+        }).ToList();
+    }
+
+    public TourDto UpdateEquipment(long tourId, List<long> equipmentIds, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+        tour.RequiredEquipment.Clear(); // reset
+
+        foreach (var eqId in equipmentIds.Distinct())
+            tour.AddRequiredEquipment(eqId); // koristi već postojeću domen logiku!
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
+    public TourDto UpdateTransportTimes(long tourId, List<TourTransportTimeDto> times, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new KeyNotFoundException("Tour not found.");
+        if (tour.AuthorId != authorId) throw new UnauthorizedAccessException();
+
+        // Delete existing transport times and add new ones
+        tour.ClearTransportTimes();
+
+        if (times != null)
+        {
+            foreach (var dto in times)
+            {
+                if (!Enum.TryParse<TransportType>(dto.Transport, true, out var transport))
+                {
+                    throw new EntityValidationException($"Invalid transport value: '{dto.Transport}'.");
+                }
+
+                if (dto.DurationMinutes <= 0)
+                {
+                    throw new EntityValidationException("Duration must be a positive number of minutes.");
+                }
+
+                tour.SetTransportTime(transport, dto.DurationMinutes);
+            }
+        }
+
+        var updated = _tourRepository.Update(tour);
+        return _mapper.Map<TourDto>(updated);
+    }
+
     //Maksim: Dodao sam Get preko ID-a, zato sto su mi potrebni podaci ture za ShoppingCart
     public TourDto GetById(long id)
     {

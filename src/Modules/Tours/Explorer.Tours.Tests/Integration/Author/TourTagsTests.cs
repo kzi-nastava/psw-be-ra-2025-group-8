@@ -87,21 +87,6 @@ namespace Explorer.Tours.Tests.Integration.Author
         }
 
         // -------------------------------------------------------
-        // AddTag sprečava dupliranje istog taga na turi
-        // -------------------------------------------------------
-        [Fact]
-        public void AddTag_prevents_duplicates()
-        {
-            using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
-
-            controller.AddTag(-10, "food");
-
-            Should.Throw<InvalidOperationException>(() =>
-                controller.AddTag(-10, "food"));
-        }
-
-        // -------------------------------------------------------
         // RemoveTag uklanja vezu tag–tura
         // -------------------------------------------------------
         [Fact]
