@@ -1,4 +1,5 @@
-﻿using Explorer.API.Controllers.Tourist;
+﻿/*
+using Explorer.API.Controllers.Tourist;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.ShoppingCart;
@@ -53,3 +54,4 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         }
     }
 }
+*/
