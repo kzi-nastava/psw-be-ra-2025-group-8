@@ -53,6 +53,7 @@ public static class StakeholdersStartup
      
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
+        services.AddScoped<IClubJoinRequestRepository, ClubJoinRequestRepository>();
 
 
         services.AddDbContext<StakeholdersContext>(opt =>

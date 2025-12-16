@@ -1,8 +1,10 @@
 -- Deleting in the correct order to respect foreign key constraints
 -- First, we delete child tables (tables that have foreign keys)
 
+DELETE FROM stakeholders."ClubJoinRequests";
 DELETE FROM stakeholders."Ratings";
 DELETE FROM stakeholders."Messages";
+DELETE FROM stakeholders."Notifications";
 -- People depends on Users
 DELETE FROM stakeholders."People";
 -- Users is the root table (has no dependencies)

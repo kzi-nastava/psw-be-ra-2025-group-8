@@ -29,5 +29,9 @@ public class StakeholderProfile : Profile
 
         // Remove construct using for CreateClubDto to avoid creating Club with OwnerId = 0
         CreateMap<CreateClubDto, Club>();
+
+        CreateMap<ClubJoinRequest, ClubJoinRequestDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+        CreateMap<ClubJoinRequestDto, ClubJoinRequest>();
     }
 }

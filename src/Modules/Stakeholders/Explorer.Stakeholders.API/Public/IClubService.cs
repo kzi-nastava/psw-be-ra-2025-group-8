@@ -18,5 +18,13 @@ namespace Explorer.Stakeholders.API.Public
         void Expel(long clubId, long ownerId, long touristId);
         void Close(long clubId, long ownerId);
         void Activate(long clubId, long ownerId);
+
+        // join requests
+        ClubJoinRequestDto RequestToJoin(long clubId, long touristId);
+        void CancelJoinRequest(long requestId, long touristId);
+        ClubJoinRequestDto AcceptJoinRequest(long requestId, long ownerId);
+        ClubJoinRequestDto RejectJoinRequest(long requestId, long ownerId);
+        IEnumerable<ClubJoinRequestDto> GetClubJoinRequests(long clubId, long ownerId);
+        IEnumerable<ClubJoinRequestDto> GetMyJoinRequests(long touristId);
     }
 }

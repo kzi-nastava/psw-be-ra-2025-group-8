@@ -110,6 +110,55 @@ namespace Explorer.API.Controllers.User
             return Ok();
         }
 
+        // ------ JOIN REQUEST ACTIONS ------
+        [HttpPost("{id:long}/request-join")]
+        public ActionResult<ClubJoinRequestDto> RequestToJoin(long id)
+        {
+            int touristId = ExtractUserId();
+            var result = _clubService.RequestToJoin(id, touristId);
+            return Ok(result);
+        }
+
+        [HttpDelete("join-requests/{requestId:long}")]
+        public ActionResult CancelJoinRequest(long requestId)
+        {
+            int touristId = ExtractUserId();
+            _clubService.CancelJoinRequest(requestId, touristId);
+            return Ok();
+        }
+
+        [HttpPost("join-requests/{requestId:long}/accept")]
+        public ActionResult<ClubJoinRequestDto> AcceptJoinRequest(long requestId)
+        {
+            int ownerId = ExtractUserId();
+            var result = _clubService.AcceptJoinRequest(requestId, ownerId);
+            return Ok(result);
+        }
+
+        [HttpPost("join-requests/{requestId:long}/reject")]
+        public ActionResult<ClubJoinRequestDto> RejectJoinRequest(long requestId)
+        {
+            int ownerId = ExtractUserId();
+            var result = _clubService.RejectJoinRequest(requestId, ownerId);
+            return Ok(result);
+        }
+
+        [HttpGet("{id:long}/join-requests")]
+        public ActionResult<IEnumerable<ClubJoinRequestDto>> GetClubJoinRequests(long id)
+        {
+            int ownerId = ExtractUserId();
+            var requests = _clubService.GetClubJoinRequests(id, ownerId);
+            return Ok(requests);
+        }
+
+        [HttpGet("my-join-requests")]
+        public ActionResult<IEnumerable<ClubJoinRequestDto>> GetMyJoinRequests()
+        {
+            int touristId = ExtractUserId();
+            var requests = _clubService.GetMyJoinRequests(touristId);
+            return Ok(requests);
+        }
+
         private int ExtractUserId()
         {
             var claim = User.Claims.FirstOrDefault(c =>
