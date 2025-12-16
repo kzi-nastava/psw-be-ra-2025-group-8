@@ -30,6 +30,6 @@ VALUES
 INSERT INTO tours."ShoppingCarts"("Id", "UserId")
 VALUES (-202, -42);
 
-INSERT INTO tours."OrderItems"("Id", "ShoppingCartId", "TourId", "Price")
+INSERT INTO tours."OrderItems"("Id", "ShoppingCartId", "TourId")
 VALUES 
-(-301, -202, -101, 50);
+(-301, -202, -101);
