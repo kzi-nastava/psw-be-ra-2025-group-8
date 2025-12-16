@@ -7,6 +7,6 @@
         public string Description { get; set; } = string.Empty;
         public List<string> ImageUrls { get; set; }
         public long OwnerId { get; set; }
-        public List<int> MemberIds { get; set; } = new();
+        public List<long> MemberIds { get; set; } = new();
     }
 }

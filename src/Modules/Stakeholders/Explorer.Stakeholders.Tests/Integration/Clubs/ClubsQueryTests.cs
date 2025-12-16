@@ -22,7 +22,7 @@ public class ClubsQueryTests : BaseStakeholdersIntegrationTest
         var controller = CreateController(scope);
 
         // Act
-        var result = ((ObjectResult)controller.Get(-1).Result)?.Value as ClubDto;
+        var result = ((ObjectResult)controller.Get(-1).Result.Result)?.Value as ClubDto;
 
         // Assert
         result.ShouldNotBeNull();
