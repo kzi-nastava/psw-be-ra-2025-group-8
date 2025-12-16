@@ -42,7 +42,8 @@ namespace Explorer.Tours.Tests.Integration.Tourist
                 Longitude = 19.0000,
                 Latitude = 44.0000,
                 IdTourist = 1,
-                Status = "Completed"
+                CompletionPercentage = 50.0,
+                Status = "InProgress"
             };
             var created = ((ObjectResult)controller.Create(createTourExecution).Result)?.Value as TourExecutionDto;
 
@@ -54,7 +55,8 @@ namespace Explorer.Tours.Tests.Integration.Tourist
             result!.Id.ShouldBe(created.Id);
             result.IdTour.ShouldBe(1);
             result.IdTourist.ShouldBe(1);
-            result.Status.ShouldBe("Completed");
+            result.CompletionPercentage.ShouldBe(50.0);
+            result.Status.ShouldBe("InProgress");
         }
 
         [Fact]
@@ -119,7 +121,8 @@ namespace Explorer.Tours.Tests.Integration.Tourist
                 Longitude = 19.0000,
                 Latitude = 44.0000,
                 IdTourist = 1,
-                Status = "Completed"
+                CompletionPercentage = 33.3,
+                Status = "InProgress"
             };
             var created = ((ObjectResult)controller.Create(createTourExecution).Result)?.Value as TourExecutionDto;
 
@@ -133,6 +136,7 @@ namespace Explorer.Tours.Tests.Integration.Tourist
                 tourExecution.ShouldNotBeNull();
                 tourExecution!.IdTourist.ShouldBe(1);
                 tourExecution.IdTour.ShouldBe(1);
+                tourExecution.CompletionPercentage.ShouldBeGreaterThanOrEqualTo(0);
             }
             else if (actionResult.Result is NotFoundResult)
             {

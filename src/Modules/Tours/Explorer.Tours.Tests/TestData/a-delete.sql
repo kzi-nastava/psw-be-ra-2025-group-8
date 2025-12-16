@@ -1,6 +1,8 @@
 -- Deleting in the correct order to respect foreign key constraints
 -- First, we delete child tables (tables that have foreign keys)
 -- PreferenceTags depends on TouristPreferences and Tags
+
+DELETE FROM tours."TourRatings";
 DELETE FROM tours."PreferenceTags";
 -- TransportTypePreferences depends on TouristPreferences  
 DELETE FROM tours."TransportTypePreferences";

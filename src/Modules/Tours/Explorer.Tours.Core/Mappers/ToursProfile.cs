@@ -11,6 +11,7 @@ public class ToursProfile : Profile
     {
         CreateMap<EquipmentDto, Equipment>().ReverseMap();
         CreateMap<MonumentDto, Monument>().ReverseMap();
+        CreateMap<TourRatingDto, TourRating>().ReverseMap();
         
         // ReportProblem mapiranje sa custom logikom za IsOverdue
         CreateMap<ReportProblemDto, ReportProblem>();
@@ -89,7 +90,7 @@ public class ToursProfile : Profile
                 .ForMember(d => d.TransportTypePreferences, o => o.Ignore())
                 .ForMember(d => d.PersonId, o => o.Ignore())
                 .ForMember(d => d.Id, o => o.Ignore());
-                //.ForMember(d => d.Person, o => o.Ignore());
+        //.ForMember(d => d.Person, o => o.Ignore());
 
         //takodje sam to slicno uradio za TransportType
         CreateMap<TransportTypePreferences, Explorer.Tours.API.Dtos.TransportTypePreferenceDto>()
@@ -121,10 +122,15 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.Equipment, opt => opt.Ignore());
 
         CreateMap<TourExecutionDto, TourExecution>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => MapTourExecutionStatus(src.Status)));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => MapTourExecutionStatus(src.Status)))
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
 
         CreateMap<TourExecution, TourExecutionDto>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.LastActivity, opt => opt.MapFrom(src => src.LastActivity))
+            .ForMember(dest => dest.CompletionPercentage, opt => opt.MapFrom(src => src.CompletionPercentage));
+
+
     }
 
     private static TourStatus MapStatus(string status)

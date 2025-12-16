@@ -14,6 +14,23 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
 {
     public TourExecutionCommandTests(ToursTestFactory factory) : base(factory) { }
 
+    // NOTE: These tests use existing test data from database (-1, -2, -3, -4)
+    // to avoid conflicts with active tour validation
+
+    [Fact]
+    public void Get_existing_tour_execution()
+    {
+    // Arrange
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope);
+        
+        // Act - Get existing TourExecution -1 from database
+        var result = controller.Get(-1);
+
+        // Assert
+        result.ShouldNotBeNull();
+    }
+
     [Fact]
     public void Creates()
     {
@@ -21,13 +38,16 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        
+        // Use unique tourist ID to avoid conflicts with other tests
         var tourExecution = new TourExecutionDto
         {
             IdTour = 1,
             Longitude = 19.8335,
             Latitude = 45.2671,
-            IdTourist = 1,
-            Status = "Completed"
+            IdTourist = 999, // Unique tourist ID
+            CompletionPercentage = 0.0,
+            Status = "InProgress"
         };
 
         // Act
@@ -40,6 +60,7 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
         result.Longitude.ShouldBe(tourExecution.Longitude);
         result.Latitude.ShouldBe(tourExecution.Latitude);
         result.IdTourist.ShouldBe(tourExecution.IdTourist);
+        result.CompletionPercentage.ShouldBe(tourExecution.CompletionPercentage);
         result.Status.ShouldBe(tourExecution.Status);
     }
 
@@ -54,12 +75,22 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             IdTour = 0, // Invalid
             Longitude = 19.8335,
             Latitude = 45.2671,
-            IdTourist = 1,
-            Status = "Completed"
+            IdTourist = 998, // Unique tourist ID
+            CompletionPercentage = 0.0,
+            Status = "InProgress"
         };
 
         // Act & Assert
-        Should.Throw<ArgumentException>(() => controller.Create(tourExecution));
+        var exception = Should.Throw<ArgumentException>(() => 
+        {
+            var result = controller.Create(tourExecution).Result;
+            // If result is BadRequest, extract and throw the exception
+            if (result is BadRequestObjectResult badRequest)
+            {
+                throw new ArgumentException(badRequest.Value?.ToString());
+            }
+        });
+        exception.Message.ShouldContain("IdTour");
     }
 
     [Fact]
@@ -74,11 +105,20 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = 19.8335,
             Latitude = 45.2671,
             IdTourist = 0, // Invalid
-            Status = "Completed"
+            CompletionPercentage = 0.0,
+            Status = "InProgress"
         };
 
         // Act & Assert
-        Should.Throw<ArgumentException>(() => controller.Create(tourExecution));
+        var exception = Should.Throw<ArgumentException>(() => 
+        {
+            var result = controller.Create(tourExecution).Result;
+            if (result is BadRequestObjectResult badRequest)
+            {
+                throw new ArgumentException(badRequest.Value?.ToString());
+            }
+        });
+        exception.Message.ShouldContain("IdTourist");
     }
 
     [Fact]
@@ -93,11 +133,20 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = -181, // Invalid
             Latitude = 45.2671,
             IdTourist = 1,
-            Status = "Completed"
+            CompletionPercentage = 0.0,
+            Status = "InProgress"
         };
 
         // Act & Assert
-        Should.Throw<ArgumentException>(() => controller.Create(tourExecution));
+        var exception = Should.Throw<ArgumentException>(() => 
+        {
+            var result = controller.Create(tourExecution).Result;
+            if (result is BadRequestObjectResult badRequest)
+            {
+                throw new ArgumentException(badRequest.Value?.ToString());
+            }
+        });
+        exception.Message.ShouldContain("Longitude");
     }
 
     [Fact]
@@ -112,11 +161,48 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = 19.8335,
             Latitude = -91, // Invalid
             IdTourist = 1,
-            Status = "Completed"
+            CompletionPercentage = 0.0,
+            Status = "InProgress"
         };
 
         // Act & Assert
-        Should.Throw<ArgumentException>(() => controller.Create(tourExecution));
+        var exception = Should.Throw<ArgumentException>(() => 
+        {
+            var result = controller.Create(tourExecution).Result;
+            if (result is BadRequestObjectResult badRequest)
+            {
+                throw new ArgumentException(badRequest.Value?.ToString());
+            }
+        });
+        exception.Message.ShouldContain("Latitude");
+    }
+
+    [Fact]
+    public void Create_fails_invalid_completion_percentage()
+    {
+        // Arrange
+        using var scope = Factory.Services.CreateScope();
+        var controller = CreateController(scope);
+        var tourExecution = new TourExecutionDto
+        {
+            IdTour = 1,
+            Longitude = 19.8335,
+            Latitude = 45.2671,
+            IdTourist = 1,
+            CompletionPercentage = 150.0, // Invalid (>100)
+            Status = "InProgress"
+        };
+
+        // Act & Assert
+        var exception = Should.Throw<ArgumentException>(() => 
+        {
+            var result = controller.Create(tourExecution).Result;
+            if (result is BadRequestObjectResult badRequest)
+            {
+                throw new ArgumentException(badRequest.Value?.ToString());
+            }
+        });
+        exception.Message.ShouldContain("CompletionPercentage");
     }
 
     [Fact]
@@ -134,7 +220,8 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = 19.0000,
             Latitude = 44.0000,
             IdTourist = 1,
-            Status = "Completed"
+            CompletionPercentage = 25.0,
+            Status = "InProgress"
         };
         var created = ((ObjectResult)controller.Create(createTourExecution).Result)?.Value as TourExecutionDto;
         
@@ -145,7 +232,8 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = 20.0000,
             Latitude = 45.0000,
             IdTourist = 1,
-            Status = "Abandoned"
+            CompletionPercentage = 75.0,
+            Status = "InProgress"
         };
 
         // Act
@@ -156,6 +244,7 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
         result!.Id.ShouldBe(created.Id);
         result.Longitude.ShouldBe(tourExecution.Longitude);
         result.Latitude.ShouldBe(tourExecution.Latitude);
+        result.CompletionPercentage.ShouldBe(tourExecution.CompletionPercentage);
         result.Status.ShouldBe(tourExecution.Status);
     }
 
@@ -172,7 +261,8 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = 19.8335,
             Latitude = 45.2671,
             IdTourist = 1,
-            Status = "Completed"
+            CompletionPercentage = 50.0,
+            Status = "InProgress"
         };
 
         // Act & Assert
@@ -193,7 +283,8 @@ public class TourExecutionCommandTests : BaseToursIntegrationTest
             Longitude = 19.0000,
             Latitude = 44.0000,
             IdTourist = 1,
-            Status = "Completed"
+            CompletionPercentage = 10.0,
+            Status = "InProgress"
         };
         var created = ((ObjectResult)controller.Create(createTourExecution).Result)?.Value as TourExecutionDto;
 

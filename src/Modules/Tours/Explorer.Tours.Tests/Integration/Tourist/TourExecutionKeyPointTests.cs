@@ -192,7 +192,7 @@ public class TourExecutionKeyPointTests : BaseToursIntegrationTest
         return new TourExecutionController(
          scope.ServiceProvider.GetRequiredService<ITourExecutionService>())
         {
-            ControllerContext = BuildContext("1")  // Tourist ID = 1
+            ControllerContext = BuildContext("-21")  // Tourist ID = -21 (from SQL test data)
         };
     }
 }
