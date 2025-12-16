@@ -21,6 +21,7 @@ public class BlogPostRepository : IBlogPostRepository
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
             .Include(b => b.Comments)
+            .Include(b => b.Votes)
             .FirstOrDefault(b => b.Id == id);
     }
 
@@ -29,6 +30,7 @@ public class BlogPostRepository : IBlogPostRepository
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
             .Include(b => b.Comments)
+            .Include(b => b.Votes)
             .Where(b => b.AuthorId == authorId)
             .ToList();
     }
@@ -38,7 +40,28 @@ public class BlogPostRepository : IBlogPostRepository
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
             .Include(b => b.Comments)
+            .Include(b => b.Votes)
             .Where(b => b.Status == BlogStatus.Published || b.Status == BlogStatus.Archived)
+            .ToList();
+    }
+
+    public IEnumerable<BlogPost> GetActive()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.PopularityStatus == BlogPopularityStatus.Active)
+            .ToList();
+    }
+
+    public IEnumerable<BlogPost> GetFamous()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.PopularityStatus == BlogPopularityStatus.Famous)
             .ToList();
     }
 
