@@ -13,12 +13,14 @@ namespace Explorer.Stakeholders.Core.UseCases
     {
         private readonly IClubMessageRepository _clubMessageRepository;
         private readonly IClubRepository _clubRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
 
-        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, IMapper mapper)
+        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IMapper mapper)
         {
             _clubMessageRepository = clubMessageRepository;
             _clubRepository = clubRepository;
+            _notificationRepository = notificationRepository;
             _mapper = mapper;
         }
 
@@ -33,6 +35,35 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             var message = new ClubMessage(dto.ClubId, authorId, dto.Content);
             var created = _clubMessageRepository.Create(message);
+
+            // ? NEW: Create notifications for all club members (except the sender)
+            foreach (var memberId in club.MemberIds.Where(m => m != authorId))
+            {
+                var notification = new Notification(
+                    memberId,
+                    NotificationType.ClubActivity,
+                    $"New message in {club.Name}",
+                    dto.Content.Length > 50 ? dto.Content.Substring(0, 50) + "..." : dto.Content,
+                    created.Id,
+                    $"ClubMessage:{dto.ClubId}"
+                );
+                _notificationRepository.Create(notification);
+            }
+
+            // Also notify the owner if they're not the sender
+            if (club.OwnerId != authorId && !club.MemberIds.Contains(club.OwnerId))
+            {
+                var ownerNotification = new Notification(
+                    club.OwnerId,
+                    NotificationType.ClubActivity,
+                    $"New message in {club.Name}",
+                    dto.Content.Length > 50 ? dto.Content.Substring(0, 50) + "..." : dto.Content,
+                    created.Id,
+                    $"ClubMessage:{dto.ClubId}"
+                );
+                _notificationRepository.Create(ownerNotification);
+            }
+
             return _mapper.Map<ClubMessageDto>(created);
         }
 

@@ -1,72 +1,101 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-namespace Explorer.API.Controllers.User
+namespace Explorer.API.Controllers.User;
+
+[Authorize(Policy = "touristPolicy")]
+[Route("api/tourist/clubs/{clubId}/messages")]
+[ApiController]
+public class ClubMessagesController : ControllerBase
 {
-    [Authorize(Policy = "touristPolicy")]
-    [Route("api/tourist/club-messages")]
-    [ApiController]
-    public class ClubMessagesController : ControllerBase
+    private readonly IClubMessageService _clubMessageService;
+
+    public ClubMessagesController(IClubMessageService clubMessageService)
     {
-        private readonly IClubMessageService _clubMessageService;
+        _clubMessageService = clubMessageService;
+    }
 
-        public ClubMessagesController(IClubMessageService clubMessageService)
+    // POST /api/tourist/clubs/{clubId}/messages
+    [HttpPost]
+    public ActionResult<ClubMessageDto> PostMessage(long clubId, [FromBody] CreateClubMessageDto dto)
+    {
+        try
         {
-            _clubMessageService = clubMessageService;
-        }
-
-        [HttpPost]
-        public Task<ActionResult<ClubMessageDto>> PostMessage([FromBody] CreateClubMessageDto dto)
-        {
-            long userId = ExtractUserId();
+            var userId = ExtractUserId();
+            dto.ClubId = clubId; // Set from route parameter
             var result = _clubMessageService.PostMessage(dto, userId);
-            return Task.FromResult<ActionResult<ClubMessageDto>>(Ok(result));
+            return Ok(result);
         }
-
-        [HttpGet("club/{clubId:long}")]
-        [AllowAnonymous]
-        public Task<ActionResult<IEnumerable<ClubMessageDto>>> GetClubMessages(long clubId)
+        catch (UnauthorizedAccessException)
         {
-            var messages = _clubMessageService.GetClubMessages(clubId);
-            return Task.FromResult<ActionResult<IEnumerable<ClubMessageDto>>>(Ok(messages));
+            return Forbid();
         }
+    }
 
-        [HttpPut("{messageId:long}")]
-        public Task<ActionResult<ClubMessageDto>> UpdateMessage(long messageId, [FromBody] UpdateClubMessageDto dto)
+    // GET /api/tourist/clubs/{clubId}/messages
+    [HttpGet]
+    [AllowAnonymous] // Members can view messages
+    public ActionResult<IEnumerable<ClubMessageDto>> GetClubMessages(long clubId)
+    {
+        var messages = _clubMessageService.GetClubMessages(clubId);
+        return Ok(messages);
+    }
+
+    // PUT /api/tourist/clubs/{clubId}/messages/{messageId}
+    [HttpPut("{messageId}")]
+    public ActionResult<ClubMessageDto> UpdateMessage(long clubId, long messageId, [FromBody] UpdateClubMessageDto dto)
+    {
+        try
         {
-            long userId = ExtractUserId();
+            var userId = ExtractUserId();
             var result = _clubMessageService.UpdateMessage(messageId, dto, userId);
-            return Task.FromResult<ActionResult<ClubMessageDto>>(Ok(result));
+            return Ok(result);
         }
-
-        [HttpDelete("{messageId:long}")]
-        public ActionResult DeleteMessage(long messageId)
+        catch (UnauthorizedAccessException)
         {
-            long userId = ExtractUserId();
+            return Forbid();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    // DELETE /api/tourist/clubs/{clubId}/messages/{messageId}
+    [HttpDelete("{messageId}")]
+    public ActionResult DeleteMessage(long clubId, long messageId)
+    {
+        try
+        {
+            var userId = ExtractUserId();
             _clubMessageService.DeleteMessage(messageId, userId);
-            return NoContent();
+            return NoContent(); // RESTful standard for successful DELETE
         }
-
-        private long ExtractUserId()
+        catch (UnauthorizedAccessException)
         {
-            var claim = User.Claims.FirstOrDefault(c =>
-                c.Type == ClaimTypes.NameIdentifier ||
-                c.Type == "id" ||
-                c.Type == "sub" ||
-                c.Type == "personId"
-            );
-
-            if (claim == null || !long.TryParse(claim.Value, out var userId))
-                throw new UnauthorizedAccessException("User id claim is missing");
-
-            return userId;
+            return Forbid();
         }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    private long ExtractUserId()
+    {
+        var claim = User.Claims.FirstOrDefault(c =>
+            c.Type == ClaimTypes.NameIdentifier ||
+            c.Type == "id" ||
+            c.Type == "sub" ||
+            c.Type == "personId"
+        );
+
+        if (claim == null || !long.TryParse(claim.Value, out var userId))
+            throw new UnauthorizedAccessException("User id claim is missing");
+
+        return userId;
     }
 }
