@@ -40,6 +40,7 @@ public static class StakeholdersStartup
 
         //za klubove
         services.AddScoped<IClubService, ClubService>();
+        services.AddScoped<IClubMessageService, ClubMessageService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -56,6 +57,7 @@ public static class StakeholdersStartup
 
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
+        services.AddScoped<IClubMessageRepository, ClubMessageRepository>();
 
 
         services.AddDbContext<StakeholdersContext>(opt =>

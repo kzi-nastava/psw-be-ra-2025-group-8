@@ -13,6 +13,7 @@ public class StakeholdersContext : DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<Meetup> Meetups { get; set; }
     public DbSet<Club> Clubs { get; set; }
+    public DbSet<ClubMessage> ClubMessages { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Follower> Followers { get; set; }
     public DbSet<FollowerMessage> FollowerMessages { get; set; }
@@ -35,6 +36,10 @@ public class StakeholdersContext : DbContext
 
         // FollowerMessage indexes
         modelBuilder.Entity<FollowerMessage>().HasIndex(m => m.SenderId);
+
+        // ClubMessage indexes
+        modelBuilder.Entity<ClubMessage>().HasIndex(cm => cm.ClubId);
+        modelBuilder.Entity<ClubMessage>().HasIndex(cm => cm.AuthorId);
 
         ConfigureStakeholder(modelBuilder);
     }

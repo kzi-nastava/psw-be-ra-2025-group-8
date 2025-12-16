@@ -6,6 +6,7 @@ DELETE FROM stakeholders."FollowerMessages";
 DELETE FROM stakeholders."Followers";
 DELETE FROM stakeholders."Ratings";
 DELETE FROM stakeholders."Messages";
+DELETE FROM stakeholders."ClubMessages";
 -- People depends on Users
 DELETE FROM stakeholders."People";
 -- Users is the root table (has no dependencies)
