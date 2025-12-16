@@ -12,6 +12,7 @@ public class ToursProfile : Profile
         CreateMap<EquipmentDto, Equipment>().ReverseMap();
         CreateMap<MonumentDto, Monument>().ReverseMap();
         CreateMap<TourRatingDto, TourRating>().ReverseMap();
+        CreateMap<TourRatingImageDto, TourRatingImage>().ReverseMap();
         
         // ReportProblem mapiranje sa custom logikom za IsOverdue
         CreateMap<ReportProblemDto, ReportProblem>();
