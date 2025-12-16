@@ -29,5 +29,8 @@ public class StakeholderProfile : Profile
             .ConstructUsing(dto => new Club(dto.OwnerId, dto.Name, dto.Description, dto.ImageUrls));
         CreateMap<CreateClubDto, Club>()
             .ConstructUsing(dto => new Club(0, dto.Name, dto.Description, dto.ImageUrls));
+
+        //mapper za poruke kluba
+        CreateMap<ClubMessage, ClubMessageDto>().ReverseMap();
     }
 }
