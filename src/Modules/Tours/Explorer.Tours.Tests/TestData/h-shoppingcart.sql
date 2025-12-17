@@ -1,4 +1,4 @@
-
+/*
 
 -- c-shoppingcart.sql
 -- Test podaci za Shopping Cart
@@ -33,3 +33,4 @@ VALUES (-202, -42);
 INSERT INTO tours."OrderItems"("Id", "ShoppingCartId", "TourId")
 VALUES 
 (-301, -202, -101);
+*/
