@@ -72,10 +72,15 @@ public class BlogCommentTests : BaseBlogIntegrationTest
     private const long SecurePublishedBlogId = -4;
 
     [Fact]
-    public void Creates_comment_successfully()//if fail drop test database
+    public void Creates_comment_successfully()
     {
         using var scope = Factory.Services.CreateScope();
         var controller = CreateCommentController(scope, userId: -102, personId: TouristPersonId);
+        var blogService = scope.ServiceProvider.GetRequiredService<IBlogCommentService>();
+
+        var initialComments = blogService.GetCommentsForBlog(SecurePublishedBlogId);
+        int initialCount = initialComments.Count;
+
         var newCommentData = new CommentCreationDto
         {
             Text = "Novi komentar iz testa."
@@ -93,9 +98,10 @@ public class BlogCommentTests : BaseBlogIntegrationTest
         result.PersonId.ShouldBe(TouristPersonId);
         result.Id.ShouldBeGreaterThan(0);
 
-        var blogService = scope.ServiceProvider.GetRequiredService<IBlogCommentService>();
-        var comments = blogService.GetCommentsForBlog(SecurePublishedBlogId);
-        comments.Count.ShouldBe(1);
+        var commentsAfter = blogService.GetCommentsForBlog(SecurePublishedBlogId);
+        commentsAfter.Count.ShouldBe(initialCount + 1);
+
+        commentsAfter.ShouldContain(c => c.Id == result.Id);
     }
 
     private const long ArchivedBlogId = -3;
