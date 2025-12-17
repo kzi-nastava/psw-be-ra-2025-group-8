@@ -29,7 +29,7 @@ public class ClubsCommandTests : BaseStakeholdersIntegrationTest
         };
 
         // Act
-        var result = ((ObjectResult)controller.Create(dto).Result.Result)?.Value as ClubDto;
+        var result = ((ObjectResult)controller.Create(dto).Result)?.Value as ClubDto;
 
         // Assert – Response
         result.ShouldNotBeNull();
@@ -75,7 +75,7 @@ public class ClubsCommandTests : BaseStakeholdersIntegrationTest
         };
 
         // Act
-        var result = ((ObjectResult)controller.Update(-2, -22, dto).Result.Result)?.Value as ClubDto;
+        var result = ((ObjectResult)controller.Update(-2, -22, dto).Result)?.Value as ClubDto;
 
         // Assert – Response
         result.ShouldNotBeNull();

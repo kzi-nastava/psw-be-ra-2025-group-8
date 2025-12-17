@@ -27,5 +27,14 @@ namespace Explorer.API.Controllers.Tourist
             if (result == null) return NotFound("Tour not found or not published.");
             return Ok(result);
         }
+
+        [HttpGet("{id}/keypoints")]
+        public IActionResult GetTourKeyPoints(long id)
+        {
+            var keyPoints = _touristTourService.GetTourKeyPoints(id);
+            if (!keyPoints.Any()) return NotFound("Tour not found or has no keypoints.");
+            return Ok(keyPoints);
+        }
+
     }
 }

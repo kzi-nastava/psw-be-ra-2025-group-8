@@ -12,6 +12,7 @@ public interface ITouristTourService
 {
     List<TouristTourPreviewDto> GetPublishedTours();
     TouristTourDetailsDto GetPublishedTourDetails(long id);
+    public List<KeyPointDto> GetTourKeyPoints(long tourId);
 }
 
 public class TouristTourService : ITouristTourService
@@ -56,6 +57,19 @@ public class TouristTourService : ITouristTourService
         dto.FirstKeyPoint = MapFirstKeyPoint(tour);
 
         return dto;
+    }
+
+    public List<KeyPointDto> GetTourKeyPoints(long tourId)
+    {
+        var tour = _tourRepository.Get(tourId);
+
+        if (tour == null || tour.Status != TourStatus.Published)
+            return new List<KeyPointDto>();
+
+        return tour.KeyPoints
+            .OrderBy(kp => kp.Order)
+            .Select(_mapper.Map<KeyPointDto>)
+            .ToList();
     }
 
     // =======================================================
