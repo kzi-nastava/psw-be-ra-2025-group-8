@@ -2,13 +2,14 @@ using AutoMapper;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Stakeholders.Core.UseCases;
 
-public class PersonService : IPersonService
+public class PersonService : IPersonService, IInternalPersonService
 {
     private readonly ICrudRepository<Person> _personRepository;
     private readonly IUserRepository _userRepository;

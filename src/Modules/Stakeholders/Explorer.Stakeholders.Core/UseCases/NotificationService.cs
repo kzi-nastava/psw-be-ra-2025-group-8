@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
 using AutoMapper;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Explorer.Stakeholders.Core.UseCases
 {
@@ -22,13 +22,14 @@ namespace Explorer.Stakeholders.Core.UseCases
         public NotificationDto Create(NotificationDto dto)
         {
             var notification = new Notification(
-                dto.UserId, 
-                (NotificationType)dto.Type, 
-                dto.Title, 
+                dto.UserId,
+                (NotificationType)dto.Type,
+                dto.Title,
                 dto.Content,
                 dto.RelatedEntityId,
                 dto.RelatedEntityType
             );
+
             var created = _notificationRepository.Create(notification);
             return _mapper.Map<NotificationDto>(created);
         }
@@ -36,13 +37,13 @@ namespace Explorer.Stakeholders.Core.UseCases
         public List<NotificationDto> GetByUserId(long userId)
         {
             var notifications = _notificationRepository.GetByUserId(userId);
-            return _mapper.Map<List<NotificationDto>>(notifications);
+            return notifications.Select(_mapper.Map<NotificationDto>).ToList();
         }
 
         public List<NotificationDto> GetUnreadByUserId(long userId)
         {
             var notifications = _notificationRepository.GetUnreadByUserId(userId);
-            return _mapper.Map<List<NotificationDto>>(notifications);
+            return notifications.Select(_mapper.Map<NotificationDto>).ToList();
         }
 
         public NotificationDto MarkAsRead(long notificationId)
@@ -61,6 +62,14 @@ namespace Explorer.Stakeholders.Core.UseCases
                 notification.MarkAsRead();
                 _notificationRepository.Update(notification);
             }
+        }
+
+        public List<NotificationDto> GetUnreadByUserIdAndTypes(long userId, params int[] types)
+        {
+            var allNotifications = _notificationRepository.GetUnreadByUserId(userId);
+            var notificationTypes = types.Select(t => (NotificationType)t).ToArray();
+            var filtered = allNotifications.Where(n => notificationTypes.Contains(n.Type));
+            return filtered.Select(_mapper.Map<NotificationDto>).ToList();
         }
     }
 }

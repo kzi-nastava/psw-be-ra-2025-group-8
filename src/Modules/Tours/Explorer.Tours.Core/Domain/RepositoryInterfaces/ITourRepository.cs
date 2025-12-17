@@ -10,4 +10,7 @@ public interface ITourRepository
     void Delete(long id);
 
     List<Tour> GetByAuthor(int authorId);
+    List<Tour> GetAll();
+    //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
+    Tour GetById(long id);
 }

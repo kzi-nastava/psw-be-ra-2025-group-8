@@ -56,6 +56,12 @@ public static class AuthConfiguration
             options.AddPolicy("authorPolicy", policy => policy.RequireRole("author"));
             options.AddPolicy("touristPolicy", policy => policy.RequireRole("tourist"));
 
+            // Policy za autore I administratore
+            options.AddPolicy("authorAdminPolicy", policy =>
+            {
+                policy.RequireRole("author", "administrator");
+            });
+
             options.AddPolicy("touristAuthorPolicy", policy =>
             {
                 policy.RequireRole("tourist", "author");
@@ -65,6 +71,7 @@ public static class AuthConfiguration
 
             options.AddPolicy("user", policy =>
                 policy.RequireAuthenticatedUser());
+            //options.AddPolicy("shoppingCartPolicy", policy => policy.RequireRole("tourist"));
         });
     }
 

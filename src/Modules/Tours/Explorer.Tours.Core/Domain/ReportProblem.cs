@@ -75,6 +75,7 @@ public class ReportProblem : Entity
         var message = new IssueMessage(Id, authorId, content);
         Messages.Add(message);
     }
+<<<<<<< HEAD
     // Administrator postavlja rok za rešavanje
     public void SetDeadline(DateTime deadline)
     {
@@ -89,6 +90,14 @@ public class ReportProblem : Entity
     {
         IsClosedByAdmin = true;
         IsAuthorPenalized = penalizeAuthor;
+=======
+
+    // Provera da li je problem star više od 5 dana i nije rešen
+    public bool IsOverdue()
+    {
+        var daysSinceReport = (DateTime.UtcNow - ReportTime).TotalDays;
+        return daysSinceReport > 5 && IsResolved != true;
+>>>>>>> origin/development
     }
 }
 

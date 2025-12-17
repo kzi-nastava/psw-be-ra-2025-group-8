@@ -23,5 +23,7 @@ namespace Explorer.Tours.API.Public.Author
         TourDto UpdateTransportTimes(long tourId, List<TourTransportTimeDto> times, int authorId);
         TourDto UpdateEquipment(long tourId, List<long> equipmentIds, int authorId);
         List<EquipmentForTourDto> GetEquipmentForTour(long tourId, int authorId);
+        //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
+        TourDto GetById(long id);
     }
 }

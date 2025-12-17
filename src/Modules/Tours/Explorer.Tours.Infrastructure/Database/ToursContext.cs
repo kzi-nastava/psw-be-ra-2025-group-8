@@ -19,6 +19,8 @@ public class ToursContext : DbContext
     public DbSet<KeyPointReached> KeyPointsReached { get; set; }
     public DbSet<KeyPoint> KeyPoints { get; set; }
     public DbSet<TourTransportTime> TourTransportTimes { get; set; }
+    public DbSet<TourRating> TourRatings { get; set; }
+    public DbSet<TourRatingImage> TourRatingImages { get; set; }
 
 
     //Preference
@@ -28,6 +30,9 @@ public class ToursContext : DbContext
     public DbSet<Tags> Tags { get; set; }
     public DbSet<TourTag> TourTags { get; set; }
 
+
+    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -220,6 +225,41 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
+        //za shopping cart i order item
+        modelBuilder.Entity<ShoppingCart>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.UserId).IsRequired();
+            builder.HasMany(c => c.Items)
+                   .WithOne()
+                   .HasForeignKey("ShoppingCartId")
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrderItem>(builder =>
+        {
+            builder.HasKey(oi => oi.Id);
+            builder.Property(oi => oi.TourId).IsRequired();
+        });
+
+        // TourRatingImage CONFIGURATION
+        modelBuilder.Entity<TourRatingImage>(builder =>
+        {
+            builder.HasKey(tri => tri.Id);
+
+            builder.Property(tri => tri.Id)
+                .ValueGeneratedOnAdd();
+
+            builder.Property(tri => tri.TourRatingId)
+                .IsRequired();
+
+            builder.Property(tri => tri.Url)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            builder.Property(tri => tri.UploadedAt)
+                .IsRequired();
+        });
     }
 
 }

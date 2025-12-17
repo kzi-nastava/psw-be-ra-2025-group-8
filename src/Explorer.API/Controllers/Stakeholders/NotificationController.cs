@@ -1,8 +1,10 @@
-using System.Linq;
-using System.Security.Claims;
 using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.Core.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Security.Claims;
 
 namespace Explorer.API.Controllers.Stakeholders
 {
@@ -20,12 +22,13 @@ namespace Explorer.API.Controllers.Stakeholders
 
         private long GetCurrentUserId()
         {
-            var personIdClaim = User.Claims.FirstOrDefault(c => c.Type == "personId");
-            if (personIdClaim == null || !long.TryParse(personIdClaim.Value, out var personId))
+            // ?ita 'id' claim koji sadrži UserId (ne personId!)
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out var userId))
             {
                 throw new UnauthorizedAccessException("Unable to determine user ID from token");
             }
-            return personId;
+            return userId;
         }
 
         [HttpGet]
@@ -57,6 +60,35 @@ namespace Explorer.API.Controllers.Stakeholders
             var userId = GetCurrentUserId();
             _notificationService.MarkAllAsRead(userId);
             return Ok();
+        }
+
+        [HttpGet("unread/social")]
+        public IActionResult GetUnreadSocial()
+        {
+            var userId = GetCurrentUserId();
+
+            var notifications = _notificationService
+                .GetUnreadByUserIdAndTypes(
+                    userId,
+                    (int)NotificationType.FollowerMessage,
+                    (int)NotificationType.ClubActivity
+                );
+
+            return Ok(notifications);
+        }
+
+        [HttpGet("unread/issues")]
+        public IActionResult GetUnreadIssues()
+        {
+            var userId = GetCurrentUserId();
+
+            var notifications = _notificationService
+                .GetUnreadByUserIdAndTypes(
+                    userId,
+                    (int)NotificationType.IssueMessage
+                );
+
+            return Ok(notifications);
         }
     }
 }

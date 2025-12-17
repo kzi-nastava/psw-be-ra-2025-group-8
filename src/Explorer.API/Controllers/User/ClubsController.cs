@@ -3,6 +3,7 @@ using Explorer.Stakeholders.API.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 
@@ -69,6 +70,94 @@ namespace Explorer.API.Controllers.User
             int userId = ExtractUserId();
             _clubService.Delete(userId, id);
             return Ok();
+        }
+
+        // ------ OWNER ACTIONS ------
+        // Invite a tourist (owner only)
+        public class InviteDto { public long TouristId { get; set; } }
+
+        [HttpPost("{id:long}/invite")]
+        public ActionResult Invite(long id, [FromBody] InviteDto dto)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Invite(id, ownerId, dto.TouristId);
+            return Ok();
+        }
+
+        // Expel a tourist (owner only)
+        public class ExpelDto { public long TouristId { get; set; } }
+
+        [HttpPost("{id:long}/expel")]
+        public ActionResult Expel(long id, [FromBody] ExpelDto dto)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Expel(id, ownerId, dto.TouristId);
+            return Ok();
+        }
+
+        [HttpPost("{id:long}/close")]
+        public ActionResult Close(long id)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Close(id, ownerId);
+            return Ok();
+        }
+
+        [HttpPost("{id:long}/activate")]
+        public ActionResult Activate(long id)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.Activate(id, ownerId);
+            return Ok();
+        }
+
+        // ------ JOIN REQUEST ACTIONS ------
+        [HttpPost("{id:long}/request-join")]
+        public ActionResult<ClubJoinRequestDto> RequestToJoin(long id)
+        {
+            int touristId = ExtractUserId();
+            var result = _clubService.RequestToJoin(id, touristId);
+            return Ok(result);
+        }
+
+        [HttpDelete("join-requests/{requestId:long}")]
+        public ActionResult CancelJoinRequest(long requestId)
+        {
+            int touristId = ExtractUserId();
+            _clubService.CancelJoinRequest(requestId, touristId);
+            return Ok();
+        }
+
+        [HttpPost("join-requests/{requestId:long}/accept")]
+        public ActionResult<ClubJoinRequestDto> AcceptJoinRequest(long requestId)
+        {
+            int ownerId = ExtractUserId();
+            var result = _clubService.AcceptJoinRequest(requestId, ownerId);
+            return Ok(result);
+        }
+
+        [HttpPost("join-requests/{requestId:long}/reject")]
+        public ActionResult<ClubJoinRequestDto> RejectJoinRequest(long requestId)
+        {
+            int ownerId = ExtractUserId();
+            var result = _clubService.RejectJoinRequest(requestId, ownerId);
+            return Ok(result);
+        }
+
+        [HttpGet("{id:long}/join-requests")]
+        public ActionResult<IEnumerable<ClubJoinRequestDto>> GetClubJoinRequests(long id)
+        {
+            int ownerId = ExtractUserId();
+            var requests = _clubService.GetClubJoinRequests(id, ownerId);
+            return Ok(requests);
+        }
+
+        [HttpGet("my-join-requests")]
+        public ActionResult<IEnumerable<ClubJoinRequestDto>> GetMyJoinRequests()
+        {
+            int touristId = ExtractUserId();
+            var requests = _clubService.GetMyJoinRequests(touristId);
+            return Ok(requests);
         }
 
         private int ExtractUserId()

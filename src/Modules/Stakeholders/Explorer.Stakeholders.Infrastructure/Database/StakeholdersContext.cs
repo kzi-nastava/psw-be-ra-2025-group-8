@@ -13,7 +13,11 @@ public class StakeholdersContext : DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<Meetup> Meetups { get; set; }
     public DbSet<Club> Clubs { get; set; }
+    public DbSet<ClubMessage> ClubMessages { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<ClubJoinRequest> ClubJoinRequests { get; set; }
+    public DbSet<Follower> Followers { get; set; }
+    public DbSet<FollowerMessage> FollowerMessages { get; set; }
 
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
@@ -25,6 +29,22 @@ public class StakeholdersContext : DbContext
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
         
         modelBuilder.Entity<Notification>().HasIndex(n => n.UserId);
+  
+        // Follower indexes
+        modelBuilder.Entity<Follower>().HasIndex(f => f.UserId);
+        modelBuilder.Entity<Follower>().HasIndex(f => f.FollowingUserId);
+        modelBuilder.Entity<Follower>().HasIndex(f => new { f.UserId, f.FollowingUserId }).IsUnique();
+
+        // FollowerMessage indexes
+        modelBuilder.Entity<FollowerMessage>().HasIndex(m => m.SenderId);
+
+        // ClubMessage indexes
+        modelBuilder.Entity<ClubMessage>().HasIndex(cm => cm.ClubId);
+        modelBuilder.Entity<ClubMessage>().HasIndex(cm => cm.AuthorId);
+
+
+        modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.ClubId);
+        modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.TouristId);
 
         ConfigureStakeholder(modelBuilder);
     }
