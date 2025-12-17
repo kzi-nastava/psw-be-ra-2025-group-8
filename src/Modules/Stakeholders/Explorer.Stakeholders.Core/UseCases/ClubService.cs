@@ -11,17 +11,19 @@ namespace Explorer.Stakeholders.Core.UseCases
     public class ClubService : IClubService
     {
         private readonly IClubRepository _clubRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IClubJoinRequestRepository _joinRequestRepository;
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
 
         public ClubService(IClubRepository repo, IClubJoinRequestRepository joinRequestRepository, 
-            INotificationService notificationService, IMapper mapper)
+            INotificationService notificationService, IMapper mapper, INotificationRepository notificationRepository)
         {
             _clubRepository = repo;
             _joinRequestRepository = joinRequestRepository;
             _notificationService = notificationService;
             _mapper = mapper;
+            _notificationRepository = notificationRepository;
         }
 
         public PagedResult<ClubDto> GetPaged(int page, int pageSize)

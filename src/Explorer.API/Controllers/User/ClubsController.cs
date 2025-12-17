@@ -23,20 +23,18 @@ namespace Explorer.API.Controllers.User
 
         // Create
         [HttpPost]
-        public Task<ActionResult<ClubDto>> Create([FromBody] CreateClubDto dto)
+        public ActionResult<ClubDto> Create([FromBody] CreateClubDto dto)
         {
-            long ownerId = ExtractUserId();
-            var result = _clubService.Create(dto, ownerId);
-            return Task.FromResult<ActionResult<ClubDto>>(Ok(result));
+            int ownerId = ExtractUserId();
+            return Ok(_clubService.Create(dto, ownerId));
         }
 
         // Get by id
         [HttpGet("{id:long}")]
         [AllowAnonymous] // all tourists should be able to view; adjust policy if needed
-        public Task<ActionResult<ClubDto>> Get(long id)
+        public ActionResult<ClubDto> Get(long id)
         {
-            var result = _clubService.Get(id);
-            return Task.FromResult<ActionResult<ClubDto>>(Ok(result));
+            return Ok(_clubService.Get(id));
         }
 
         // List
@@ -51,25 +49,25 @@ namespace Explorer.API.Controllers.User
         [HttpPost("{id:long}/join")]
         public ActionResult Join(long id)
         {
-            long touristId = ExtractUserId();
+            int touristId = ExtractUserId();
             _clubService.Join(id, touristId);
             return Ok();
         }
 
         // Update (owner only)
         [HttpPut("{id:long}")]
-        public Task<ActionResult<ClubDto>> Update(long id, long current_owner_id, [FromBody] ClubDto dto)
+        public ActionResult<ClubDto> Update(long id, long current_owner_id, [FromBody] ClubDto dto)
         {
-            long userId = ExtractUserId();
+            int userId = ExtractUserId();
             var updated = _clubService.Update(id, current_owner_id, dto, userId);
-            return Task.FromResult<ActionResult<ClubDto>>(Ok(updated));
+            return Ok(updated);
         }
 
         // Delete (owner only)
         [HttpDelete("{id:long}")]
         public ActionResult Delete(long id)
         {
-            long userId = ExtractUserId();
+            int userId = ExtractUserId();
             _clubService.Delete(userId, id);
             return Ok();
         }
@@ -162,7 +160,7 @@ namespace Explorer.API.Controllers.User
             return Ok(requests);
         }
 
-        private long ExtractUserId()
+        private int ExtractUserId()
         {
             var claim = User.Claims.FirstOrDefault(c =>
                 c.Type == ClaimTypes.NameIdentifier ||
@@ -171,7 +169,7 @@ namespace Explorer.API.Controllers.User
                 c.Type == "personId"
             );
 
-            if (claim == null || !long.TryParse(claim.Value, out var userId))
+            if (claim == null || !int.TryParse(claim.Value, out var userId))
                 throw new UnauthorizedAccessException("User id claim is missing");
 
             return userId;
