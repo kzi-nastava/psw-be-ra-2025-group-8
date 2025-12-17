@@ -35,6 +35,5 @@ namespace Explorer.API.Controllers.Tourist
             if (!keyPoints.Any()) return NotFound("Tour not found or has no keypoints.");
             return Ok(keyPoints);
         }
-
     }
 }

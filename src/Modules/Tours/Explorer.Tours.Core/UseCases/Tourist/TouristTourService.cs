@@ -12,7 +12,7 @@ public interface ITouristTourService
 {
     List<TouristTourPreviewDto> GetPublishedTours();
     TouristTourDetailsDto GetPublishedTourDetails(long id);
-    public List<KeyPointDto> GetTourKeyPoints(long tourId);
+    List<KeyPointDto> GetTourKeyPoints(long tourId);
 }
 
 public class TouristTourService : ITouristTourService
