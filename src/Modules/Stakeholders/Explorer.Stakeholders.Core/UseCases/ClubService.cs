@@ -11,13 +11,16 @@ namespace Explorer.Stakeholders.Core.UseCases
     public class ClubService : IClubService
     {
         private readonly IClubRepository _clubRepository;
-        private readonly INotificationRepository _notificationRepository;
+        private readonly IClubJoinRequestRepository _joinRequestRepository;
+        private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
 
-        public ClubService(IClubRepository repo, INotificationRepository notificationRepository, IMapper mapper)
+        public ClubService(IClubRepository repo, IClubJoinRequestRepository joinRequestRepository, 
+            INotificationService notificationService, IMapper mapper)
         {
             _clubRepository = repo;
-            _notificationRepository = notificationRepository;
+            _joinRequestRepository = joinRequestRepository;
+            _notificationService = notificationService;
             _mapper = mapper;
         }
 
@@ -85,6 +88,143 @@ namespace Explorer.Stakeholders.Core.UseCases
             if (club.OwnerId != userId)
                 throw new UnauthorizedAccessException("Only the owner can delete the club");
             _clubRepository.Delete(id);
+        }
+
+        // owner actions
+        public void Invite(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            club.InviteMember(ownerId, touristId);
+            _clubRepository.Update(club);
+        }
+
+        public void Expel(long clubId, long ownerId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            club.ExpelMember(ownerId, touristId);
+            _clubRepository.Update(club);
+        }
+
+        public void Close(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the owner can close the club.");
+            club.Close();
+            _clubRepository.Update(club);
+        }
+
+        public void Activate(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the owner can activate the club.");
+            club.Activate();
+            _clubRepository.Update(club);
+        }
+
+        // Join Request Methods
+        public ClubJoinRequestDto RequestToJoin(long clubId, long touristId)
+        {
+            var club = _clubRepository.Get(clubId);
+            
+            if (club.Status != ClubStatus.Active)
+                throw new InvalidOperationException("Cannot request to join a closed club.");
+
+            if (club.MemberIds.Contains(touristId))
+                throw new InvalidOperationException("You are already a member of this club.");
+
+            var existingRequest = _joinRequestRepository.GetPendingRequest(clubId, touristId);
+            if (existingRequest != null)
+                throw new InvalidOperationException("You already have a pending join request for this club.");
+
+            var request = new ClubJoinRequest(clubId, touristId);
+            var created = _joinRequestRepository.Create(request);
+            
+            return _mapper.Map<ClubJoinRequestDto>(created);
+        }
+
+        public void CancelJoinRequest(long requestId, long touristId)
+        {
+            var request = _joinRequestRepository.Get(requestId);
+            
+            if (request.TouristId != touristId)
+                throw new UnauthorizedAccessException("You can only cancel your own requests.");
+
+            request.Cancel();
+            _joinRequestRepository.Delete(requestId);
+        }
+
+        public ClubJoinRequestDto AcceptJoinRequest(long requestId, long ownerId)
+        {
+            var request = _joinRequestRepository.Get(requestId);
+            var club = _clubRepository.Get(request.ClubId);
+
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the club owner can accept join requests.");
+
+            request.Accept();
+            club.AddMember(request.TouristId);
+            
+            _clubRepository.Update(club);
+            _joinRequestRepository.Delete(requestId);
+
+            _notificationService.Create(new NotificationDto
+            {
+                UserId = request.TouristId,
+                Type = 1,
+                Title = "Join Request Accepted",
+                Content = $"Your request to join club '{club.Name}' has been accepted!",
+                RelatedEntityId = club.Id,
+                RelatedEntityType = "Club"
+            });
+
+            return _mapper.Map<ClubJoinRequestDto>(request);
+        }
+
+        public ClubJoinRequestDto RejectJoinRequest(long requestId, long ownerId)
+        {
+            var request = _joinRequestRepository.Get(requestId);
+            var club = _clubRepository.Get(request.ClubId);
+
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the club owner can reject join requests.");
+
+            request.Reject();
+            _joinRequestRepository.Delete(requestId);
+
+            _notificationService.Create(new NotificationDto
+            {
+                UserId = request.TouristId,
+                Type = 1,
+                Title = "Join Request Rejected",
+                Content = $"Your request to join club '{club.Name}' has been rejected.",
+                RelatedEntityId = club.Id,
+                RelatedEntityType = "Club"
+            });
+
+            return _mapper.Map<ClubJoinRequestDto>(request);
+        }
+
+        public IEnumerable<ClubJoinRequestDto> GetClubJoinRequests(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the club owner can view join requests.");
+
+            var requests = _joinRequestRepository.GetByClubId(clubId)
+                .Where(r => r.Status == ClubJoinRequestStatus.Pending);
+            
+            return _mapper.Map<IEnumerable<ClubJoinRequestDto>>(requests);
+        }
+
+        public IEnumerable<ClubJoinRequestDto> GetMyJoinRequests(long touristId)
+        {
+            var requests = _joinRequestRepository.GetByTouristId(touristId)
+                .Where(r => r.Status == ClubJoinRequestStatus.Pending);
+            
+            return _mapper.Map<IEnumerable<ClubJoinRequestDto>>(requests);
         }
     }
 }

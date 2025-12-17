@@ -1,5 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Tests;
+using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Tests.TestHelpers;
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +12,26 @@ public class ToursTestFactory : BaseTestFactory<ToursContext>
 {
     protected override IServiceCollection ReplaceNeededDbContexts(IServiceCollection services)
     {
-        var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ToursContext>));
-        services.Remove(descriptor!);
+        //TOURS CONTEXT
+        var toursDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(DbContextOptions<ToursContext>)
+        );
+        services.Remove(toursDescriptor!);
         services.AddDbContext<ToursContext>(SetupTestContext());
 
-        // Registruj mock notification service za testove
+        //STAKEHOLDERS CONTEXT
+        var stakeholdersDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(DbContextOptions<StakeholdersContext>)
+        );
+        if (stakeholdersDescriptor != null)
+            services.Remove(stakeholdersDescriptor);
+
+        services.AddDbContext<StakeholdersContext>(SetupTestContext());
+
+        // Mock notification service
         services.AddScoped<IIssueNotificationService, MockIssueNotificationService>();
 
         return services;
     }
+
 }

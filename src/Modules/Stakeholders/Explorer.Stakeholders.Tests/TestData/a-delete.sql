@@ -1,6 +1,7 @@
 -- Deleting in the correct order to respect foreign key constraints
 -- First, we delete child tables (tables that have foreign keys)
 
+DELETE FROM stakeholders."ClubJoinRequests";
 DELETE FROM stakeholders."Notifications";
 DELETE FROM stakeholders."FollowerMessages";
 DELETE FROM stakeholders."Followers";

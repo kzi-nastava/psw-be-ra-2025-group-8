@@ -60,8 +60,16 @@ public class TourExecutionController : ControllerBase
     [HttpPost]
     public ActionResult<TourExecutionDto> Create([FromBody] TourExecutionDto tourExecution)
     {
-        var result = _tourExecutionService.Create(tourExecution);
-        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+        try
+        {
+            var result = _tourExecutionService.Create(tourExecution);
+            return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+        }
+        catch (ArgumentException ex)
+        {
+            // Tourist already has active tour or invalid input
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
@@ -112,6 +120,50 @@ public class TourExecutionController : ControllerBase
         
       var result = _tourExecutionService.GetReachedKeyPoints(tourExecutionId);
         return Ok(result);
+    }
+
+    [HttpGet("{tourExecutionId:long}/keypoint/{order:int}/secret")]
+    public ActionResult<KeyPointSecretDto> GetKeyPointSecret(long tourExecutionId, int order)
+    {
+        try
+        {
+            // Security check: verify TourExecution belongs to logged-in tourist
+            var touristId = GetTouristIdFromToken();
+        
+            var tourExecution = _tourExecutionService.Get((int)tourExecutionId);
+            if (tourExecution == null)
+                return NotFound(new { message = "TourExecution not found" });
+      
+            if (tourExecution.IdTourist != touristId)
+                return Forbid(); // 403 - not your tour execution
+
+            // Get secret (will throw exception if not unlocked)
+            var result = _tourExecutionService.GetKeyPointSecret(tourExecutionId, order);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // KeyPoint not reached yet
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("my-active-tour")]
+    public ActionResult<TourExecutionDto> GetMyActiveTour()
+    {
+        var touristId = GetTouristIdFromToken();
+
+        var executions = _tourExecutionService.GetByTourist(touristId);
+        var activeTour = executions.FirstOrDefault(te => te.Status == "InProgress");
+    
+        if (activeTour == null)
+            return NotFound(new { message = "No active tour found" });
+        
+        return Ok(activeTour);
     }
 
     private int GetTouristIdFromToken()

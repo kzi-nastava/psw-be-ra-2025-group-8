@@ -1,4 +1,5 @@
-﻿using Explorer.BuildingBlocks.Core.Domain;
+﻿
+using Explorer.BuildingBlocks.Core.Domain;
 using System.Net.Mail;
 using System.Text.Json;
 
@@ -12,6 +13,9 @@ namespace Explorer.Stakeholders.Core.Domain
         public List<string> ImageUrls { get; private set; } = new();
         public List<long> MemberIds { get; private set; } = new();
 
+        // new status
+        public ClubStatus Status { get; private set; }
+
         private Club() { }
         public Club(long ownerId, string name, string desc, IEnumerable<string>? imageUrls = null)
         {
@@ -22,6 +26,9 @@ namespace Explorer.Stakeholders.Core.Domain
             {
                 ImageUrls = imageUrls.ToList();
             }
+
+            // default to active when created
+            Status = ClubStatus.Active;
 
             Validate();
         }
@@ -62,7 +69,43 @@ namespace Explorer.Stakeholders.Core.Domain
 
         public bool IsOwner(long touristId) => OwnerId == touristId;
 
+        // Owner-specific actions
+        public void InviteMember(long ownerId, long touristId)
+        {
+            if (!IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the owner can invite members to the club.");
+
+            if (Status != ClubStatus.Active)
+                throw new InvalidOperationException("Cannot invite members when the club is not active.");
+
+            AddMember(touristId);
+        }
+
+        public void ExpelMember(long ownerId, long touristId)
+        {
+            if (!IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the owner can expel members from the club.");
+
+            // allow expel regardless of status
+            RemoveMember(touristId);
+        }
+
+        public void Close()
+        {
+            Status = ClubStatus.Closed;
+        }
+
+        public void Activate()
+        {
+            Status = ClubStatus.Active;
+        }
 
 
+    }
+
+    public enum ClubStatus
+    {
+        Active,
+        Closed
     }
 }
