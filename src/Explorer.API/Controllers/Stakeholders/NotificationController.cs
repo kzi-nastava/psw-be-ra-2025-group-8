@@ -1,8 +1,10 @@
-using System.Linq;
-using System.Security.Claims;
 using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.Core.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Security.Claims;
 
 namespace Explorer.API.Controllers.Stakeholders
 {
@@ -58,6 +60,35 @@ namespace Explorer.API.Controllers.Stakeholders
             var userId = GetCurrentUserId();
             _notificationService.MarkAllAsRead(userId);
             return Ok();
+        }
+
+        [HttpGet("unread/social")]
+        public IActionResult GetUnreadSocial()
+        {
+            var userId = GetCurrentUserId();
+
+            var notifications = _notificationService
+                .GetUnreadByUserIdAndTypes(
+                    userId,
+                    (int)NotificationType.FollowerMessage,
+                    (int)NotificationType.ClubActivity
+                );
+
+            return Ok(notifications);
+        }
+
+        [HttpGet("unread/issues")]
+        public IActionResult GetUnreadIssues()
+        {
+            var userId = GetCurrentUserId();
+
+            var notifications = _notificationService
+                .GetUnreadByUserIdAndTypes(
+                    userId,
+                    (int)NotificationType.IssueMessage
+                );
+
+            return Ok(notifications);
         }
     }
 }

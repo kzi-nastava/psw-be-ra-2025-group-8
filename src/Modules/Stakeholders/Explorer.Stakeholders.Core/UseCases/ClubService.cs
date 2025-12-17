@@ -11,17 +11,19 @@ namespace Explorer.Stakeholders.Core.UseCases
     public class ClubService : IClubService
     {
         private readonly IClubRepository _clubRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IClubJoinRequestRepository _joinRequestRepository;
         private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
 
         public ClubService(IClubRepository repo, IClubJoinRequestRepository joinRequestRepository, 
-            INotificationService notificationService, IMapper mapper)
+            INotificationService notificationService, IMapper mapper, INotificationRepository notificationRepository)
         {
             _clubRepository = repo;
             _joinRequestRepository = joinRequestRepository;
             _notificationService = notificationService;
             _mapper = mapper;
+            _notificationRepository = notificationRepository;
         }
 
         public PagedResult<ClubDto> GetPaged(int page, int pageSize)
@@ -52,6 +54,17 @@ namespace Explorer.Stakeholders.Core.UseCases
             var club = _clubRepository.Get(id);
             club.AddMember(touristId);
             _clubRepository.Update(club);
+
+            // Create notification for club owner about new member
+            var notification = new Notification(
+                club.OwnerId,
+                NotificationType.ClubActivity,
+                $"New member joined {club.Name}",
+                $"User {touristId} has joined your club",
+                id,
+                $"Club:{id}"
+            );
+            _notificationRepository.Create(notification);
         }
         public ClubDto Update(long id, long current_owner_id, ClubDto dto, long user_id)
         {

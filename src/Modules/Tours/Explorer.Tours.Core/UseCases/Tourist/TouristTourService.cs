@@ -59,6 +59,19 @@ public class TouristTourService : ITouristTourService
         return dto;
     }
 
+    public List<KeyPointDto> GetTourKeyPoints(long tourId)
+    {
+        var tour = _tourRepository.Get(tourId);
+
+        if (tour == null || tour.Status != TourStatus.Published)
+            return new List<KeyPointDto>();
+
+        return tour.KeyPoints
+            .OrderBy(kp => kp.Order)
+            .Select(_mapper.Map<KeyPointDto>)
+            .ToList();
+    }
+
     // =======================================================
     // Private helpers
     // =======================================================
@@ -127,18 +140,5 @@ public class TouristTourService : ITouristTourService
     {
         var ratings = _tourRatingService.GetByTour((int)tourId);
         return ratings.Any() ? ratings.Average(r => r.Rating) : 0;
-    }
-
-    public List<KeyPointDto> GetTourKeyPoints(long tourId)
-    {
-        var tour = _tourRepository.Get(tourId);
-
-        if (tour == null || tour.Status != TourStatus.Published)
-            return new List<KeyPointDto>();
-
-        return tour.KeyPoints
-            .OrderBy(kp => kp.Order)
-            .Select(_mapper.Map<KeyPointDto>)
-            .ToList();
     }
 }
