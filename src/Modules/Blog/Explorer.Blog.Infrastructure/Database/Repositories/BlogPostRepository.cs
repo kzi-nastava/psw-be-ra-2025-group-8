@@ -20,6 +20,8 @@ public class BlogPostRepository : IBlogPostRepository
     {
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
             .FirstOrDefault(b => b.Id == id);
     }
 
@@ -27,7 +29,39 @@ public class BlogPostRepository : IBlogPostRepository
     {
         return _dbContext.Set<BlogPost>()
             .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
             .Where(b => b.AuthorId == authorId)
+            .ToList();
+    }
+
+    public IEnumerable<BlogPost> GetPublishedAndArchived()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.Status == BlogStatus.Published || b.Status == BlogStatus.Archived)
+            .ToList();
+    }
+
+    public IEnumerable<BlogPost> GetActive()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.PopularityStatus == BlogPopularityStatus.Active)
+            .ToList();
+    }
+
+    public IEnumerable<BlogPost> GetFamous()
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Images)
+            .Include(b => b.Comments)
+            .Include(b => b.Votes)
+            .Where(b => b.PopularityStatus == BlogPopularityStatus.Famous)
             .ToList();
     }
 
@@ -51,8 +85,30 @@ public class BlogPostRepository : IBlogPostRepository
 
         if (blogPost == null) return;
 
-        // EF će automatski obrisati slike (zbog FK i cascade rules)
         _dbContext.BlogPosts.Remove(blogPost);
         _dbContext.SaveChanges();
+    }
+
+    public BlogPost? GetByCommentId(long commentId)
+    {
+        return _dbContext.Set<BlogPost>()
+            .Include(b => b.Comments)
+            .Include(b => b.Images)
+            .FirstOrDefault(b => b.Comments.Any(c => c.Id == commentId));
+    }
+
+    public void RemoveComment(long commentId)
+    {
+        // finds comment that we want to delete
+        var commentToDelete = _dbContext.Comments.Find(commentId);
+
+        if (commentToDelete != null)
+        {
+            // deletes it from dbContext
+            _dbContext.Comments.Remove(commentToDelete);
+
+            // saves changes(Data base will run DELETE script)
+            _dbContext.SaveChanges();
+        }
     }
 }

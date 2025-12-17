@@ -7,7 +7,13 @@ public class BlogPostDto
     public string Title { get; set; }
     public string Description { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? LastModifiedAt { get; set; }
+    public int Status { get; set; }
+    public int PopularityStatus { get; set; }
     public List<BlogImageDto> Images { get; set; } = new();
+    public int UpvoteCount { get; set; }
+    public int DownvoteCount { get; set; }
+    public VoteDto? UserVote { get; set; }
 }
 
 public class BlogImageDto
