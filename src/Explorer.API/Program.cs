@@ -1,4 +1,4 @@
-﻿using Explorer.API.Middleware;
+using Explorer.API.Middleware;
 using Explorer.API.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,12 +18,12 @@ var app = builder.Build();
 // Global exception handler
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// 🔥 Uvek uključi Swagger — bez obzira na environment
+if (app.Environment.IsDevelopment())
+{
 app.UseSwagger();
 app.UseSwaggerUI();
-
-// HSTS samo van Development-a (nije obavezno ali može ostati)
-if (!app.Environment.IsDevelopment())
+}
+else
 {
     app.UseHsts();
 }

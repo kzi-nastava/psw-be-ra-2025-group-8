@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Core.UseCases;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
@@ -8,6 +8,7 @@ using Explorer.Blog.Core.Mappers;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace Explorer.Blog.Infrastructure
 {
@@ -15,7 +16,7 @@ namespace Explorer.Blog.Infrastructure
     {
         public static IServiceCollection ConfigureBlogModule(this IServiceCollection services)
         {
-            // register AutoMapper for Blog module
+
             services.AddAutoMapper(typeof(BlogProfile));
 
             SetupCore(services);
@@ -31,7 +32,10 @@ namespace Explorer.Blog.Infrastructure
 
         private static void SetupInfrastructure(IServiceCollection services)
         {
-            services.AddScoped<IBlogPostRepository, BlogPostRepository>();
+        services.AddScoped<IBlogPostRepository, BlogPostRepository>();
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("blog"));
+        dataSourceBuilder.EnableDynamicJson();
+        var dataSource = dataSourceBuilder.Build();
 
             services.AddDbContext<BlogContext>(opt =>
                 opt.UseNpgsql(DbConnectionStringBuilder.Build("blog"),

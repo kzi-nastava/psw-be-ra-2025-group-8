@@ -1,4 +1,4 @@
-﻿using ArchUnitNET.xUnit;
+using ArchUnitNET.xUnit;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace Explorer.Architecture.Tests;
@@ -28,7 +28,7 @@ public class ModulesTests : BaseArchitecturalTests
 
         var rule = Types().That().Are(examinedTypes)
             .Should().NotDependOnAny(forbiddenTypes)
-            .WithoutRequiringPositiveResults();   // ← dodato
+            .WithoutRequiringPositiveResults();   // ? dodato
 
         rule.Check(Architecture);
     }
@@ -42,7 +42,7 @@ public class ModulesTests : BaseArchitecturalTests
 
         var rule = Types().That().Are(examinedTypes)
             .Should().NotDependOnAny(forbiddenTypes)
-            .WithoutRequiringPositiveResults();   // ← dodato
+            .WithoutRequiringPositiveResults();   // ? dodato
 
         rule.Check(Architecture);
     }
@@ -93,7 +93,7 @@ public class ModulesTests : BaseArchitecturalTests
 
         var rule = Types().That().Are(apiTypes)
             .Should().NotDependOnAny(internalApiTypes)
-            .WithoutRequiringPositiveResults();   // ← dodato
+            .WithoutRequiringPositiveResults();   // ? dodato
 
         rule.Check(Architecture);
     }
