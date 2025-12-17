@@ -37,6 +37,12 @@ public class ReportProblemController : ControllerBase
     public ActionResult<ReportProblemDto> Update(long id, [FromBody] ReportProblemDto problem)
     {
         problem.Id = (int)id;
+        if (!User.IsInRole("administrator"))
+        {
+            problem.Deadline = null;
+            problem.IsClosedByAdmin = null;
+            problem.IsAuthorPenalized = null;
+        }
         return Ok(_reportProblemService.Update(problem));
     }
 
