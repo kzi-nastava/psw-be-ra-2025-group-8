@@ -1,6 +1,7 @@
 ﻿using Explorer.API.Controllers.Tourist.Profile;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
+using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -135,7 +136,7 @@ public class FollowerCommandTests : BaseStakeholdersIntegrationTest
         // Assert - Database (Notification created for follower)
         var notification = dbContext.Notifications
                     .OrderByDescending(n => n.Id)
-                    .FirstOrDefault(n => n.UserId == USER_TOURIST2_ID && n.Type == Core.Domain.NotificationType.FollowerMessage);
+                    .FirstOrDefault(n => n.UserId == USER_TOURIST2_ID && n.Type == NotificationType.FollowerMessage);
         notification.ShouldNotBeNull();
     }
 
