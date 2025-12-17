@@ -35,10 +35,14 @@ public class ExceptionHandlingMiddleware
         var (statusCode, message) = exception switch
         {
             ArgumentException ex => (HttpStatusCode.BadRequest, ex.Message),
-            UnauthorizedAccessException ex => (HttpStatusCode.Unauthorized, ex.Message),
+            // map UnauthorizedAccessException to 403 Forbidden (authenticated but not allowed)
+            UnauthorizedAccessException ex => (HttpStatusCode.Forbidden, ex.Message),
+            // domain-specific forbidden
             ForbiddenException ex => (HttpStatusCode.Forbidden, ex.Message),
             NotFoundException ex => (HttpStatusCode.NotFound, ex.Message),
             EntityValidationException ex => (HttpStatusCode.UnprocessableEntity, ex.Message),
+            // map invalid operations (domain state conflicts) to 409 Conflict
+            InvalidOperationException ex => (HttpStatusCode.Conflict, ex.Message),
             _ => (HttpStatusCode.InternalServerError, "An internal server error occurred.")
         };
 

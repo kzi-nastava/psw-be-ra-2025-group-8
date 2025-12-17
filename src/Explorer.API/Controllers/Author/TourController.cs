@@ -68,7 +68,6 @@ public class TourController : ControllerBase
             throw new UnauthorizedAccessException("You cannot modify another author's tour");
         }
 
-
         var result = _tourService.Update(tour);
         return Ok(result);
     }
@@ -80,9 +79,54 @@ public class TourController : ControllerBase
         _tourService.Delete(id, authorId);
         return Ok();
     }
+
+    // ============================================================
+    // Authoring endpoints for key points and tour lifecycle
+    // ============================================================
+
+    // POST api/author/tour/{tourId}/key-points
+    // Adding a key point to a tour
+    [HttpPost("{tourId:long}/key-points")]
+    public ActionResult<TourDto> AddKeyPoint(long tourId, [FromBody] KeyPointDto keyPoint)
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.AddKeyPoint(tourId, keyPoint, authorId);
+        return Ok(result);
+    }
+
+    // PUT api/author/tour/{id}/publish
+    // Publishing a tour
+    [HttpPut("{id:long}/publish")]
+    public ActionResult<TourDto> Publish(long id)
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.Publish(id, authorId);
+        return Ok(result);
+    }
+
+    // PUT api/author/tour/{id}/archive
+    // Archiving a tour
+    [HttpPut("{id:long}/archive")]
+    public ActionResult<TourDto> Archive(long id)
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.Archive(id, authorId);
+        return Ok(result);
+    }
+
+    // PUT api/author/tour/{id}/reactivate
+    // Reactivating an archived tour
+    [HttpPut("{id:long}/reactivate")]
+    public ActionResult<TourDto> Reactivate(long id) 
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.Reactivate(id, authorId);
+        return Ok(result);
+    }
+
+
     private int GetAuthorIdFromToken()
     {
-
         var idClaim = User.FindFirst("id")
                    ?? User.FindFirst(ClaimTypes.NameIdentifier)
                    ?? User.FindFirst("personId")

@@ -2,43 +2,245 @@
 
 namespace Explorer.Tours.Core.Domain
 {
-    public class Tour : Entity
+    public class Tour : AggregateRoot
     {
         public string Name { get; set; }
         public string Description { get; set; }
         public int Difficulty { get; set; }
-        public List<string> Tags { get; set; }
         public TourStatus Status { get; set; }
         public decimal Price { get; set; }
         public int AuthorId { get; set; }
 
-        // Constructor for creating a new tour (Draft, Price = 0)
-        public Tour(string name, string description, int difficulty, List<string> tags, int authorId)
+        // Aggregate
+        public List<KeyPoint> KeyPoints { get; private set; } = new();
+        public double LengthInKilometers { get; private set; }
+        public List<TourEquipment> RequiredEquipment { get; private set; } = new();
+        public List<TourTag> TourTags { get; private set; } = new();
+        public DateTime? PublishedAt { get; private set; }
+        public DateTime? ArchivedAt { get; private set; }
+        public List<TourTransportTime> TransportTimes { get; private set; } = new();
+
+        // Constructor for creating a new tour (draft, price=0)
+        public Tour(string name, string description, int difficulty, int authorId)
         {
             Name = name;
             Description = description;
             Difficulty = difficulty;
-            Tags = tags ?? new List<string>();
+            TourTags = new List<TourTag>();
             Status = TourStatus.Draft;
             Price = 0;
             AuthorId = authorId;
+            KeyPoints = new List<KeyPoint>();
+            LengthInKilometers = 0;
+            RequiredEquipment = new List<TourEquipment>();
+            TransportTimes = new List<TourTransportTime>();
+
+            PublishedAt = null;
+            ArchivedAt = null;
         }
 
-        // Constructor for full initialization (for EF Core hydration or tests)
-        public Tour(int id, string name, string description, int difficulty, List<string> tags, TourStatus status, decimal price, int authorId)
+        // For rehydrating an existing tour and tests
+        public Tour(long id, string name, string description, int difficulty,
+                    TourStatus status, decimal price, int authorId)
         {
             Id = id;
             Name = name;
             Description = description;
             Difficulty = difficulty;
-            Tags = tags;
+            TourTags = new List<TourTag>();
             Status = status;
             Price = price;
             AuthorId = authorId;
+            KeyPoints = new List<KeyPoint>();
+            LengthInKilometers = 0;
+            RequiredEquipment = new List<TourEquipment>();
+            TransportTimes = new List<TourTransportTime>();
+
+            PublishedAt = null;
+            ArchivedAt = null;
         }
 
-        public Tour() { }
+        // EF Core constructor
+        public Tour()
+        {
+            TourTags = new List<TourTag>();
+            KeyPoints = new List<KeyPoint>();
+            RequiredEquipment = new List<TourEquipment>();
+            TransportTimes = new List<TourTransportTime>();
+        }
+
+        // Adding a key point to the tour
+        public KeyPoint AddKeyPoint(string name, string description, string imageUrl, string secret, GeoCoordinate location)
+        {
+            if (Status != TourStatus.Draft)
+                throw new InvalidOperationException("Key points can only be added while the tour is in preparation.");
+
+            if (location == null) throw new ArgumentNullException(nameof(location));
+
+            var order = KeyPoints.Count + 1;
+
+            var keyPoint = new KeyPoint(name, description, imageUrl, secret, location, order);
+            KeyPoints.Add(keyPoint);
+
+            RecalculateLength();
+
+            return keyPoint;
+        }
+
+        // Removing a key point from the tour
+        public void RemoveKeyPoint(long keyPointId)
+        {
+            if (Status != TourStatus.Draft)
+                throw new InvalidOperationException("Key points can only be removed while the tour is in preparation.");
+
+            var existing = KeyPoints.SingleOrDefault(kp => kp.Id == keyPointId)
+                           ?? throw new InvalidOperationException("Key point not found on this tour.");
+
+            KeyPoints.Remove(existing);
+
+            int order = 1;
+            foreach (var kp in KeyPoints.OrderBy(k => k.Order))
+            {
+                kp.Order = order++;
+            }
+
+            RecalculateLength();
+        }
+
+        // Publishing the tour
+        public void Publish()
+        {
+            if (Status != TourStatus.Draft)
+                throw new InvalidOperationException("Only tours in preparation can be published.");
+
+            if (string.IsNullOrWhiteSpace(Name) ||
+                string.IsNullOrWhiteSpace(Description) ||
+                Difficulty <= 0 ||
+                TourTags == null || TourTags.Count == 0)
+            {
+                throw new InvalidOperationException("Tour basics must be filled in before publishing.");
+            }
+
+            if (KeyPoints.Count < 2)
+                throw new InvalidOperationException("Tour must have at least two key points before publishing.");
+
+            if (TransportTimes == null || !TransportTimes.Any())
+                throw new InvalidOperationException("Tour must have at least one transport duration before publishing.");
+
+            if (TransportTimes.Any(t => t.DurationMinutes <= 0))
+                throw new InvalidOperationException("Transport duration must be greater than zero.");
+
+            PublishedAt = DateTime.UtcNow;
+            Status = TourStatus.Published;
+        }
+
+        public void Archive()
+        {
+            if (Status != TourStatus.Published)
+                throw new InvalidOperationException("Only published tours can be archived.");
+
+            ArchivedAt = DateTime.UtcNow;
+            Status = TourStatus.Archived;
+        }
+
+        public void Reactivate()
+        {
+            if (Status != TourStatus.Archived)
+                throw new InvalidOperationException("Only archived tours can be reactivated.");
+
+            Status = TourStatus.Published;
+        }
+
+
+
+        // Calculate total length based on key points
+        private void RecalculateLength()
+        {
+            if (KeyPoints == null || KeyPoints.Count < 2)
+            {
+                LengthInKilometers = 0;
+                return;
+            }
+
+            var ordered = KeyPoints.OrderBy(k => k.Order).ToList();
+            double total = 0;
+
+            for (int i = 1; i < ordered.Count; i++)
+            {
+                total += ordered[i - 1].Location.DistanceTo(ordered[i].Location);
+            }
+
+            LengthInKilometers = Math.Round(total, 3);
+        }
+
+        // Add equipment required for the tour
+        public void AddRequiredEquipment(long equipmentId)
+        {
+            if (RequiredEquipment.Any(e => e.EquipmentId == equipmentId))
+                return;
+
+            RequiredEquipment.Add(new TourEquipment(Id, equipmentId));
+        }
+
+        // Remove equipment from the tour
+        public void RemoveRequiredEquipment(long equipmentId)
+        {
+            var existing = RequiredEquipment
+                .FirstOrDefault(e => e.EquipmentId == equipmentId);
+
+
+            if (existing == null) return;
+
+            RequiredEquipment.Remove(existing);
+        }
+
+        public void SetTransportTime(TransportType transport, int minutes)
+        {
+            if (minutes <= 0)
+                throw new ArgumentOutOfRangeException(nameof(minutes), "Duration must be greater than zero.");
+
+            var existing = TransportTimes.FirstOrDefault(t => t.Transport == transport);
+            if (existing != null)
+            {
+                existing.DurationMinutes = minutes;
+            }
+            else
+            {
+                TransportTimes.Add(new TourTransportTime
+                {
+                    Transport = transport,
+                    DurationMinutes = minutes
+                });
+            }
+        }
+
+        public void ClearTransportTimes()
+        {
+            TransportTimes.Clear();
+        }
+
+        public void AddTag(long tagId)
+        {
+            if (TourTags.Any(tt => tt.TagsId == tagId))
+                return;
+
+            TourTags.Add(new TourTag
+            {
+                TagsId = tagId
+                // TourId će EF postaviti jer je ovo child entitet u kolekciji Tour-a
+            });
+        }
+
+        // 🔹 Ukloni tag sa ture
+        public void RemoveTag(long tagId)
+        {
+            var existing = TourTags.FirstOrDefault(tt => tt.TagsId == tagId);
+            if (existing == null) return;
+
+            TourTags.Remove(existing);
+        }
     }
+
 
     public enum TourStatus
     {

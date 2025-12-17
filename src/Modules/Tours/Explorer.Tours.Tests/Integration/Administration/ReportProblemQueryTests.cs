@@ -23,7 +23,7 @@ namespace Explorer.Tours.Tests.Integration.Administration
             var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
             var newReport = new ReportProblemDto
             {
-                TourId = 1,
+                TourId = -1, // Use existing negative TourId
                 TouristId = 1,
                 Category = 0, // Technical
                 Priority = 2, // High
@@ -53,7 +53,7 @@ namespace Explorer.Tours.Tests.Integration.Administration
             var updatedReport = new ReportProblemDto
             {
                 Id = -1,
-                TourId = 1,
+                TourId = -1, // Use negative TourId
                 TouristId = 1,
                 Category = 1, // Safety
                 Priority = 3, // Critical
@@ -117,7 +117,7 @@ namespace Explorer.Tours.Tests.Integration.Administration
             var specificReport = allResult!.Results.FirstOrDefault(r => r.Id == -3); // Changed to -3 which is not modified by other tests
             specificReport.ShouldNotBeNull();
             specificReport!.Id.ShouldBe(-3);
-            specificReport.TourId.ShouldBe(1);
+            specificReport.TourId.ShouldBe(-1); // Changed to negative TourId
             specificReport.Category.ShouldBe(2); // Guide category from test data
             specificReport.Priority.ShouldBe(1); // Low priority from test data
         }
@@ -143,7 +143,9 @@ namespace Explorer.Tours.Tests.Integration.Administration
 
         private static ReportProblemController CreateController(IServiceScope scope)
         {
-            return new ReportProblemController(scope.ServiceProvider.GetRequiredService<IReportProblemService>())
+            return new ReportProblemController(
+                scope.ServiceProvider.GetRequiredService<IReportProblemService>(),
+                scope.ServiceProvider.GetRequiredService<Explorer.Tours.API.Public.Author.ITourService>())
             {
                 ControllerContext = BuildContext("-1")
             };

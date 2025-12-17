@@ -13,12 +13,11 @@ public class StakeholdersContext : DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<Meetup> Meetups { get; set; }
     public DbSet<Club> Clubs { get; set; }
-
-    //Preference
-    public DbSet<TouristPreferences> TouristPreferences { get; set; }
-    public DbSet<TransportTypePreferences> TransportTypePreferences { get; set; }
-    public DbSet<PreferenceTags> PreferenceTags { get; set; }
-    public DbSet<Tags> Tags { get; set; }
+    public DbSet<ClubMessage> ClubMessages { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<ClubJoinRequest> ClubJoinRequests { get; set; }
+    public DbSet<Follower> Followers { get; set; }
+    public DbSet<FollowerMessage> FollowerMessages { get; set; }
 
 
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
@@ -28,6 +27,24 @@ public class StakeholdersContext : DbContext
         modelBuilder.HasDefaultSchema("stakeholders");
 
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+        
+        modelBuilder.Entity<Notification>().HasIndex(n => n.UserId);
+  
+        // Follower indexes
+        modelBuilder.Entity<Follower>().HasIndex(f => f.UserId);
+        modelBuilder.Entity<Follower>().HasIndex(f => f.FollowingUserId);
+        modelBuilder.Entity<Follower>().HasIndex(f => new { f.UserId, f.FollowingUserId }).IsUnique();
+
+        // FollowerMessage indexes
+        modelBuilder.Entity<FollowerMessage>().HasIndex(m => m.SenderId);
+
+        // ClubMessage indexes
+        modelBuilder.Entity<ClubMessage>().HasIndex(cm => cm.ClubId);
+        modelBuilder.Entity<ClubMessage>().HasIndex(cm => cm.AuthorId);
+
+
+        modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.ClubId);
+        modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.TouristId);
 
         ConfigureStakeholder(modelBuilder);
     }
@@ -39,32 +56,6 @@ public class StakeholdersContext : DbContext
             .WithOne()
             .HasForeignKey<Person>(s => s.UserId);
 
-        modelBuilder.Entity<TouristPreferences>()
-            .HasOne(tp => tp.Person)
-            .WithOne()
-            .HasForeignKey<TouristPreferences>(tp => tp.PersonId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<TransportTypePreferences>()
-            .HasOne(t => t.Preference)
-            .WithMany(p => p.TransportTypePreferences)
-            .HasForeignKey(t => t.PreferenceId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PreferenceTags>()
-        .HasKey(pt => new { pt.TouristPreferencesId, pt.TagsId });
-
-        modelBuilder.Entity<PreferenceTags>()
-            .HasOne(pt => pt.TouristPreferences)
-            .WithMany(tp => tp.PreferenceTags)
-            .HasForeignKey(pt => pt.TouristPreferencesId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PreferenceTags>()
-            .HasOne(pt => pt.Tags)
-            .WithMany(t => t.PreferenceTags)
-            .HasForeignKey(pt => pt.TagsId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Club>(b =>
         {
@@ -93,14 +84,6 @@ public class StakeholdersContext : DbContext
         });
 
 
-        //enum konverzije
-        modelBuilder.Entity<TouristPreferences>()
-            .Property(tp => tp.Difficulty)
-            .HasConversion<string>();
-
-        modelBuilder.Entity<TransportTypePreferences>()
-            .Property(t => t.Transport)
-            .HasConversion<string>();
         modelBuilder.Entity<Rating>()
             .HasOne<User>()
             .WithMany()
