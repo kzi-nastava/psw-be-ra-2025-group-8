@@ -17,7 +17,6 @@ public class TourAggregateTests
             name: "Test tour",
             description: "Opis ture",
             difficulty: 2,
-            tags: new List<string> { "tag1" },
             authorId: -1);
     }
 
@@ -37,7 +36,7 @@ public class TourAggregateTests
 
         // Assert
         tour.KeyPoints.Count.ShouldBe(1);
-        tour.LengthInKilometers.ShouldBe(0); // stiil no length with only one point
+        tour.LengthInKilometers.ShouldBe(0); // still no length with only one point
         tour.KeyPoints[0].Order.ShouldBe(1);
     }
 
@@ -95,12 +94,13 @@ public class TourAggregateTests
     {
         // Arrange
         var tour = CreateDraftTour();
-        // has no keypoints
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+        tour.SetTransportTime(TransportType.Walk, 120);
 
-        // Act & Assert
+        // Act & Assert: bez ijedne ključne tačke
         Should.Throw<InvalidOperationException>(() => tour.Publish());
 
-        // Adding another key point - still cannot publish
+        // Dodamo jednu ključnu tačku – i dalje ne sme da se objavi
         tour.AddKeyPoint(
             name: "Only point",
             description: "Jedina tačka",
@@ -138,43 +138,82 @@ public class TourAggregateTests
     }
 
     [Fact]
-    public void Publish_succeeds_when_all_rules_satisfied()
+    public void Publish_fails_when_no_transport_times_defined()
     {
         // Arrange
         var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
 
-        tour.AddKeyPoint(
-            name: "Start",
-            description: "Polazna tačka",
-            imageUrl: "",
-            secret: "",
-            location: new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
 
-        tour.AddKeyPoint(
-            name: "End",
-            description: "Krajnja tačka",
-            imageUrl: "",
-            secret: "",
-            location: new GeoCoordinate(45.1, 19.1));
-
-        // Act
-        tour.Publish();
-
-        // Assert
-        tour.Status.ShouldBe(TourStatus.Published);
-        tour.LengthInKilometers.ShouldBeGreaterThan(0);
+        // Act & Assert
+        Should.Throw<InvalidOperationException>(() => tour.Publish());
     }
 
     [Fact]
-    public void Archive_sets_status_to_archived()
+    public void Publish_succeeds_when_all_rules_satisfied()
     {
-        // Arrange
         var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
+
+        tour.SetTransportTime(TransportType.Walk, 120);
+
+        tour.Publish();
+
+        tour.Status.ShouldBe(TourStatus.Published);
+        tour.LengthInKilometers.ShouldBeGreaterThan(0);
+        tour.PublishedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Archive_sets_status_and_archivedAt_for_published_tour()
+    {
+        // Arrange – napravimo validnu published turu
+        var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
+
+        tour.SetTransportTime(TransportType.Walk, 120);
+        tour.Publish();
 
         // Act
         tour.Archive();
 
         // Assert
         tour.Status.ShouldBe(TourStatus.Archived);
+        tour.ArchivedAt.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void Archive_fails_if_tour_not_published()
+    {
+        var tour = CreateDraftTour();
+
+        Should.Throw<InvalidOperationException>(() => tour.Archive());
+    }
+
+    [Fact]
+    public void Reactivate_moves_status_back_to_published()
+    {
+        var tour = CreateDraftTour();
+        tour.TourTags.Add(new TourTag { TourId = tour.Id, TagsId = 1 });
+
+        tour.AddKeyPoint("Start", "Polazna tačka", "", "", new GeoCoordinate(45.0, 19.0));
+        tour.AddKeyPoint("End", "Krajnja tačka", "", "", new GeoCoordinate(45.1, 19.1));
+        tour.SetTransportTime(TransportType.Walk, 120);
+
+        tour.Publish();
+        tour.Archive();
+
+        tour.Reactivate();
+
+        tour.Status.ShouldBe(TourStatus.Published);
+    }
+
 }

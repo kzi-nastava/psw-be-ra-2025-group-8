@@ -1,9 +1,9 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.PersonalEquipment;
 using Explorer.Tours.API.Public.Tourist;
-using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
@@ -14,6 +14,8 @@ using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Explorer.Tours.Core.UseCases.ShoppingCart;
+using Explorer.Tours.API.Public.ShoppingCart;
 
 
 namespace Explorer.Tours.Infrastructure;
@@ -39,12 +41,17 @@ public static class ToursStartup
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
+        services.AddScoped<IShoppingCartService, ShoppingCartService>();
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
         //
 
+        services.AddScoped<ITourExecutionService, TourExecutionService>();
+        services.AddScoped<ITourRatingService, TourRatingService>();
+        services.AddScoped<ITourRatingImageService, TourRatingImageService>();
+        services.AddScoped<ITouristTourService, TouristTourService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -59,12 +66,19 @@ public static class ToursStartup
         services.AddScoped<ITagsRepository, TagsRepository>();
         services.AddScoped<IPreferenceTagsRepository, PreferenceTagsRepository>();
 
+        services.AddScoped<ITourExecutionRepository, TourExecutionRepository>();
+        services.AddScoped<IKeyPointReachedRepository, KeyPointReachedRepository>();
+        services.AddScoped<IKeyPointRepository, KeyPointRepository>();
         services.AddScoped(typeof(ICrudRepository<Equipment>), typeof(CrudDatabaseRepository<Equipment, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Facility>), typeof(CrudDatabaseRepository<Facility, ToursContext>));
         services.AddScoped(typeof(ICrudRepository<Tour>), typeof(CrudDatabaseRepository<Tour, ToursContext>));
+        services.AddScoped(typeof(ICrudRepository<TourExecution>), typeof(CrudDatabaseRepository<TourExecution, ToursContext>));
         services.AddScoped<ITourRepository, TourRepository>();
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
+        services.AddScoped<ITourRatingRepository, TourRatingRepository>();
+        services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
 
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         services.AddDbContext<ToursContext>(opt =>
             opt.UseNpgsql(DbConnectionStringBuilder.Build("tours"),
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "tours")));
