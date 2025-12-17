@@ -71,6 +71,7 @@ public static class AuthConfiguration
 
             options.AddPolicy("user", policy =>
                 policy.RequireAuthenticatedUser());
+            //options.AddPolicy("shoppingCartPolicy", policy => policy.RequireRole("tourist"));
         });
     }
 

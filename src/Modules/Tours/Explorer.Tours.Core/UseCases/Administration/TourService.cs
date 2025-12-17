@@ -352,4 +352,10 @@ public class TourService : ITourService
         return _mapper.Map<TourDto>(updated);
     }
 
+    //Maksim: Dodao sam Get preko ID-a, zato sto su mi potrebni podaci ture za ShoppingCart
+    public TourDto GetById(long id)
+    {
+        var tour = _tourRepository.GetById(id);
+        return _mapper.Map<TourDto>(tour);
+    }
 }

@@ -132,6 +132,11 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.CompletionPercentage, opt => opt.MapFrom(src => src.CompletionPercentage));
 
 
+        //mapper za shopping cart i order item
+        CreateMap<ShoppingCart, ShoppingCartDto>()
+               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
+                .ConstructUsing(dto => new OrderItem(dto.TourId));
     }
 
     private static TourStatus MapStatus(string status)

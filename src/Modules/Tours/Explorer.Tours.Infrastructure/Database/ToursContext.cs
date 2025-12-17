@@ -31,6 +31,9 @@ public class ToursContext : DbContext
     public DbSet<TourTag> TourTags { get; set; }
 
 
+    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -222,6 +225,22 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
+        //za shopping cart i order item
+        modelBuilder.Entity<ShoppingCart>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.UserId).IsRequired();
+            builder.HasMany(c => c.Items)
+                   .WithOne()
+                   .HasForeignKey("ShoppingCartId")
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrderItem>(builder =>
+        {
+            builder.HasKey(oi => oi.Id);
+            builder.Property(oi => oi.TourId).IsRequired();
+        });
 
         // TourRatingImage CONFIGURATION
         modelBuilder.Entity<TourRatingImage>(builder =>
