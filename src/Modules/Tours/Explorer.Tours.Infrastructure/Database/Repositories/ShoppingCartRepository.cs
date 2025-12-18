@@ -21,6 +21,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
         {
             return _context.ShoppingCarts
                 .Include(c => c.Items)
+                .Include(c => c.PurchasedItems)
                 .FirstOrDefault(c => c.Id == id);
         }
 
@@ -28,6 +29,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
         {
             return _context.ShoppingCarts
                 .Include(c => c.Items)
+                .Include(c => c.PurchasedItems)
                 .FirstOrDefault(c => c.UserId == userId);
         }
 
@@ -47,6 +49,7 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
         {
             var existing = _context.ShoppingCarts
                 .Include(c => c.Items)
+                .Include(c => c.PurchasedItems)
                 .FirstOrDefault(c => c.Id == id);
 
             if (existing != null)

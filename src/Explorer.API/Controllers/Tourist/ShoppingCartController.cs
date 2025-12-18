@@ -109,6 +109,43 @@ namespace Explorer.API.Controllers.Tourist
                 return NotFound(ex.Message);
             }
         }
-
+        [HttpPost("purchase/item")]
+        public IActionResult PurchaseItem([FromQuery] long userId, [FromQuery] long tourId)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseItem(userId, tourId);
+                return Ok("Item purchased successfully.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("purchase/all")]
+        public IActionResult PurchaseAllItems([FromQuery] long userId)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseAllItems(userId);
+                return Ok("All items purchased successfully.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

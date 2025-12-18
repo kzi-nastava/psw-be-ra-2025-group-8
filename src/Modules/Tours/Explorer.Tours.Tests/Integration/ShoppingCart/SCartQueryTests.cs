@@ -122,6 +122,16 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // Prvo obriši postojeću korpu ako postoji
+            var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -12);
+            if (existingCart != null)
+            {
+                dbContext.ShoppingCarts.Remove(existingCart);
+                dbContext.SaveChanges();
+            }
+            dbContext.ChangeTracker.Clear();
 
             // Kreiraj novu korpu i dodaj dve ture (cene 100 i 70) za autor2 (-12)
             controller.NewCart(-12);
@@ -137,6 +147,188 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
             var cartDto = result.Value as ShoppingCartDto;
             cartDto.ShouldNotBeNull();
             cartDto.TotalPrice.ShouldBe(170); // 100 + 70
+        }
+
+        [Fact]
+        public void GetCart_Returns_PurchasedItems()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var controller = CreateController(scope);
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // Prvo obriši postojeću korpu ako postoji
+            var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -12);
+            if (existingCart != null)
+            {
+                dbContext.ShoppingCarts.Remove(existingCart);
+                dbContext.SaveChanges();
+            }
+            dbContext.ChangeTracker.Clear();
+
+            // Kreiraj korpu, dodaj stavke i kupi ih
+            controller.NewCart(-12);
+            controller.AddItem(-12, -511);
+            controller.AddItem(-12, -522);
+            controller.PurchaseItem(-12, -511);
+
+            var actionResult = controller.GetCart(-12);
+            var result = actionResult.Result as ObjectResult;
+
+            result.ShouldNotBeNull();
+            result.StatusCode.ShouldBe(200);
+
+            var cartDto = result.Value as ShoppingCartDto;
+            cartDto.ShouldNotBeNull();
+            cartDto.PurchasedItems.ShouldNotBeNull();
+            cartDto.PurchasedItems.Count.ShouldBe(1);
+            cartDto.PurchasedItems.Any(p => p.TourId == -511).ShouldBeTrue();
+            cartDto.Items.Count.ShouldBe(1);
+        }
+
+        [Fact]
+        public void GetCart_Shows_Separate_Items_And_PurchasedItems()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var controller = CreateController(scope);
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // Prvo obriši postojeću korpu ako postoji
+            var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
+            if (existingCart != null)
+            {
+                dbContext.ShoppingCarts.Remove(existingCart);
+                dbContext.SaveChanges();
+            }
+            dbContext.ChangeTracker.Clear();
+
+            // Kreiraj korpu sa stavkama i kupljenim stavkama
+            controller.NewCart(-13);
+            controller.AddItem(-13, -511);
+            controller.AddItem(-13, -522);
+            controller.AddItem(-13, -533);
+            controller.PurchaseItem(-13, -511);
+            controller.PurchaseItem(-13, -533);
+
+            var actionResult = controller.GetCart(-13);
+            var result = actionResult.Result as ObjectResult;
+
+            result.ShouldNotBeNull();
+            result.StatusCode.ShouldBe(200);
+
+            var cartDto = result.Value as ShoppingCartDto;
+            cartDto.ShouldNotBeNull();
+            
+            // Proveri da postoji 1 stavka u korpi i 2 kupljene stavke
+            cartDto.Items.Count.ShouldBe(1);
+            cartDto.Items.Any(i => i.TourId == -522).ShouldBeTrue();
+            
+            cartDto.PurchasedItems.Count.ShouldBe(2);
+            cartDto.PurchasedItems.Any(p => p.TourId == -511).ShouldBeTrue();
+            cartDto.PurchasedItems.Any(p => p.TourId == -533).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void GetCart_PurchasedItems_Contain_Price_And_Date()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var controller = CreateController(scope);
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // Prvo obriši postojeću korpu ako postoji
+            var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -12);
+            if (existingCart != null)
+            {
+                dbContext.ShoppingCarts.Remove(existingCart);
+                dbContext.SaveChanges();
+            }
+            dbContext.ChangeTracker.Clear();
+
+            // Kreiraj korpu i kupi stavku
+            controller.NewCart(-12);
+            controller.AddItem(-12, -522); // Cena 100
+            controller.PurchaseItem(-12, -522);
+
+            var actionResult = controller.GetCart(-12);
+            var result = actionResult.Result as ObjectResult;
+
+            result.ShouldNotBeNull();
+            result.StatusCode.ShouldBe(200);
+
+            var cartDto = result.Value as ShoppingCartDto;
+            cartDto.ShouldNotBeNull();
+            cartDto.PurchasedItems.Count.ShouldBe(1);
+
+            var purchasedItem = cartDto.PurchasedItems.First();
+            purchasedItem.TourId.ShouldBe(-522);
+            purchasedItem.Price.ShouldBe(100);
+            purchasedItem.PurchaseDate.ShouldNotBe(default(DateTime));
+        }
+
+        [Fact]
+        public void GetCart_After_PurchaseAll_Shows_All_In_PurchasedItems()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var controller = CreateController(scope);
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // Prvo obriši postojeću korpu ako postoji
+            var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
+            if (existingCart != null)
+            {
+                dbContext.ShoppingCarts.Remove(existingCart);
+                dbContext.SaveChanges();
+            }
+            dbContext.ChangeTracker.Clear();
+
+            // Kreiraj korpu, dodaj stavke i kupi sve
+            controller.NewCart(-13);
+            controller.AddItem(-13, -511);
+            controller.AddItem(-13, -522);
+            controller.AddItem(-13, -533);
+            controller.PurchaseAllItems(-13);
+
+            var actionResult = controller.GetCart(-13);
+            var result = actionResult.Result as ObjectResult;
+
+            result.ShouldNotBeNull();
+            result.StatusCode.ShouldBe(200);
+
+            var cartDto = result.Value as ShoppingCartDto;
+            cartDto.ShouldNotBeNull();
+            cartDto.Items.Count.ShouldBe(0);
+            cartDto.PurchasedItems.Count.ShouldBe(3);
+            cartDto.TotalPrice.ShouldBe(0); // TotalPrice samo za Items, ne PurchasedItems
+        }
+
+        [Fact]
+        public void GetCart_Empty_PurchasedItems_By_Default()
+        {
+            using var scope = Factory.Services.CreateScope();
+            var controller = CreateController(scope);
+            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // Prvo obriši postojeću korpu ako postoji
+            var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -12);
+            if (existingCart != null)
+            {
+                dbContext.ShoppingCarts.Remove(existingCart);
+                dbContext.SaveChanges();
+            }
+            dbContext.ChangeTracker.Clear();
+
+            // Nova korpa nema kupljenih stavki
+            controller.NewCart(-12);
+
+            var actionResult = controller.GetCart(-12);
+            var result = actionResult.Result as ObjectResult;
+
+            result.ShouldNotBeNull();
+            result.StatusCode.ShouldBe(200);
+
+            var cartDto = result.Value as ShoppingCartDto;
+            cartDto.ShouldNotBeNull();
+            cartDto.PurchasedItems.ShouldNotBeNull();
+            cartDto.PurchasedItems.Count.ShouldBe(0);
         }
     }
 }

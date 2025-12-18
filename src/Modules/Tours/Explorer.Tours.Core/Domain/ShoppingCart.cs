@@ -6,7 +6,10 @@ namespace Explorer.Tours.Core.Domain
     public class ShoppingCart : AggregateRoot
     {
         private readonly List<OrderItem> _items = new();
+        private readonly List<PurchasedItem> _purchasedItems = new();
+        
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+        public IReadOnlyCollection<PurchasedItem> PurchasedItems => _purchasedItems.AsReadOnly();
         public long UserId { get; private set; }
 
         private ShoppingCart() { }
@@ -38,6 +41,35 @@ namespace Explorer.Tours.Core.Domain
 
         public void ClearCart()
         {
+            _items.Clear();
+        }
+
+        public void PurchaseItem(long tourId, decimal price)
+        {
+            var item = _items.FirstOrDefault(i => i.TourId == tourId);
+            if (item == null) throw new KeyNotFoundException("Item not found in cart.");
+
+            var purchasedItem = new PurchasedItem(tourId, price);
+            _purchasedItems.Add(purchasedItem);
+            _items.Remove(item);
+        }
+
+        public void PurchaseAllItems(Dictionary<long, decimal> tourPrices)
+        {
+            if (_items.Count == 0)
+                throw new InvalidOperationException("Cart is empty.");
+
+            var itemsToRemove = _items.ToList();
+            
+            foreach (var item in itemsToRemove)
+            {
+                if (!tourPrices.ContainsKey(item.TourId))
+                    throw new KeyNotFoundException($"Price not found for tour {item.TourId}");
+
+                var purchasedItem = new PurchasedItem(item.TourId, tourPrices[item.TourId]);
+                _purchasedItems.Add(purchasedItem);
+            }
+
             _items.Clear();
         }
     }

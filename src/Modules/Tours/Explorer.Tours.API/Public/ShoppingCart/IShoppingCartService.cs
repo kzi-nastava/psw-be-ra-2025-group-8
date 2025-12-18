@@ -10,5 +10,7 @@ namespace Explorer.Tours.API.Public.ShoppingCart
         void RemoveItem(long userId, long tourId);
         void ClearCart(long userId);
         void DeleteCart(long userId);
+        void PurchaseItem(long userId, long tourId);
+        void PurchaseAllItems(long userId);
     }
 }

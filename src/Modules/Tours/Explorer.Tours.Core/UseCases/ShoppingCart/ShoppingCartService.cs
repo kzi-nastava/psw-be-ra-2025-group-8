@@ -81,6 +81,41 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             if (cart == null) throw new KeyNotFoundException("Cart not found for this user.");
             _cartRepository.Delete(cart.Id);
         }
+
+        public void PurchaseItem(long userId, long tourId)
+        {
+            var cart = _cartRepository.GetByUserId(userId);
+            if (cart == null) throw new NotFoundException("Cart not found for this user.");
+
+            var tour = _tourRepository.Get(tourId);
+            if (tour == null) throw new NotFoundException("Tour not found.");
+
+            cart.PurchaseItem(tourId, tour.Price);
+            _cartRepository.Update(cart);
+        }
+
+        public void PurchaseAllItems(long userId)
+        {
+            var cart = _cartRepository.GetByUserId(userId);
+            if (cart == null) throw new NotFoundException("Cart not found for this user.");
+
+            if (!cart.Items.Any())
+                throw new InvalidOperationException("Cart is empty.");
+
+            var tourPrices = new Dictionary<long, decimal>();
+            foreach (var item in cart.Items)
+            {
+                var tour = _tourRepository.Get(item.TourId);
+                if (tour == null)
+                    throw new NotFoundException($"Tour with ID {item.TourId} not found.");
+                
+                tourPrices[item.TourId] = tour.Price;
+            }
+
+            cart.PurchaseAllItems(tourPrices);
+            _cartRepository.Update(cart);
+        }
+
         private decimal CalculateTotalPrice(Domain.ShoppingCart cart)
         {
             if (cart.Items == null || !cart.Items.Any())
