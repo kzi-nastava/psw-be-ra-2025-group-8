@@ -1,0 +1,35 @@
+﻿using Explorer.Payments.Core.Mappers;
+using Explorer.Payments.Infrastructure.Database;
+using Explorer.BuildingBlocks.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+
+namespace Explorer.Payments.Infrastructure;
+
+public static class PaymentsStartup
+{
+    public static IServiceCollection ConfigurePaymentsModule(this IServiceCollection services)
+    {
+        services.AddAutoMapper(typeof(PaymentsProfile).Assembly);
+        SetupCore(services);
+        SetupInfrastructure(services);
+        return services;
+    }
+
+    private static void SetupCore(IServiceCollection services)
+    {
+        // here goes DI for services from Core (PaymentService etc.)
+    }
+
+    private static void SetupInfrastructure(IServiceCollection services)
+    {
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("payments"));
+        dataSourceBuilder.EnableDynamicJson();
+        var dataSource = dataSourceBuilder.Build();
+
+        services.AddDbContext<PaymentsContext>(opt =>
+            opt.UseNpgsql(dataSource,
+                x => x.MigrationsHistoryTable("__EFMigrationsHistory", "payments")));
+    }
+}
