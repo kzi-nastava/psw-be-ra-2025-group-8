@@ -34,6 +34,19 @@ namespace Explorer.API.Controllers.Tourist
                 return NotFound(ex.Message);
             }
         }
+        [HttpGet("purchased")]
+        public ActionResult<List<PurchasedItemDto>> GetPurchasedItems([FromQuery] long userId)
+        {
+            try
+            {
+                var purchasedItems = _shoppingCartService.GetPurchasedItems(userId);
+                return Ok(purchasedItems);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
         [HttpPost("new")]
         public ActionResult NewCart([FromQuery] long userId)
         {

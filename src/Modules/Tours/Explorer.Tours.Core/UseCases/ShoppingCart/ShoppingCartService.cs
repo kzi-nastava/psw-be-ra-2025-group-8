@@ -43,6 +43,18 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             return dto;
         }
 
+        public List<PurchasedItemDto> GetPurchasedItems(long userId)
+        {
+            var cart = _cartRepository.GetByUserId(userId);
+
+            if (cart == null)
+            {
+                throw new NotFoundException("Cart not found for this user.");
+            }
+
+            return _mapper.Map<List<PurchasedItemDto>>(cart.PurchasedItems);
+        }
+
         public void AddItem(long userId, OrderItemDto itemDto)
         {
             var cart = _cartRepository.GetByUserId(userId);
