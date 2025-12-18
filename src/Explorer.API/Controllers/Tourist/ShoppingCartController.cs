@@ -34,6 +34,19 @@ namespace Explorer.API.Controllers.Tourist
                 return NotFound(ex.Message);
             }
         }
+        [HttpGet("purchased")]
+        public ActionResult<List<PurchasedItemDto>> GetPurchasedItems([FromQuery] long userId)
+        {
+            try
+            {
+                var purchasedItems = _shoppingCartService.GetPurchasedItems(userId);
+                return Ok(purchasedItems);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
         [HttpPost("new")]
         public ActionResult NewCart([FromQuery] long userId)
         {
@@ -50,32 +63,51 @@ namespace Explorer.API.Controllers.Tourist
         [HttpPost("items")]
         public IActionResult AddItem([FromQuery] long userId,[FromQuery] long tourId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            var tour = _tourService.GetById(tourId);
-
-            if (tour == null) return NotFound("Tour not found.");
-            var dto = new OrderItemDto
+            try
             {
-                TourId = tourId
-            };
-            _shoppingCartService.AddItem(userId, dto);
-            return Ok("Item added to cart.");
+                var cart = _shoppingCartService.GetCart(userId);
+                var tour = _tourService.GetById(tourId);
+
+                if (tour == null) return NotFound("Tour not found.");
+                var dto = new OrderItemDto
+                {
+                    TourId = tourId
+                };
+                _shoppingCartService.AddItem(userId, dto);
+                return Ok("Item added to cart.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("remove")]
         public IActionResult RemoveItem([FromQuery] long userId, [FromQuery] long tourId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            if (cart == null) return NotFound("Cart not found.");
-            _shoppingCartService.RemoveItem(userId, tourId);
-            return Ok("Item removed from cart.");
+            try
+            {
+                var cart = _shoppingCartService.GetCart(userId);
+                _shoppingCartService.RemoveItem(userId, tourId);
+                return Ok("Item removed from cart.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("clear")]
         public IActionResult ClearCart([FromQuery] long userId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            if (cart == null) return NotFound("Cart not found.");
-            _shoppingCartService.ClearCart(userId);
-            return Ok("Cart cleared.");
+            try
+            {
+                var cart = _shoppingCartService.GetCart(userId);
+                _shoppingCartService.ClearCart(userId);
+                return Ok("Cart cleared.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("delete")]
         public IActionResult DeleteCart([FromQuery] long userId)
@@ -90,6 +122,43 @@ namespace Explorer.API.Controllers.Tourist
                 return NotFound(ex.Message);
             }
         }
-
+        [HttpPost("purchase/item")]
+        public IActionResult PurchaseItem([FromQuery] long userId, [FromQuery] long tourId)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseItem(userId, tourId);
+                return Ok("Item purchased successfully.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("purchase/all")]
+        public IActionResult PurchaseAllItems([FromQuery] long userId)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseAllItems(userId);
+                return Ok("All items purchased successfully.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

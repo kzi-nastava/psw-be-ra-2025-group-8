@@ -134,9 +134,11 @@ public class ToursProfile : Profile
 
         //mapper za shopping cart i order item
         CreateMap<ShoppingCart, ShoppingCartDto>()
-               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
+               .ForMember(dest => dest.PurchasedItems, opt => opt.MapFrom(src => src.PurchasedItems));
         CreateMap<OrderItem, OrderItemDto>().ReverseMap()
                 .ConstructUsing(dto => new OrderItem(dto.TourId));
+        CreateMap<PurchasedItem, PurchasedItemDto>();
     }
 
     private static TourStatus MapStatus(string status)
