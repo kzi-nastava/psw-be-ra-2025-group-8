@@ -50,32 +50,51 @@ namespace Explorer.API.Controllers.Tourist
         [HttpPost("items")]
         public IActionResult AddItem([FromQuery] long userId,[FromQuery] long tourId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            var tour = _tourService.GetById(tourId);
-
-            if (tour == null) return NotFound("Tour not found.");
-            var dto = new OrderItemDto
+            try
             {
-                TourId = tourId
-            };
-            _shoppingCartService.AddItem(userId, dto);
-            return Ok("Item added to cart.");
+                var cart = _shoppingCartService.GetCart(userId);
+                var tour = _tourService.GetById(tourId);
+
+                if (tour == null) return NotFound("Tour not found.");
+                var dto = new OrderItemDto
+                {
+                    TourId = tourId
+                };
+                _shoppingCartService.AddItem(userId, dto);
+                return Ok("Item added to cart.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("remove")]
         public IActionResult RemoveItem([FromQuery] long userId, [FromQuery] long tourId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            if (cart == null) return NotFound("Cart not found.");
-            _shoppingCartService.RemoveItem(userId, tourId);
-            return Ok("Item removed from cart.");
+            try
+            {
+                var cart = _shoppingCartService.GetCart(userId);
+                _shoppingCartService.RemoveItem(userId, tourId);
+                return Ok("Item removed from cart.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("clear")]
         public IActionResult ClearCart([FromQuery] long userId)
         {
-            var cart = _shoppingCartService.GetCart(userId);
-            if (cart == null) return NotFound("Cart not found.");
-            _shoppingCartService.ClearCart(userId);
-            return Ok("Cart cleared.");
+            try
+            {
+                var cart = _shoppingCartService.GetCart(userId);
+                _shoppingCartService.ClearCart(userId);
+                return Ok("Cart cleared.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("delete")]
         public IActionResult DeleteCart([FromQuery] long userId)
