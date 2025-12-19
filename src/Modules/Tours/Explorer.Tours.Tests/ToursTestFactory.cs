@@ -5,6 +5,8 @@ using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Tests.TestHelpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Explorer.Stakeholders.API.Internal;
+
 
 namespace Explorer.Tours.Tests;
 
@@ -30,6 +32,15 @@ public class ToursTestFactory : BaseTestFactory<ToursContext>
 
         // Mock notification service
         services.AddScoped<IIssueNotificationService, MockIssueNotificationService>();
+
+        var personServiceDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(IInternalPersonService)
+        );
+        if (personServiceDescriptor != null)
+            services.Remove(personServiceDescriptor);
+
+        services.AddScoped<IInternalPersonService, MockInternalPersonService>();
+
 
         return services;
     }
