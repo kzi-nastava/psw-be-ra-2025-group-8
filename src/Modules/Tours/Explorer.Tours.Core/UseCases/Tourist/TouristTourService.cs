@@ -8,13 +8,6 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Tours.Core.UseCases.Tourist;
 
-public interface ITouristTourService
-{
-    List<TouristTourPreviewDto> GetPublishedTours();
-    TouristTourDetailsDto GetPublishedTourDetails(long id);
-    List<KeyPointDto> GetTourKeyPoints(long tourId);
-}
-
 public class TouristTourService : ITouristTourService
 {
     private readonly ITourRepository _tourRepository;
@@ -70,6 +63,16 @@ public class TouristTourService : ITouristTourService
             .OrderBy(kp => kp.Order)
             .Select(_mapper.Map<KeyPointDto>)
             .ToList();
+    }
+
+    public List<TouristTourPreviewDto> SearchToursByLocation(TourSearchByLocationDto searchDto)
+    {
+        var tours = _tourRepository.SearchByLocation(
+            searchDto.Latitude,
+            searchDto.Longitude,
+            searchDto.DistanceInKilometers);
+
+        return tours.Select(MapPreview).ToList();
     }
 
     // =======================================================

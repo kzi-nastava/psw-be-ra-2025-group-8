@@ -1,4 +1,5 @@
-﻿using Explorer.Tours.Core.UseCases.Tourist;
+﻿using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Public.Tourist;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Tourist
@@ -34,6 +35,19 @@ namespace Explorer.API.Controllers.Tourist
             var keyPoints = _touristTourService.GetTourKeyPoints(id);
             if (!keyPoints.Any()) return NotFound("Tour not found or has no keypoints.");
             return Ok(keyPoints);
+        }
+
+        [HttpPost("search-by-location")]
+        public IActionResult SearchToursByLocation([FromBody] TourSearchByLocationDto searchDto)
+        {
+            if (searchDto == null)
+                return BadRequest("Search parameters are required.");
+
+            if (searchDto.DistanceInKilometers <= 0)
+                return BadRequest("Distance must be greater than zero.");
+
+            var tours = _touristTourService.SearchToursByLocation(searchDto);
+            return Ok(tours);
         }
     }
 }

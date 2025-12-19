@@ -13,4 +13,6 @@ public interface ITourRepository
     List<Tour> GetAll();
     //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
     Tour GetById(long id);
+    
+    List<Tour> SearchByLocation(double latitude, double longitude, double distanceInKm);
 }
