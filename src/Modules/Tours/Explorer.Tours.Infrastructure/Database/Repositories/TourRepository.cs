@@ -78,4 +78,20 @@ public class TourRepository : ITourRepository
         return _context.Tours
             .FirstOrDefault(t => t.Id == id);
     }
+
+    public List<Tour> SearchByLocation(double latitude, double longitude, double distanceInKm)
+    {
+        var allPublishedTours = ToursWithIncludes()
+            .Where(t => t.Status == TourStatus.Published)
+            .ToList();
+
+        var searchLocation = new GeoCoordinate(latitude, longitude);
+
+        var toursWithinRange = allPublishedTours
+            .Where(tour => tour.KeyPoints.Any(kp => 
+                kp.Location.DistanceTo(searchLocation) <= distanceInKm))
+            .ToList();
+
+        return toursWithinRange;
+    }
 }

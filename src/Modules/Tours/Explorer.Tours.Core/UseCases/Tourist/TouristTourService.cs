@@ -8,25 +8,6 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Tours.Core.UseCases.Tourist;
 
-public interface ITouristTourService
-{
-    List<TouristTourPreviewDto> GetPublishedTours();
-    List<TouristTourPreviewDto> GetPublishedTours(int? minPrice, int? maxPrice);
-
-    List<TouristTourPreviewDto> GetPublishedTours(
-            long personId,
-            bool searchByOwnedEquipment,
-            bool searchByPreferenceTags,
-            bool searchByPreferenceDifficulty,
-            List<int>? difficulties,
-            int? minPrice,
-            int? maxPrice);
-
-    TouristTourDetailsDto GetPublishedTourDetails(long id);
-    List<TouristTourPreviewDto> GetPublishedTours(List<int> difficulties, int? minPrice, int? maxPrice);
-    List<KeyPointDto> GetTourKeyPoints(long tourId);
-}
-
 public class TouristTourService : ITouristTourService
 {
     private readonly ITourRepository _tourRepository;
@@ -211,6 +192,16 @@ public class TouristTourService : ITouristTourService
             .OrderBy(kp => kp.Order)
             .Select(_mapper.Map<KeyPointDto>)
             .ToList();
+    }
+
+    public List<TouristTourPreviewDto> SearchToursByLocation(TourSearchByLocationDto searchDto)
+    {
+        var tours = _tourRepository.SearchByLocation(
+            searchDto.Latitude,
+            searchDto.Longitude,
+            searchDto.DistanceInKilometers);
+
+        return tours.Select(MapPreview).ToList();
     }
 
     // =======================================================

@@ -6,6 +6,8 @@ using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Explorer.Tours.API.Public;
+using Explorer.Tours.API.Public.Tourist;
 
 namespace Explorer.Tours.Tests.Integration.Tourist;
 
