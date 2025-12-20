@@ -103,6 +103,7 @@ public class ModulesTests : BaseArchitecturalTests
         new object[] { "Stakeholders" },
         new object[] { "Blog" },
         new object[] { "Tours" },
-        new object[] { "Payments" }
+        new object[] { "Payments" },
+        new object[] { "Encounters" }
     };
 }
