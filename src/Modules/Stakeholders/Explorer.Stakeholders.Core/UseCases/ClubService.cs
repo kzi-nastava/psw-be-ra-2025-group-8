@@ -13,15 +13,25 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IClubRepository _clubRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IClubJoinRequestRepository _joinRequestRepository;
+        private readonly IClubInvitationRepository _invitationRepository;
         private readonly INotificationService _notificationService;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public ClubService(IClubRepository repo, IClubJoinRequestRepository joinRequestRepository, 
-            INotificationService notificationService, IMapper mapper, INotificationRepository notificationRepository)
+        public ClubService(
+            IClubRepository repo, 
+            IClubJoinRequestRepository joinRequestRepository,
+            IClubInvitationRepository invitationRepository,
+            INotificationService notificationService, 
+            IUserRepository userRepository,
+            IMapper mapper, 
+            INotificationRepository notificationRepository)
         {
             _clubRepository = repo;
             _joinRequestRepository = joinRequestRepository;
+            _invitationRepository = invitationRepository;
             _notificationService = notificationService;
+            _userRepository = userRepository;
             _mapper = mapper;
             _notificationRepository = notificationRepository;
         }
@@ -93,13 +103,6 @@ namespace Explorer.Stakeholders.Core.UseCases
         }
 
         // owner actions
-        public void Invite(long clubId, long ownerId, long touristId)
-        {
-            var club = _clubRepository.Get(clubId);
-            club.InviteMember(ownerId, touristId);
-            _clubRepository.Update(club);
-        }
-
         public void Expel(long clubId, long ownerId, long touristId)
         {
             var club = _clubRepository.Get(clubId);
@@ -123,6 +126,152 @@ namespace Explorer.Stakeholders.Core.UseCases
                 throw new UnauthorizedAccessException("Only the owner can activate the club.");
             club.Activate();
             _clubRepository.Update(club);
+        }
+
+        // Invitation Methods (Owner invites Tourist)
+        public ClubInvitationDto InviteTouristByUsername(long clubId, long ownerId, string username)
+        {
+            var club = _clubRepository.Get(clubId);
+            
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the club owner can send invitations.");
+
+            if (club.Status != ClubStatus.Active)
+                throw new InvalidOperationException("Cannot send invitations when the club is not active.");
+
+            // Find tourist by username
+            var user = _userRepository.GetActiveByName(username);
+            if (user == null)
+                throw new KeyNotFoundException($"User with username '{username}' not found.");
+
+            if (user.Role != UserRole.Tourist)
+                throw new InvalidOperationException("You can only invite tourists to the club.");
+
+            var touristUserId = user.Id; // Use UserId instead of PersonId
+
+            // Check if already a member
+            if (club.MemberIds.Contains(touristUserId))
+                throw new InvalidOperationException("This user is already a member of the club.");
+
+            // Check if there's already a pending invitation
+            var existingInvitation = _invitationRepository.GetPendingInvitation(clubId, touristUserId);
+            if (existingInvitation != null)
+                throw new InvalidOperationException("This user already has a pending invitation.");
+
+            // Create invitation
+            var invitation = new ClubInvitation(clubId, touristUserId);
+            var created = _invitationRepository.Create(invitation);
+
+            // Send notification to tourist
+            _notificationService.Create(new NotificationDto
+            {
+                UserId = touristUserId,
+                Type = 1,
+                Title = "Club Invitation",
+                Content = $"You have been invited to join club '{club.Name}'",
+                RelatedEntityId = clubId,
+                RelatedEntityType = "Club"
+            });
+
+            return _mapper.Map<ClubInvitationDto>(created);
+        }
+
+        public IEnumerable<ClubInvitationDto> GetMyInvitations(long touristId)
+        {
+            var invitations = _invitationRepository.GetByTouristId(touristId)
+                .Where(i => i.Status == ClubInvitationStatus.Pending);
+            
+            return _mapper.Map<IEnumerable<ClubInvitationDto>>(invitations);
+        }
+
+        public IEnumerable<ClubInvitationDto> GetClubInvitations(long clubId, long ownerId)
+        {
+            var club = _clubRepository.Get(clubId);
+            
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the club owner can view invitations.");
+
+            var invitations = _invitationRepository.GetByClubId(clubId)
+                .Where(i => i.Status == ClubInvitationStatus.Pending);
+            
+            return _mapper.Map<IEnumerable<ClubInvitationDto>>(invitations);
+        }
+
+        public ClubInvitationDto AcceptInvitation(long invitationId, long touristId)
+        {
+            var invitation = _invitationRepository.Get(invitationId);
+            
+            if (invitation.TouristId != touristId)
+                throw new UnauthorizedAccessException("You can only accept your own invitations.");
+
+            if (invitation.Status != ClubInvitationStatus.Pending)
+                throw new InvalidOperationException("This invitation is no longer pending.");
+
+            var club = _clubRepository.Get(invitation.ClubId);
+            
+            // Accept invitation
+            invitation.Accept();
+            club.AddMember(touristId);
+            
+            _clubRepository.Update(club);
+            _invitationRepository.Delete(invitationId);
+
+            // Notify club owner
+            _notificationService.Create(new NotificationDto
+            {
+                UserId = club.OwnerId,
+                Type = 1,
+                Title = "Invitation Accepted",
+                Content = $"A tourist has accepted your invitation to join '{club.Name}'",
+                RelatedEntityId = club.Id,
+                RelatedEntityType = "Club"
+            });
+
+            return _mapper.Map<ClubInvitationDto>(invitation);
+        }
+
+        public ClubInvitationDto RejectInvitation(long invitationId, long touristId)
+        {
+            var invitation = _invitationRepository.Get(invitationId);
+            
+            if (invitation.TouristId != touristId)
+                throw new UnauthorizedAccessException("You can only reject your own invitations.");
+
+            if (invitation.Status != ClubInvitationStatus.Pending)
+                throw new InvalidOperationException("This invitation is no longer pending.");
+
+            var club = _clubRepository.Get(invitation.ClubId);
+            
+            invitation.Reject();
+            _invitationRepository.Delete(invitationId);
+
+            // Notify club owner
+            _notificationService.Create(new NotificationDto
+            {
+                UserId = club.OwnerId,
+                Type = 1,
+                Title = "Invitation Rejected",
+                Content = $"A tourist has rejected your invitation to join '{club.Name}'",
+                RelatedEntityId = club.Id,
+                RelatedEntityType = "Club"
+            });
+
+            return _mapper.Map<ClubInvitationDto>(invitation);
+        }
+
+        public void CancelInvitation(long invitationId, long ownerId)
+        {
+            var invitation = _invitationRepository.Get(invitationId);
+            var club = _clubRepository.Get(invitation.ClubId);
+            
+            if (!club.IsOwner(ownerId))
+                throw new UnauthorizedAccessException("Only the club owner can cancel invitations.");
+
+            if (invitation.Status != ClubInvitationStatus.Pending)
+                throw new InvalidOperationException("This invitation is no longer pending.");
+
+            invitation.Cancel();
+            _invitationRepository.Delete(invitationId);
         }
 
         // Join Request Methods

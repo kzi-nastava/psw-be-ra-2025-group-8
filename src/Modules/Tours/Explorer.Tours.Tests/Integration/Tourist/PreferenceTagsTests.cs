@@ -88,39 +88,52 @@ public class PreferenceTagsTests : IClassFixture<ToursTestFactory>
     [Fact]
     public void RemoveTagFromPerson_Removes_link_only()
     {
-        using var scope = _factory.Services.CreateScope();
-        var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        long tagId;
+        long prefId;
 
-        // 1) Uzmi preference za osobu -21
-        var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
-
-        // 2) Kreiraj tag (EF ce sam dodeliti ID)
-        var tag = new Tags("mountain");
-        ctx.Tags.Add(tag);
-        ctx.SaveChanges();
-        // sada tag.Id ima stvarnu vrednost (pozitivan broj)
-
-        // 3) Napravi PreferenceTags vezu
-        ctx.PreferenceTags.Add(new PreferenceTags
+        // SETUP: Create tag and link in separate scope
+        using (var setupScope = _factory.Services.CreateScope())
         {
-            TouristPreferencesId = pref.Id,
-            TagsId = tag.Id
-        });
-        ctx.SaveChanges();
+            var setupCtx = setupScope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // 4) Uveri se da link postoji pre brisanja
-        var existingLink = ctx.PreferenceTags
-            .SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == tag.Id);
-        existingLink.ShouldNotBeNull();
+            // 1) Uzmi preference za osobu -21
+            var pref = setupCtx.TouristPreferences.Single(tp => tp.PersonId == -21);
+            prefId = pref.Id;
 
-        // 5) Akcija — brisanje tag veze
-        svc.RemoveTagFromPerson(-21, tag.Id);
+            // 2) Kreiraj tag (EF ce sam dodeliti ID)
+            var tag = new Tags("RemoveTest_" + Guid.NewGuid().ToString().Substring(0, 8));
+            setupCtx.Tags.Add(tag);
+            setupCtx.SaveChanges();
+            tagId = tag.Id;
 
-        // 6) Proveri da je veza uklonjena
-        var after = ctx.PreferenceTags
-            .SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == tag.Id);
-        after.ShouldBeNull();
+            // 3) Napravi PreferenceTags vezu
+            setupCtx.PreferenceTags.Add(new PreferenceTags
+            {
+                TouristPreferencesId = prefId,
+                TagsId = tagId
+            });
+            setupCtx.SaveChanges();
+        }
+
+        // ACT & ASSERT: Use fresh scope for the actual test
+        using (var testScope = _factory.Services.CreateScope())
+        {
+            var svc = testScope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
+            var ctx = testScope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // 4) Uveri se da link postoji pre brisanja
+            var existingLink = ctx.PreferenceTags
+                .SingleOrDefault(pt => pt.TouristPreferencesId == prefId && pt.TagsId == tagId);
+            existingLink.ShouldNotBeNull();
+
+            // 5) Akcija — brisanje tag veze
+            svc.RemoveTagFromPerson(-21, tagId);
+
+            // 6) Proveri da je veza uklonjena
+            var after = ctx.PreferenceTags
+                .SingleOrDefault(pt => pt.TouristPreferencesId == prefId && pt.TagsId == tagId);
+            after.ShouldBeNull();
+        }
     }
 
 }

@@ -61,6 +61,7 @@ public static class StakeholdersStartup
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
         services.AddScoped<IClubJoinRequestRepository, ClubJoinRequestRepository>();
+        services.AddScoped<IClubInvitationRepository, ClubInvitationRepository>();
         services.AddScoped<IClubMessageRepository, ClubMessageRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));

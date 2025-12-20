@@ -73,15 +73,15 @@ namespace Explorer.API.Controllers.User
         }
 
         // ------ OWNER ACTIONS ------
-        // Invite a tourist (owner only)
-        public class InviteDto { public long TouristId { get; set; } }
+        // Invite a tourist by username (owner only)
+        public class InviteByUsernameDto { public string Username { get; set; } }
 
         [HttpPost("{id:long}/invite")]
-        public ActionResult Invite(long id, [FromBody] InviteDto dto)
+        public ActionResult<ClubInvitationDto> InviteTourist(long id, [FromBody] InviteByUsernameDto dto)
         {
             int ownerId = ExtractUserId();
-            _clubService.Invite(id, ownerId, dto.TouristId);
-            return Ok();
+            var result = _clubService.InviteTouristByUsername(id, ownerId, dto.Username);
+            return Ok(result);
         }
 
         // Expel a tourist (owner only)
@@ -108,6 +108,47 @@ namespace Explorer.API.Controllers.User
         {
             int ownerId = ExtractUserId();
             _clubService.Activate(id, ownerId);
+            return Ok();
+        }
+
+        // ------ INVITATION ACTIONS ------
+        [HttpGet("my-invitations")]
+        public ActionResult<IEnumerable<ClubInvitationDto>> GetMyInvitations()
+        {
+            int touristId = ExtractUserId();
+            var invitations = _clubService.GetMyInvitations(touristId);
+            return Ok(invitations);
+        }
+
+        [HttpGet("{id:long}/invitations")]
+        public ActionResult<IEnumerable<ClubInvitationDto>> GetClubInvitations(long id)
+        {
+            int ownerId = ExtractUserId();
+            var invitations = _clubService.GetClubInvitations(id, ownerId);
+            return Ok(invitations);
+        }
+
+        [HttpPost("invitations/{invitationId:long}/accept")]
+        public ActionResult<ClubInvitationDto> AcceptInvitation(long invitationId)
+        {
+            int touristId = ExtractUserId();
+            var result = _clubService.AcceptInvitation(invitationId, touristId);
+            return Ok(result);
+        }
+
+        [HttpPost("invitations/{invitationId:long}/reject")]
+        public ActionResult<ClubInvitationDto> RejectInvitation(long invitationId)
+        {
+            int touristId = ExtractUserId();
+            var result = _clubService.RejectInvitation(invitationId, touristId);
+            return Ok(result);
+        }
+
+        [HttpDelete("invitations/{invitationId:long}")]
+        public ActionResult CancelInvitation(long invitationId)
+        {
+            int ownerId = ExtractUserId();
+            _clubService.CancelInvitation(invitationId, ownerId);
             return Ok();
         }
 
