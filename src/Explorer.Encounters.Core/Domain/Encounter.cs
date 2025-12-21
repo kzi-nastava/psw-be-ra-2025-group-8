@@ -25,8 +25,8 @@ namespace Explorer.Encounters.Core.Domain
         public string Description { get; set; }
         // Sometimes maybe encouter doesnt have a specific coordinates, just a location name
         public string Location { get; set; }
-        public double Latitude { get; private set; }
-        public double Longitude { get; private set; }
+        public double? Latitude { get; private set; }
+        public double? Longitude { get; private set; }
         public EncouterStatus Status { get; set; }
         public EncouterType Type { get; set; }
         public int XPReward { get; set; }
@@ -34,7 +34,7 @@ namespace Explorer.Encounters.Core.Domain
         public DateTime? ArchivedAt { get; private set; }
 
         // Constructor for creating a new encounter (draft)
-        public Encounter(string name, string description, string location, double latitude, double longitude, EncouterType type, int xpReward)
+        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward)
         {
             Name = name;
             Description = description;
@@ -53,8 +53,9 @@ namespace Explorer.Encounters.Core.Domain
         //Publish encounter
         public void Publish()
         {
-            if (Status == EncouterStatus.Draft)
-                throw new InvalidOperationException("Only non published encounters can be published.");
+            if (Status != EncouterStatus.Draft)
+                throw new InvalidOperationException("Only draft encounters can be published.");
+
             Status = EncouterStatus.Published;
             PublishedAt = DateTime.UtcNow;
         }
