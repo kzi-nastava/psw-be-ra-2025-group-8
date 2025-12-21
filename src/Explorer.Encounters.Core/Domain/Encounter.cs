@@ -77,6 +77,12 @@ namespace Explorer.Encounters.Core.Domain
             ArchivedAt = null;
         }
 
+        public void SetCoordinates(double? latitude, double? longitude)
+        {
+            Latitude = latitude;
+            Longitude = longitude;
+        }
+
 
 
 

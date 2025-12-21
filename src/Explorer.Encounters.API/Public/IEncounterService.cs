@@ -1,0 +1,18 @@
+﻿using Explorer.Encounters.API.Dtos;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Explorer.Encounters.API.Public
+{
+    public interface IEncounterService
+    {
+        List<EncounterDto> GetAllEncounters();
+        EncounterDto GetEncounterById(long id);
+        EncounterDto CreateEncounter(EncounterDto createDto);
+        EncounterDto UpdateEncounter(long id, EncounterDto updateDto);
+        void DeleteEncounter(long id);
+    }
+}
