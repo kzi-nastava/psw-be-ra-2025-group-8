@@ -35,6 +35,15 @@ namespace Explorer.Encounters.Infrastructure.Database.Repositories
         {
             return _context.Encounters.ToList();
         }
+        public void Delete(long id)
+        {
+            var encounter = _context.Encounters.FirstOrDefault(e => e.Id == id);
+            if (encounter != null)
+            {
+                _context.Encounters.Remove(encounter);
+                _context.SaveChanges();
+            }
+        }
 
     }
 }

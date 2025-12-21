@@ -12,6 +12,6 @@ namespace Explorer.Encounters.Core.Domain.ReposotoryInterfaces
         Encounter Create(Encounter encounter);
         Encounter Update(Encounter encounter);
         IEnumerable<Encounter> GetAll();
-
+        void Delete(long id);
     }
 }

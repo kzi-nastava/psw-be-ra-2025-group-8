@@ -57,8 +57,7 @@ namespace Explorer.Encounters.Core.UseCases
             if (existingEncounter == null)
                 throw new KeyNotFoundException($"Encounter with ID {id} not found.");
 
-            // trenutno nije definisano brisanje u zahtevu
-            throw new NotImplementedException("Delete operation is not implemented.");
+            _encounterRepository.Delete(id);
         }
 
         // --------------------

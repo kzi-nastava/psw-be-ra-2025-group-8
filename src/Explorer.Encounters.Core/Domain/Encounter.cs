@@ -82,9 +82,5 @@ namespace Explorer.Encounters.Core.Domain
             Latitude = latitude;
             Longitude = longitude;
         }
-
-
-
-
     }
 }
