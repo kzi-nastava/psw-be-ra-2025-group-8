@@ -23,6 +23,7 @@ namespace Explorer.Encounters.Core.Domain
     {
         public string Name { get; set; }
         public string Description { get; set; }
+        // Sometimes maybe encouter doesnt have a specific coordinates, just a location name
         public string Location { get; set; }
         public double Latitude { get; private set; }
         public double Longitude { get; private set; }
