@@ -30,7 +30,12 @@
 
 
   <ItemGroup>
-    <Folder Include="TestData\" />
+    <None Update="TestData\a-delete.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\h-shoppingcart.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
