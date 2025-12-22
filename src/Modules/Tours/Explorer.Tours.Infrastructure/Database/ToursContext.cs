@@ -31,9 +31,7 @@ public class ToursContext : DbContext
     public DbSet<TourTag> TourTags { get; set; }
 
 
-    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
-    public DbSet<PurchasedItem> PurchasedItems { get; set; }
+
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -226,34 +224,6 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
-        //za shopping cart i order item
-        modelBuilder.Entity<ShoppingCart>(builder =>
-        {
-            builder.HasKey(c => c.Id);
-            builder.Property(c => c.UserId).IsRequired();
-            builder.HasMany(c => c.Items)
-                   .WithOne()
-                   .HasForeignKey("ShoppingCartId")
-                   .OnDelete(DeleteBehavior.Cascade);
-            builder.HasMany(c => c.PurchasedItems)
-                   .WithOne()
-                   .HasForeignKey("ShoppingCartId")
-                   .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<OrderItem>(builder =>
-        {
-            builder.HasKey(oi => oi.Id);
-            builder.Property(oi => oi.TourId).IsRequired();
-        });
-
-        modelBuilder.Entity<PurchasedItem>(builder =>
-        {
-            builder.HasKey(pi => pi.Id);
-            builder.Property(pi => pi.TourId).IsRequired();
-            builder.Property(pi => pi.Price).IsRequired().HasColumnType("decimal(18,2)");
-            builder.Property(pi => pi.PurchaseDate).IsRequired();
-        });
 
         // TourRatingImage CONFIGURATION
         modelBuilder.Entity<TourRatingImage>(builder =>

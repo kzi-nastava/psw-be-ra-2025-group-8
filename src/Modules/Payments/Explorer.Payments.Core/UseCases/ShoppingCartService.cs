@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
-using Explorer.Tours.API.Dtos;
-using Explorer.Tours.API.Public.ShoppingCart;
-using Explorer.Tours.Core.Domain;
+using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Public;
+using Explorer.Payments.Core.Domain;
+using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.BuildingBlocks.Core.Exceptions;
-namespace Explorer.Tours.Core.UseCases.ShoppingCart
+namespace Explorer.Payments.Core.UseCases
 {
     public class ShoppingCartService : IShoppingCartService
     {

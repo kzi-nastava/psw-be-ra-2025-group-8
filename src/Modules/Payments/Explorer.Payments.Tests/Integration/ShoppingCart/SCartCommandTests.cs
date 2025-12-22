@@ -1,20 +1,20 @@
 ﻿using Explorer.API.Controllers.Tourist;
-using Explorer.Tours.API.Dtos;
+using Explorer.Payments.API.Dtos;
 using Explorer.Tours.API.Public.Author;
-using Explorer.Tours.API.Public.ShoppingCart;
-using Explorer.Tours.Infrastructure.Database;
+using Explorer.Payments.API.Public;
+using Explorer.Payments.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 
-namespace Explorer.Tours.Tests.Integration.ShoppingCart
+namespace Explorer.Payments.Tests.Integration.ShoppingCart
 {
     [Collection("Sequential")]
-    public class SCartCommandTests : BaseToursIntegrationTest
+    public class SCartCommandTests : BasePaymentsIntegrationTest
     {
-        public SCartCommandTests(ToursTestFactory factory) : base(factory) { }
+        public SCartCommandTests(PaymentsTestFactory factory) : base(factory) { }
 
         private static ShoppingCartController CreateController(IServiceScope scope)
         {
@@ -29,7 +29,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Korisnik -21 (turista1) već ima praznu korpu (-500) u test podacima
             var result = (ObjectResult)controller.AddItem(-21, -522);
@@ -64,7 +64,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Korisnik -22 (turista2) ima korpu (-202) sa jednom stavkom (tura -511)
             var result = (ObjectResult)controller.RemoveItem(-22, -511);
@@ -86,7 +86,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Kreiraj novu korpu i dodaj stavke za turista3 (-23)
             controller.NewCart(-23);
@@ -114,7 +114,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Kreiraj novu korpu za turista3 (-23)
             var result = (ObjectResult)controller.NewCart(-23);
@@ -134,7 +134,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Kreiraj korpu za autor2 (-12) pa je obriši
             controller.NewCart(-12);
@@ -156,7 +156,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
@@ -231,7 +231,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts
@@ -277,7 +277,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
@@ -304,7 +304,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
@@ -341,7 +341,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -12);
@@ -386,7 +386,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
@@ -412,7 +412,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
@@ -449,7 +449,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -12);
@@ -487,7 +487,7 @@ namespace Explorer.Tours.Tests.Integration.ShoppingCart
         {
             using var scope = Factory.Services.CreateScope();
             var controller = CreateController(scope);
-            var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Prvo obriši postojeću korpu ako postoji
             var existingCart = dbContext.ShoppingCarts.FirstOrDefault(c => c.UserId == -13);
