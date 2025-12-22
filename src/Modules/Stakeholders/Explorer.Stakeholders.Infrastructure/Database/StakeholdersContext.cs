@@ -85,6 +85,11 @@ public class StakeholdersContext : DbContext
             b.Property(c => c.MemberIds)
                 .HasConversion(membersConverter)
                 .HasColumnType("text");
+            
+            // Configure Status property
+            b.Property(c => c.Status)
+                .HasColumnName("Status")
+                .IsRequired();
         });
 
 

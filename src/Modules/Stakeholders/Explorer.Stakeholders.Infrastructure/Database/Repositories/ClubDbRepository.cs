@@ -40,7 +40,7 @@ namespace Explorer.Stakeholders.Infrastructure.Database.Repositories
         }
         public Club Update(Club club)
         {
-            _dbSet.Update(club);
+            _dbContext.Entry(club).State = EntityState.Modified;
             _dbContext.SaveChanges();
             return club;
         }

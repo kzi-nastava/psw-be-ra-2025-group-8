@@ -75,7 +75,7 @@ public class ClubsCommandTests : BaseStakeholdersIntegrationTest
         };
 
         // Act
-        var result = ((ObjectResult)controller.Update(-2, -22, dto).Result)?.Value as ClubDto;
+        var result = ((ObjectResult)controller.Update(-2, dto).Result)?.Value as ClubDto;
 
         // Assert – Response
         result.ShouldNotBeNull();
@@ -99,12 +99,13 @@ public class ClubsCommandTests : BaseStakeholdersIntegrationTest
         var dto = new ClubDto
         {
             Name = "Nesto",
-            Description = "Nesto"
+            Description = "Nesto",
+            OwnerId = -33
         };
 
         // Act & Assert
         Should.Throw<UnauthorizedAccessException>(() =>
-            controller.Update(-3, -33, dto));
+            controller.Update(-3, dto));
     }
 
     [Fact]

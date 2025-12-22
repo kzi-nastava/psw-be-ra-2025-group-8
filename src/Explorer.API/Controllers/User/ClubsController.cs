@@ -56,10 +56,10 @@ namespace Explorer.API.Controllers.User
 
         // Update (owner only)
         [HttpPut("{id:long}")]
-        public ActionResult<ClubDto> Update(long id, long current_owner_id, [FromBody] ClubDto dto)
+        public ActionResult<ClubDto> Update(long id, [FromBody] ClubDto dto)
         {
             int userId = ExtractUserId();
-            var updated = _clubService.Update(id, current_owner_id, dto, userId);
+            var updated = _clubService.Update(id, dto.OwnerId, dto, userId);
             return Ok(updated);
         }
 
