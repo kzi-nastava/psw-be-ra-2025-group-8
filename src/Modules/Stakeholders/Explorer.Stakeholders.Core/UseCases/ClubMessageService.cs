@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
@@ -14,13 +15,17 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IClubMessageRepository _clubMessageRepository;
         private readonly IClubRepository _clubRepository;
         private readonly INotificationRepository _notificationRepository;
+        private readonly IInternalPersonService _personService;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IMapper mapper)
+        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IInternalPersonService personService, IUserRepository userRepository, IMapper mapper)
         {
             _clubMessageRepository = clubMessageRepository;
             _clubRepository = clubRepository;
             _notificationRepository = notificationRepository;
+            _personService = personService;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
@@ -108,7 +113,37 @@ namespace Explorer.Stakeholders.Core.UseCases
         public IEnumerable<ClubMessageDto> GetClubMessages(long clubId)
         {
             var messages = _clubMessageRepository.GetByClubId(clubId);
-            return messages.Select(_mapper.Map<ClubMessageDto>).ToList();
+            var messageDtos = messages.Select(_mapper.Map<ClubMessageDto>).ToList();
+            
+            // Enrich with author information
+            var authorIds = messageDtos.Select(m => m.AuthorId).Distinct().ToList();
+            var personData = _personService.GetByUserIds(authorIds);
+            var userData = new Dictionary<long, User>();
+            
+            foreach (var userId in authorIds)
+            {
+                var user = _userRepository.GetById(userId);
+                if (user != null)
+                {
+                    userData[userId] = user;
+                }
+            }
+            
+            foreach (var messageDto in messageDtos)
+            {
+                if (personData.TryGetValue(messageDto.AuthorId, out var person))
+                {
+                    messageDto.AuthorName = person.Name;
+                    messageDto.AuthorSurname = person.Surname;
+                }
+                
+                if (userData.TryGetValue(messageDto.AuthorId, out var user))
+                {
+                    messageDto.AuthorUsername = user.Username;
+                }
+            }
+            
+            return messageDtos;
         }
     }
 }

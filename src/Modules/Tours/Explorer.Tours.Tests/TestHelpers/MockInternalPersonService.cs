@@ -31,4 +31,23 @@ public class MockInternalPersonService : IInternalPersonService
             Motto = dto.Motto
         };
     }
+
+    public Dictionary<long, PersonDto> GetByUserIds(IEnumerable<long> userIds)
+    {
+        var result = new Dictionary<long, PersonDto>();
+        
+        foreach (var userId in userIds)
+        {
+            result[userId] = new PersonDto
+            {
+                Id = userId,
+                UserId = userId,
+                Name = "Test",
+                Surname = "User",
+                Email = $"test.user{userId}@example.com"
+            };
+        }
+        
+        return result;
+    }
 }

@@ -52,4 +52,29 @@ public class PersonService : IPersonService, IInternalPersonService
         var updatedPerson = _personRepository.Update(person);
         return _mapper.Map<PersonDto>(updatedPerson);
     }
+
+    public Dictionary<long, PersonDto> GetByUserIds(IEnumerable<long> userIds)
+    {
+        var result = new Dictionary<long, PersonDto>();
+        
+        foreach (var userId in userIds.Distinct())
+        {
+            try
+            {
+                var personId = _userRepository.GetPersonId(userId);
+                var person = _personRepository.Get(personId);
+                
+                if (person != null)
+                {
+                    result[userId] = _mapper.Map<PersonDto>(person);
+                }
+            }
+            catch
+            {
+                // Skip users without person records
+            }
+        }
+        
+        return result;
+    }
 }
