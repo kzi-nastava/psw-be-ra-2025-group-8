@@ -80,7 +80,7 @@ public class EncountersAdminTests : BaseEncountersIntegrationTest
         var db = scope.ServiceProvider.GetRequiredService<EncountersContext>();
         var controller = CreateController(scope);
 
-        var updateDto = new EncounterDto
+        var updateDto = new EncounterUpdateDto
         {
             Name = "Updated encounter",
             Description = "Updated description",
