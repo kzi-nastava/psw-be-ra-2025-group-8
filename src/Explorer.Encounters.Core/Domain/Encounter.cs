@@ -17,7 +17,7 @@ namespace Explorer.Encounters.Core.Domain
     {
         SocialBased,
         LocationBased,
-        MiscBased       //nzm sta ovo treba da predstavlja
+        MiscBased       //I dont know what this means
     }
     public class Encounter : AggregateRoot
     {
