@@ -39,7 +39,7 @@ namespace Explorer.Encounters.Core.UseCases
             return MapToDto(createdEncounter);
         }
 
-        public EncounterDto UpdateEncounter(long id, EncounterDto updateDto)
+        public EncounterDto UpdateEncounter(long id, EncounterUpdateDto updateDto)
         {
             var existingEncounter = _encounterRepository.GetById(id);
             if (existingEncounter == null)
@@ -93,7 +93,7 @@ namespace Explorer.Encounters.Core.UseCases
             );
         }
 
-        private void UpdateDomain(Encounter existing, EncounterDto dto)
+        private void UpdateDomain(Encounter existing, EncounterUpdateDto dto)
         {
             existing.Name = dto.Name;
             existing.Description = dto.Description;

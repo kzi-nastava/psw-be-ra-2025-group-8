@@ -52,7 +52,7 @@ namespace Explorer.API.Controllers.Encouters
 
         [Authorize(Policy = "administratorPolicy")]
         [HttpPut("{id:long}")]
-        public ActionResult<EncounterDto> Update(long id, [FromBody] EncounterDto encounter)
+        public ActionResult<EncounterDto> Update(long id, [FromBody] EncounterUpdateDto encounter)
         {
             var updated = _encounterService.UpdateEncounter(id, encounter);
             return Ok(updated);

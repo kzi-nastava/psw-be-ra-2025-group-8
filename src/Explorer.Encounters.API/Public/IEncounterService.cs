@@ -12,7 +12,7 @@ namespace Explorer.Encounters.API.Public
         List<EncounterDto> GetAllEncounters();
         EncounterDto GetEncounterById(long id);
         EncounterDto CreateEncounter(EncounterDto createDto);
-        EncounterDto UpdateEncounter(long id, EncounterDto updateDto);
+        EncounterDto UpdateEncounter(long id, EncounterUpdateDto updateDto);
         void DeleteEncounter(long id);
     }
 }
