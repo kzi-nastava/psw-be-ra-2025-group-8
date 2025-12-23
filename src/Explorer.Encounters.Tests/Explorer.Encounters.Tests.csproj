@@ -25,9 +25,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Integration\" />
-    <Folder Include="TestData\" />
-  </ItemGroup>
-
 </Project>
