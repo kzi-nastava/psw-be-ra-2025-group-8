@@ -1,4 +1,4 @@
-﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain;
 using Explorer.Tours.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -224,6 +224,20 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
+
+        // Explicit mapping for new ReportProblem columns
+        modelBuilder.Entity<ReportProblem>(builder =>
+        {
+            builder.Property(rp => rp.Deadline)
+                   .IsRequired(false);
+
+            // keep these nullable in the domain; set default false in DB to avoid seed issues
+            builder.Property(rp => rp.IsClosedByAdmin)
+                   .HasDefaultValue(false);
+
+            builder.Property(rp => rp.IsAuthorPenalized)
+                   .HasDefaultValue(false);
+        });
 
         // TourRatingImage CONFIGURATION
         modelBuilder.Entity<TourRatingImage>(builder =>

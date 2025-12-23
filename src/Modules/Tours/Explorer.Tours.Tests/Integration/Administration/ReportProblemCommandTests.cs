@@ -2,6 +2,7 @@
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Administration;
+using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -197,6 +198,50 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         // Act & Assert
         Should.Throw<NotFoundException>(() => controller.Delete(-1000));
     }
+    /*
+    [Fact]
+    public void CloseIssueByAdmin_sets_IsClosedByAdmin()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IReportProblemService>();
+        var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        var result = service.CloseIssueByAdmin(-1);
+        result.ShouldNotBeNull();
+        result.IsClosedByAdmin.ShouldNotBeNull();
+        result.IsClosedByAdmin.Value.ShouldBeTrue();
+
+        var stored = db.ReportProblem.Find(-1L);
+        stored.ShouldNotBeNull();
+        stored!.IsClosedByAdmin.ShouldNotBeNull();
+        stored.IsClosedByAdmin.Value.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PenalizeAuthor_sets_flag_and_archives_tour()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IReportProblemService>();
+        var db = scope.ServiceProvider.GetRequiredService<ToursContext>();
+
+        // Use a report that references a tour which exists in seeded data (e.g. report -4 -> tour -3)
+        var result = service.PenalizeAuthor(-4);
+        result.ShouldNotBeNull();
+        result.IsAuthorPenalized.ShouldNotBeNull();
+        result.IsAuthorPenalized.Value.ShouldBeTrue();
+
+        var stored = db.ReportProblem.Find(-4L);
+        stored.ShouldNotBeNull();
+        stored!.IsAuthorPenalized.ShouldNotBeNull();
+        stored.IsAuthorPenalized.Value.ShouldBeTrue();
+
+        // Verify corresponding tour is archived
+        var tour = db.Tours.Find((long)stored.TourId);
+        tour.ShouldNotBeNull();
+        tour!.Status.ShouldBe(TourStatus.Archived);
+    }
+    */
+
 
     private static ReportProblemController CreateController(IServiceScope scope)
     {

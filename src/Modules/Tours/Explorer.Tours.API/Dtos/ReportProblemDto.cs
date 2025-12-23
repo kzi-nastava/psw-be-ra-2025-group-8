@@ -31,5 +31,11 @@ namespace Explorer.Tours.API.Dtos
 
         // Property koji označava da li je problem star više od 5 dana i nije rešen
         public bool IsOverdue { get; set; }
+
+        // Deadline
+        public DateTime? Deadline { get; set; }
+        public bool? IsClosedByAdmin { get; set; }
+        public bool? IsAuthorPenalized { get; set; }
+
     }
 }
