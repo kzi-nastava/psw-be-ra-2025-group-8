@@ -1,6 +1,6 @@
-﻿using Explorer.Tours.API.Dtos;
+﻿using Explorer.Payments.API.Dtos;
 using Explorer.Tours.API.Public.Author;
-using Explorer.Tours.API.Public.ShoppingCart;
+using Explorer.Payments.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Explorer.BuildingBlocks.Core.Exceptions;

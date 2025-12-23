@@ -1,6 +1,6 @@
-﻿using Explorer.Tours.API.Dtos;
+﻿using Explorer.Payments.API.Dtos;
 
-namespace Explorer.Tours.API.Public.ShoppingCart
+namespace Explorer.Payments.API.Public
 {
     public interface IShoppingCartService
     {

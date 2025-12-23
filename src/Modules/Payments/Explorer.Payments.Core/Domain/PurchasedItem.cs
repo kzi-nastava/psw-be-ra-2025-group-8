@@ -1,6 +1,6 @@
 using Explorer.BuildingBlocks.Core.Domain;
 
-namespace Explorer.Tours.Core.Domain
+namespace Explorer.Payments.Core.Domain
 {
     public class PurchasedItem : Entity
     {
