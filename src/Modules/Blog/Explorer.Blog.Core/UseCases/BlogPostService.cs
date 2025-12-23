@@ -5,17 +5,22 @@ using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Core.Domain;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Blog.Core.UseCases;
 
 public class BlogPostService : IBlogPostService
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly IInternalPersonService _personService;
+    private readonly IInternalUserService _userService;
     private readonly IMapper _mapper;
 
-    public BlogPostService(IBlogPostRepository blogPostRepository, IMapper mapper)
+    public BlogPostService(IBlogPostRepository blogPostRepository, IInternalPersonService personService, IInternalUserService userService, IMapper mapper)
     {
         _blogPostRepository = blogPostRepository;
+        _personService = personService;
+        _userService = userService;
         _mapper = mapper;
     }
 
@@ -179,6 +184,48 @@ public class BlogPostService : IBlogPostService
             }
         }
 
+        // Enrich with author information
+        EnrichBlogPostWithUserInfo(dto);
+
         return dto;
+    }
+
+    private void EnrichBlogPostWithUserInfo(BlogPostDto blogPostDto)
+    {
+        if (blogPostDto == null) return;
+
+        // Enrich author info
+        try
+        {
+            var authorPerson = _personService.GetByUserId(blogPostDto.AuthorId);
+            var authorUser = _userService.GetById(blogPostDto.AuthorId);
+            
+            blogPostDto.AuthorName = authorPerson?.Name ?? "";
+            blogPostDto.AuthorSurname = authorPerson?.Surname ?? "";
+            blogPostDto.AuthorUsername = authorUser?.Username ?? "";
+        }
+        catch { }
+
+        // Enrich comments with person info
+        if (blogPostDto.Comments != null && blogPostDto.Comments.Any())
+        {
+            var personIds = blogPostDto.Comments.Select(c => c.PersonId).Distinct().ToList();
+            var personData = _personService.GetByUserIds(personIds);
+            var userData = _userService.GetByIds(personIds);
+
+            foreach (var comment in blogPostDto.Comments)
+            {
+                if (personData.TryGetValue(comment.PersonId, out var person))
+                {
+                    comment.PersonName = person.Name;
+                    comment.PersonSurname = person.Surname;
+                }
+                
+                if (userData.TryGetValue(comment.PersonId, out var user))
+                {
+                    comment.PersonUsername = user.Username;
+                }
+            }
+        }
     }
 }

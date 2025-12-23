@@ -16,16 +16,16 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IClubRepository _clubRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IInternalPersonService _personService;
-        private readonly IUserRepository _userRepository;
+        private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
 
-        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IInternalPersonService personService, IUserRepository userRepository, IMapper mapper)
+        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IInternalPersonService personService, IInternalUserService userService, IMapper mapper)
         {
             _clubMessageRepository = clubMessageRepository;
             _clubRepository = clubRepository;
             _notificationRepository = notificationRepository;
             _personService = personService;
-            _userRepository = userRepository;
+            _userService = userService;
             _mapper = mapper;
         }
 
@@ -118,16 +118,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             // Enrich with author information
             var authorIds = messageDtos.Select(m => m.AuthorId).Distinct().ToList();
             var personData = _personService.GetByUserIds(authorIds);
-            var userData = new Dictionary<long, User>();
-            
-            foreach (var userId in authorIds)
-            {
-                var user = _userRepository.GetById(userId);
-                if (user != null)
-                {
-                    userData[userId] = user;
-                }
-            }
+            var userData = _userService.GetByIds(authorIds);
             
             foreach (var messageDto in messageDtos)
             {

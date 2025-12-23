@@ -14,6 +14,9 @@ public class StakeholderProfile : Profile
         CreateMap<RatingNoIdDto, Rating>();
 
         CreateMap<Person, PersonDto>().ReverseMap();
+        
+        CreateMap<User, UserDto>()
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
 
         CreateMap<Message, MessageDto>().ReverseMap();
 

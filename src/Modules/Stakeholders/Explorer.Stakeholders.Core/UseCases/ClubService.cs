@@ -18,6 +18,7 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly INotificationService _notificationService;
         private readonly IUserRepository _userRepository;
         private readonly IInternalPersonService _personService;
+        private readonly IInternalUserService _userService;
         private readonly IMapper _mapper;
 
         public ClubService(
@@ -27,6 +28,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             INotificationService notificationService, 
             IUserRepository userRepository,
             IInternalPersonService personService,
+            IInternalUserService userService,
             IMapper mapper, 
             INotificationRepository notificationRepository)
         {
@@ -36,6 +38,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             _notificationService = notificationService;
             _userRepository = userRepository;
             _personService = personService;
+            _userService = userService;
             _mapper = mapper;
             _notificationRepository = notificationRepository;
         }
@@ -433,7 +436,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             try
             {
                 var ownerPerson = _personService.GetByUserId(clubDto.OwnerId);
-                var ownerUser = _userRepository.GetById(clubDto.OwnerId);
+                var ownerUser = _userService.GetById(clubDto.OwnerId);
                 
                 clubDto.OwnerName = ownerPerson?.Name ?? "";
                 clubDto.OwnerSurname = ownerPerson?.Surname ?? "";
@@ -445,16 +448,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             if (clubDto.MemberIds != null && clubDto.MemberIds.Any())
             {
                 var personData = _personService.GetByUserIds(clubDto.MemberIds);
-                var userData = new Dictionary<long, User>();
-                
-                foreach (var memberId in clubDto.MemberIds)
-                {
-                    var user = _userRepository.GetById(memberId);
-                    if (user != null)
-                    {
-                        userData[memberId] = user;
-                    }
-                }
+                var userData = _userService.GetByIds(clubDto.MemberIds);
 
                 clubDto.Members = clubDto.MemberIds.Select(memberId =>
                 {
@@ -486,14 +480,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             var clubIds = invitationList.Select(i => i.ClubId).Distinct().ToList();
             
             var personData = _personService.GetByUserIds(touristIds);
-            var userData = new Dictionary<long, User>();
+            var userData = _userService.GetByIds(touristIds);
             var clubData = new Dictionary<long, Club>();
-            
-            foreach (var userId in touristIds)
-            {
-                var user = _userRepository.GetById(userId);
-                if (user != null) userData[userId] = user;
-            }
             
             foreach (var clubId in clubIds)
             {
@@ -530,14 +518,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             var clubIds = requestList.Select(r => r.ClubId).Distinct().ToList();
             
             var personData = _personService.GetByUserIds(touristIds);
-            var userData = new Dictionary<long, User>();
+            var userData = _userService.GetByIds(touristIds);
             var clubData = new Dictionary<long, Club>();
-            
-            foreach (var userId in touristIds)
-            {
-                var user = _userRepository.GetById(userId);
-                if (user != null) userData[userId] = user;
-            }
             
             foreach (var clubId in clubIds)
             {

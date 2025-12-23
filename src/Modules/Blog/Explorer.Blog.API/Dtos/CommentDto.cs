@@ -4,6 +4,9 @@
     {
         public long Id { get; set; }
         public long PersonId { get; set; }
+        public string PersonName { get; set; }
+        public string PersonSurname { get; set; }
+        public string PersonUsername { get; set; }
         public string Text { get; set; }
         public DateTime CreationTime { get; set; }
         public DateTime? LastEditTime { get; set; }

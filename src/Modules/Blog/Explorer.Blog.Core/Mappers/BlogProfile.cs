@@ -12,7 +12,8 @@ public class BlogProfile : Profile
 
         CreateMap<BlogPost, BlogPostDto>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => (int)src.Status))
-            .ForMember(dest => dest.PopularityStatus, opt => opt.MapFrom(src => (int)src.PopularityStatus));
+            .ForMember(dest => dest.PopularityStatus, opt => opt.MapFrom(src => (int)src.PopularityStatus))
+            .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments));
 
         CreateMap<CreateBlogPostDto, BlogPost>();
         CreateMap<UpdateBlogPostDto, BlogPost>();

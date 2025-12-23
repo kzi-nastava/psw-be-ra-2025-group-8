@@ -5,17 +5,22 @@ using AutoMapper;
 using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Blog.Core.UseCases;
 
 public class BlogCommentService : IBlogCommentService
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly IInternalPersonService _personService;
+    private readonly IInternalUserService _userService;
     private readonly IMapper _mapper;
 
-    public BlogCommentService(IBlogPostRepository blogPostRepository, IMapper mapper)
+    public BlogCommentService(IBlogPostRepository blogPostRepository, IInternalPersonService personService, IInternalUserService userService, IMapper mapper)
     {
         _blogPostRepository = blogPostRepository;
+        _personService = personService;
+        _userService = userService;
         _mapper = mapper;
     }
 
@@ -37,7 +42,9 @@ public class BlogCommentService : IBlogCommentService
 
             _blogPostRepository.Update(blogPost);
 
-            return _mapper.Map<CommentDto>(newComment);
+            var commentDto = _mapper.Map<CommentDto>(newComment);
+            EnrichCommentWithUserInfo(commentDto);
+            return commentDto;
         }
         catch (InvalidOperationException e)
         {
@@ -58,9 +65,13 @@ public class BlogCommentService : IBlogCommentService
         if (blogPost == null)
             throw new KeyNotFoundException($"Blog Post with ID {blogId} not found.");
 
-        return _mapper.Map<List<CommentDto>>(
+        var commentDtos = _mapper.Map<List<CommentDto>>(
             blogPost.Comments.OrderByDescending(c => c.CreationTime).ToList()
         );
+        
+        EnrichCommentsWithUserInfo(commentDtos);
+        
+        return commentDtos;
     }
 
     public CommentDto Update(long userId, long commentId, CommentCreationDto commentData)
@@ -81,7 +92,9 @@ public class BlogCommentService : IBlogCommentService
 
             _blogPostRepository.Update(blogPost);
 
-            return _mapper.Map<CommentDto>(updatedComment);
+            var commentDto = _mapper.Map<CommentDto>(updatedComment);
+            EnrichCommentWithUserInfo(commentDto);
+            return commentDto;
         }
         catch (KeyNotFoundException)
         {
@@ -123,6 +136,45 @@ public class BlogCommentService : IBlogCommentService
         {
             // not author or passed 15 min threshold
             throw;
+        }
+    }
+
+    private void EnrichCommentWithUserInfo(CommentDto commentDto)
+    {
+        if (commentDto == null) return;
+        
+        try
+        {
+            var person = _personService.GetByUserId(commentDto.PersonId);
+            var user = _userService.GetById(commentDto.PersonId);
+            
+            commentDto.PersonName = person?.Name ?? "";
+            commentDto.PersonSurname = person?.Surname ?? "";
+            commentDto.PersonUsername = user?.Username ?? "";
+        }
+        catch { }
+    }
+
+    private void EnrichCommentsWithUserInfo(List<CommentDto> comments)
+    {
+        if (comments == null || !comments.Any()) return;
+
+        var personIds = comments.Select(c => c.PersonId).Distinct().ToList();
+        var personData = _personService.GetByUserIds(personIds);
+        var userData = _userService.GetByIds(personIds);
+
+        foreach (var comment in comments)
+        {
+            if (personData.TryGetValue(comment.PersonId, out var person))
+            {
+                comment.PersonName = person.Name;
+                comment.PersonSurname = person.Surname;
+            }
+            
+            if (userData.TryGetValue(comment.PersonId, out var user))
+            {
+                comment.PersonUsername = user.Username;
+            }
         }
     }
 }
