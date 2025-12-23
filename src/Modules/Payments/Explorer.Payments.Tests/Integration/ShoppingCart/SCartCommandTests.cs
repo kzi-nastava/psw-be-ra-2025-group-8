@@ -107,6 +107,10 @@ namespace Explorer.Payments.Tests.Integration.ShoppingCart
                 .FirstOrDefault(c => c.UserId == -23);
             cart.ShouldNotBeNull();
             cart.Items.Count.ShouldBe(0);
+
+            // Cleanup: remove the created cart so other tests are not affected
+            dbContext.ShoppingCarts.Remove(cart);
+            dbContext.SaveChanges();
         }
 
         [Fact]
