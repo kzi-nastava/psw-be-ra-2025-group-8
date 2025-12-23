@@ -7,10 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Explorer.Payments.Tests;
 using Explorer.Payments.Infrastructure.Database;
 
-namespace Explorer.Tours.Tests.Integration.ShoppingCart
+namespace Explorer.Payments.Tests.Integration.ShoppingCart
 {
     [Collection("Sequential")]
     public class SCartQueryTests : BasePaymentsIntegrationTest

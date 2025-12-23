@@ -37,5 +37,7 @@ public static class PaymentsStartup
         services.AddDbContext<PaymentsContext>(opt =>
             opt.UseNpgsql(dataSource,
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "payments")));
+
+        // ITourPriceProvider is registered at API level (Explorer.API) so infra does not depend on other modules.
     }
 }
