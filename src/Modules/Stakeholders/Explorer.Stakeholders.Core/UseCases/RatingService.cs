@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
-using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.API.Dtos;
+using Explorer.Stakeholders.API.Internal;
+using Explorer.Stakeholders.API.Public;
 using Explorer.Stakeholders.Core.Domain;
 using Explorer.Stakeholders.Core.Domain.RepositoryInterfaces;
 
@@ -10,11 +11,13 @@ namespace Explorer.Stakeholders.Core.UseCases
     public class RatingService : IRatingService
     {
         private readonly IRatingRepository _ratingRepository;
+        private readonly IInternalUserService _internalUserService;
         private readonly IMapper _mapper;
 
-        public RatingService(IRatingRepository ratingRepository, IMapper mapper)
+        public RatingService(IRatingRepository ratingRepository, IInternalUserService internalUserService, IMapper mapper)
         {
             _ratingRepository = ratingRepository;
+            _internalUserService = internalUserService;
             _mapper = mapper;
         }
 
@@ -27,13 +30,13 @@ namespace Explorer.Stakeholders.Core.UseCases
             //rating.Validate();
 
             var result = _ratingRepository.Create(rating);
-            return _mapper.Map<RatingDto>(result);
+            return EnrichRatingDto(_mapper.Map<RatingDto>(result));
         }
 
         public PagedResult<RatingDto> GetPaged(int page, int pageSize)
         {
             var result = _ratingRepository.GetPaged(page, pageSize);
-            var items = result.Results.Select(_mapper.Map<RatingDto>).ToList();
+            var items = result.Results.Select(r => EnrichRatingDto(_mapper.Map<RatingDto>(r))).ToList();
             return new PagedResult<RatingDto>(items, result.TotalCount);
         }
 
@@ -43,13 +46,13 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             if (rating == null) return null;
 
-            return _mapper.Map<RatingDto>(rating);
+            return EnrichRatingDto(_mapper.Map<RatingDto>(rating));
         }
 
         public RatingDto Get(int id)
         {
             var result = _ratingRepository.Get(id);
-            return _mapper.Map<RatingDto>(result);
+            return EnrichRatingDto(_mapper.Map<RatingDto>(result));
         }
 
         public RatingDto UpdateByUserId(RatingNoIdDto ratingDto, long userId)
@@ -66,7 +69,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             existingRating.CreationDate = DateTime.UtcNow;
 
             var result = _ratingRepository.Update(existingRating);
-            return _mapper.Map<RatingDto>(result);
+            return EnrichRatingDto(_mapper.Map<RatingDto>(result));
         }
 
         public RatingDto Update(RatingDto ratingDto, long userId)
@@ -82,7 +85,7 @@ namespace Explorer.Stakeholders.Core.UseCases
             existingRating.CreationDate = existingRating.CreationDate;
 
             var result = _ratingRepository.Update(existingRating);
-            return _mapper.Map<RatingDto>(result);
+            return EnrichRatingDto(_mapper.Map<RatingDto>(result));
         }
 
         public void DeleteByUserId(long userId)
@@ -107,6 +110,12 @@ namespace Explorer.Stakeholders.Core.UseCases
             }
 
             _ratingRepository.Delete(id);
+        }
+
+        private RatingDto EnrichRatingDto(RatingDto dto)
+        {
+            dto.Username = _internalUserService.GetUsernameById(dto.UserId);
+            return dto;
         }
     }
 }
