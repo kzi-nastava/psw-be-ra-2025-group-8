@@ -40,24 +40,30 @@ namespace Explorer.Stakeholders.Core.UseCases
         {
             var result = _clubRepository.GetPaged(page, pageSize);
 
-            var items = result.Results.Select(_mapper.Map<ClubDto>).ToList();
+            var items = result.Results
+                .Select(_mapper.Map<ClubDto>)
+                .Select(EnrichClubWithUsernames)
+                .ToList();
             return new PagedResult<ClubDto>(items, result.TotalCount);
         }
         public ClubDto Create(CreateClubDto dto, long ownerId)
         {
             var club = new Club(ownerId, dto.Name, dto.Description, dto.ImageUrls);
             var created = _clubRepository.Create(club);
-            return _mapper.Map<ClubDto>(created);
+            var clubDto = _mapper.Map<ClubDto>(created);
+            return EnrichClubWithUsernames(clubDto);
         }
         public ClubDto Get(long id)
         {
             var club = _clubRepository.Get(id);
-            return _mapper.Map<ClubDto>(club);
+            var dto = _mapper.Map<ClubDto>(club);
+            return EnrichClubWithUsernames(dto);
         }
         public IEnumerable<ClubDto> GetAll()
         {
             var clubs = _clubRepository.GetAll();
-            return _mapper.Map<IEnumerable<ClubDto>>(clubs);
+            var dtos = _mapper.Map<IEnumerable<ClubDto>>(clubs);
+            return dtos.Select(EnrichClubWithUsernames);
         }
         public void Join(long id, long touristId)
         {
@@ -90,7 +96,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             // 3. sačuvaj
             var updated = _clubRepository.Update(existing);
 
-            return _mapper.Map<ClubDto>(updated);
+            var updatedDto = _mapper.Map<ClubDto>(updated);
+            return EnrichClubWithUsernames(updatedDto);
         }
 
 
@@ -173,7 +180,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                 RelatedEntityType = "Club"
             });
 
-            return _mapper.Map<ClubInvitationDto>(created);
+            var invitationDto = _mapper.Map<ClubInvitationDto>(created);
+            return EnrichInvitationWithUsername(invitationDto);
         }
 
         public IEnumerable<ClubInvitationDto> GetMyInvitations(long touristId)
@@ -181,7 +189,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             var invitations = _invitationRepository.GetByTouristId(touristId)
                 .Where(i => i.Status == ClubInvitationStatus.Pending);
             
-            return _mapper.Map<IEnumerable<ClubInvitationDto>>(invitations);
+            var dtos = _mapper.Map<IEnumerable<ClubInvitationDto>>(invitations);
+            return dtos.Select(EnrichInvitationWithUsername);
         }
 
         public IEnumerable<ClubInvitationDto> GetClubInvitations(long clubId, long ownerId)
@@ -194,7 +203,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             var invitations = _invitationRepository.GetByClubId(clubId)
                 .Where(i => i.Status == ClubInvitationStatus.Pending);
             
-            return _mapper.Map<IEnumerable<ClubInvitationDto>>(invitations);
+            var dtos = _mapper.Map<IEnumerable<ClubInvitationDto>>(invitations);
+            return dtos.Select(EnrichInvitationWithUsername);
         }
 
         public ClubInvitationDto AcceptInvitation(long invitationId, long touristId)
@@ -227,7 +237,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                 RelatedEntityType = "Club"
             });
 
-            return _mapper.Map<ClubInvitationDto>(invitation);
+            var invitationDto = _mapper.Map<ClubInvitationDto>(invitation);
+            return EnrichInvitationWithUsername(invitationDto);
         }
 
         public ClubInvitationDto RejectInvitation(long invitationId, long touristId)
@@ -256,7 +267,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                 RelatedEntityType = "Club"
             });
 
-            return _mapper.Map<ClubInvitationDto>(invitation);
+            var invitationDto = _mapper.Map<ClubInvitationDto>(invitation);
+            return EnrichInvitationWithUsername(invitationDto);
         }
 
         public void CancelInvitation(long invitationId, long ownerId)
@@ -292,7 +304,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             var request = new ClubJoinRequest(clubId, touristId);
             var created = _joinRequestRepository.Create(request);
             
-            return _mapper.Map<ClubJoinRequestDto>(created);
+            var requestDto = _mapper.Map<ClubJoinRequestDto>(created);
+            return EnrichJoinRequestWithUsername(requestDto);
         }
 
         public void CancelJoinRequest(long requestId, long touristId)
@@ -330,7 +343,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                 RelatedEntityType = "Club"
             });
 
-            return _mapper.Map<ClubJoinRequestDto>(request);
+            var requestDto = _mapper.Map<ClubJoinRequestDto>(request);
+            return EnrichJoinRequestWithUsername(requestDto);
         }
 
         public ClubJoinRequestDto RejectJoinRequest(long requestId, long ownerId)
@@ -354,7 +368,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                 RelatedEntityType = "Club"
             });
 
-            return _mapper.Map<ClubJoinRequestDto>(request);
+            var requestDto = _mapper.Map<ClubJoinRequestDto>(request);
+            return EnrichJoinRequestWithUsername(requestDto);
         }
 
         public IEnumerable<ClubJoinRequestDto> GetClubJoinRequests(long clubId, long ownerId)
@@ -367,7 +382,8 @@ namespace Explorer.Stakeholders.Core.UseCases
             var requests = _joinRequestRepository.GetByClubId(clubId)
                 .Where(r => r.Status == ClubJoinRequestStatus.Pending);
             
-            return _mapper.Map<IEnumerable<ClubJoinRequestDto>>(requests);
+            var dtos = _mapper.Map<IEnumerable<ClubJoinRequestDto>>(requests);
+            return dtos.Select(EnrichJoinRequestWithUsername);
         }
 
         public IEnumerable<ClubJoinRequestDto> GetMyJoinRequests(long touristId)
@@ -375,7 +391,33 @@ namespace Explorer.Stakeholders.Core.UseCases
             var requests = _joinRequestRepository.GetByTouristId(touristId)
                 .Where(r => r.Status == ClubJoinRequestStatus.Pending);
             
-            return _mapper.Map<IEnumerable<ClubJoinRequestDto>>(requests);
+            var dtos = _mapper.Map<IEnumerable<ClubJoinRequestDto>>(requests);
+            return dtos.Select(EnrichJoinRequestWithUsername);
+        }
+
+        private ClubDto EnrichClubWithUsernames(ClubDto dto)
+        {
+            dto.OwnerUsername = GetUsernameById(dto.OwnerId);
+            dto.MemberUsernames = dto.MemberIds.Select(GetUsernameById).ToList();
+            return dto;
+        }
+
+        private ClubJoinRequestDto EnrichJoinRequestWithUsername(ClubJoinRequestDto dto)
+        {
+            dto.TouristUsername = GetUsernameById(dto.TouristId);
+            return dto;
+        }
+
+        private ClubInvitationDto EnrichInvitationWithUsername(ClubInvitationDto dto)
+        {
+            dto.TouristUsername = GetUsernameById(dto.TouristId);
+            return dto;
+        }
+
+        private string GetUsernameById(long userId)
+        {
+            var user = _userRepository.GetById(userId);
+            return user?.Username ?? $"User#{userId}";
         }
     }
 }
