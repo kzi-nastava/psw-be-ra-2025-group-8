@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Internal\" />
     <Folder Include="Public\ShoppingCart\" />
   </ItemGroup>
 

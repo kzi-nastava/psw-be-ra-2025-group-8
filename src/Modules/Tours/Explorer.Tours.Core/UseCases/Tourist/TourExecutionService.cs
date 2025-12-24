@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
@@ -14,6 +15,7 @@ public class TourExecutionService : ITourExecutionService
     private readonly ICrudRepository<TourExecution> _crudRepository;
     private readonly IKeyPointRepository _keyPointRepository;
     private readonly IKeyPointReachedRepository _keyPointReachedRepository;
+    private readonly IInternalTourService _internalTourService;
     private readonly IMapper _mapper;
 
     // Proximity threshold (meters)
@@ -24,26 +26,37 @@ public class TourExecutionService : ITourExecutionService
         ICrudRepository<TourExecution> crudRepository,
         IKeyPointRepository keyPointRepository,
         IKeyPointReachedRepository keyPointReachedRepository,
+        IInternalTourService internalTourService,
         IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
         _crudRepository = crudRepository;
         _keyPointRepository = keyPointRepository;
         _keyPointReachedRepository = keyPointReachedRepository;
+        _internalTourService = internalTourService;
         _mapper = mapper;
     }
 
     public PagedResult<TourExecutionDto> GetPaged(int page, int pageSize)
     {
         var result = _crudRepository.GetPaged(page, pageSize);
-        var items = result.Results.Select(_mapper.Map<TourExecutionDto>).ToList();
+        var items = result.Results.Select(te =>
+        {
+            var dto = _mapper.Map<TourExecutionDto>(te);
+            dto.TourName = _internalTourService.GetTourNameById(te.IdTour);
+            return dto;
+        }).ToList();
         return new PagedResult<TourExecutionDto>(items, result.TotalCount);
     }
 
     public TourExecutionDto Get(int id)
     {
         var tourExecution = _tourExecutionRepository.Get(id);
-        return tourExecution != null ? _mapper.Map<TourExecutionDto>(tourExecution) : null;
+        if (tourExecution == null) return null;
+        
+        var dto = _mapper.Map<TourExecutionDto>(tourExecution);
+        dto.TourName = _internalTourService.GetTourNameById(tourExecution.IdTour);
+        return dto;
     }
 
     public TourExecutionDto Create(TourExecutionDto tourExecutionDto)
@@ -71,7 +84,9 @@ public class TourExecutionService : ITourExecutionService
         );
 
         var result = _tourExecutionRepository.Create(tourExecution);
-        return _mapper.Map<TourExecutionDto>(result);
+        var dto = _mapper.Map<TourExecutionDto>(result);
+        dto.TourName = _internalTourService.GetTourNameById(result.IdTour);
+        return dto;
     }
 
     public TourExecutionDto Update(TourExecutionDto tourExecutionDto)
@@ -85,25 +100,41 @@ public class TourExecutionService : ITourExecutionService
         existing.UpdateCompletionPercentage(tourExecutionDto.CompletionPercentage);
 
         var result = _tourExecutionRepository.Update(existing);
-        return _mapper.Map<TourExecutionDto>(result);
+        var dto = _mapper.Map<TourExecutionDto>(result);
+        dto.TourName = _internalTourService.GetTourNameById(result.IdTour);
+        return dto;
     }
 
     public TourExecutionDto GetByTouristAndTour(int touristId, int tourId)
     {
         var tourExecution = _tourExecutionRepository.GetByTouristAndTour(touristId, tourId);
-        return tourExecution != null ? _mapper.Map<TourExecutionDto>(tourExecution) : null;
+        if (tourExecution == null) return null;
+        
+        var dto = _mapper.Map<TourExecutionDto>(tourExecution);
+        dto.TourName = _internalTourService.GetTourNameById(tourExecution.IdTour);
+        return dto;
     }
 
     public List<TourExecutionDto> GetByTourist(int touristId)
     {
         var executions = _tourExecutionRepository.GetByTourist(touristId);
-        return executions.Select(_mapper.Map<TourExecutionDto>).ToList();
+        return executions.Select(te =>
+        {
+            var dto = _mapper.Map<TourExecutionDto>(te);
+            dto.TourName = _internalTourService.GetTourNameById(te.IdTour);
+            return dto;
+        }).ToList();
     }
 
     public List<TourExecutionDto> GetByTour(int tourId)
     {
         var executions = _tourExecutionRepository.GetByTour(tourId);
-        return executions.Select(_mapper.Map<TourExecutionDto>).ToList();
+        return executions.Select(te =>
+        {
+            var dto = _mapper.Map<TourExecutionDto>(te);
+            dto.TourName = _internalTourService.GetTourNameById(te.IdTour);
+            return dto;
+        }).ToList();
     }
 
     public void Delete(int id)
@@ -183,7 +214,18 @@ public class TourExecutionService : ITourExecutionService
     public List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId)
     {
         var reachedKeyPoints = _keyPointReachedRepository.GetByTourExecution(tourExecutionId);
-        return reachedKeyPoints.Select(_mapper.Map<KeyPointReachedDto>).ToList();
+        
+        // Get the tour execution to know which tour we're dealing with
+        var tourExecution = _crudRepository.Get(tourExecutionId);
+        if (tourExecution == null)
+            throw new KeyNotFoundException($"TourExecution with id {tourExecutionId} not found.");
+        
+        return reachedKeyPoints.Select(kpr =>
+        {
+            var dto = _mapper.Map<KeyPointReachedDto>(kpr);
+            dto.KeyPointName = _internalTourService.GetKeyPointNameByTourAndOrder(tourExecution.IdTour, kpr.KeyPointOrder);
+            return dto;
+        }).ToList();
     }
 
     public KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder)
