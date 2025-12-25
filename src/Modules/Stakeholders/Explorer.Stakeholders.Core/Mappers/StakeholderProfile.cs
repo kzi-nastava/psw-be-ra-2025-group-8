@@ -44,5 +44,7 @@ public class StakeholderProfile : Profile
 
         //mapper za poruke kluba
         CreateMap<ClubMessage, ClubMessageDto>().ReverseMap();
+
+        CreateMap<Wallet, WalletDto>().ReverseMap();
     }
 }
