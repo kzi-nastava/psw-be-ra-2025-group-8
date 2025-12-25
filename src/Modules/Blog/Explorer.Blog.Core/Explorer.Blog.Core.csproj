@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Explorer.Blog.API\Explorer.Blog.API.csproj" />
+    <ProjectReference Include="..\..\Stakeholders\Explorer.Stakeholders.API\Explorer.Stakeholders.API.csproj" />
   </ItemGroup>
 
 </Project>

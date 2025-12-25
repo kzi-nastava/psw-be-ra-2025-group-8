@@ -14,13 +14,15 @@ namespace Explorer.Stakeholders.Core.UseCases
         private readonly IClubMessageRepository _clubMessageRepository;
         private readonly IClubRepository _clubRepository;
         private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IMapper mapper)
+        public ClubMessageService(IClubMessageRepository clubMessageRepository, IClubRepository clubRepository, INotificationRepository notificationRepository, IUserRepository userRepository, IMapper mapper)
         {
             _clubMessageRepository = clubMessageRepository;
             _clubRepository = clubRepository;
             _notificationRepository = notificationRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
@@ -64,7 +66,8 @@ namespace Explorer.Stakeholders.Core.UseCases
                 _notificationRepository.Create(ownerNotification);
             }
 
-            return _mapper.Map<ClubMessageDto>(created);
+            var messageDto = _mapper.Map<ClubMessageDto>(created);
+            return EnrichMessageWithUsername(messageDto);
         }
 
         public ClubMessageDto UpdateMessage(long messageId, UpdateClubMessageDto dto, long userId)
@@ -83,7 +86,8 @@ namespace Explorer.Stakeholders.Core.UseCases
 
             message.Update(dto.Content);
             var updated = _clubMessageRepository.Update(message);
-            return _mapper.Map<ClubMessageDto>(updated);
+            var messageDto = _mapper.Map<ClubMessageDto>(updated);
+            return EnrichMessageWithUsername(messageDto);
         }
 
         public void DeleteMessage(long messageId, long userId)
@@ -108,7 +112,20 @@ namespace Explorer.Stakeholders.Core.UseCases
         public IEnumerable<ClubMessageDto> GetClubMessages(long clubId)
         {
             var messages = _clubMessageRepository.GetByClubId(clubId);
-            return messages.Select(_mapper.Map<ClubMessageDto>).ToList();
+            var dtos = messages.Select(_mapper.Map<ClubMessageDto>);
+            return dtos.Select(EnrichMessageWithUsername).ToList();
+        }
+
+        private ClubMessageDto EnrichMessageWithUsername(ClubMessageDto dto)
+        {
+            dto.AuthorUsername = GetUsernameById(dto.AuthorId);
+            return dto;
+        }
+
+        private string GetUsernameById(long userId)
+        {
+            var user = _userRepository.GetById(userId);
+            return user?.Username ?? $"User#{userId}";
         }
     }
 }

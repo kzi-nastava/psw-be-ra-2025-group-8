@@ -31,6 +31,7 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IInternalPersonService, PersonService>();
+        services.AddScoped<IInternalUserService, InternalUserService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
 
 
