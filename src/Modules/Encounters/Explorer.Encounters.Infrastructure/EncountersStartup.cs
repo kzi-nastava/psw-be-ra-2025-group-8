@@ -23,13 +23,14 @@ public static class EncountersStartup
 
     private static void SetupCore(IServiceCollection services)
     {
-        // here goes DI for services from Core (EncountersService etc.)
         services.AddScoped<IEncounterService, EncounterService>();
+        services.AddScoped<IEncounterParticipationService, EncounterParticipationService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped<IEncounterRepository, EncounterRepository>();
+        services.AddScoped<IEncounterParticipationRepository, EncounterParticipationRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("encounters"));
         dataSourceBuilder.EnableDynamicJson();
@@ -40,4 +41,3 @@ public static class EncountersStartup
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "encounters")));
     }
 }
-

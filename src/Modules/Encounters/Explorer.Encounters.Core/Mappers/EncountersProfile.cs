@@ -9,6 +9,6 @@ public class EncountersProfile : Profile
     public EncountersProfile()
     {
         CreateMap<EncounterDto, Encounter>().ReverseMap();
-
+        CreateMap<EncounterParticipationDto, EncounterParticipation>().ReverseMap();
     }
 }
