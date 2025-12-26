@@ -1,4 +1,4 @@
-﻿using Explorer.API.Controllers.Encouters;
+﻿using Explorer.API.Controllers.Administration;
 using Explorer.Encounters.API.Dtos;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;

@@ -60,6 +60,39 @@ namespace Explorer.Encounters.Core.UseCases
             _encounterRepository.Delete(id);
         }
 
+        public EncounterDto PublishEncounter(long id)
+        {
+            var encounter = _encounterRepository.GetById(id);
+            if (encounter == null)
+                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
+
+            encounter.Publish();
+            var updatedEncounter = _encounterRepository.Update(encounter);
+            return MapToDto(updatedEncounter);
+        }
+
+        public EncounterDto ArchiveEncounter(long id)
+        {
+            var encounter = _encounterRepository.GetById(id);
+            if (encounter == null)
+                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
+
+            encounter.Archive();
+            var updatedEncounter = _encounterRepository.Update(encounter);
+            return MapToDto(updatedEncounter);
+        }
+
+        public EncounterDto ReactivateEncounter(long id)
+        {
+            var encounter = _encounterRepository.GetById(id);
+            if (encounter == null)
+                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
+
+            encounter.Reactivate();
+            var updatedEncounter = _encounterRepository.Update(encounter);
+            return MapToDto(updatedEncounter);
+        }
+
         // --------------------
         // Manual mapping
         // --------------------
@@ -76,7 +109,9 @@ namespace Explorer.Encounters.Core.UseCases
                 Longitude = encounter.Longitude ?? 0,
                 Type = encounter.Type.ToString(),
                 XPReward = encounter.XPReward,
-                Status = encounter.Status.ToString()
+                Status = encounter.Status.ToString(),
+                PublishedAt = encounter.PublishedAt,
+                ArchivedAt = encounter.ArchivedAt
             };
         }
 

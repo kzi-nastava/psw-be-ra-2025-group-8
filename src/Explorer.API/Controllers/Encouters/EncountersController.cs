@@ -3,7 +3,7 @@ using Explorer.Encounters.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Explorer.API.Controllers.Encouters
+namespace Explorer.API.Controllers.Administration
 {
     [Route("api/administration/encounters")]
     [ApiController]
@@ -68,6 +68,42 @@ namespace Explorer.API.Controllers.Encouters
         {
             _encounterService.DeleteEncounter(id);
             return Ok();
+        }
+
+        // --------------------
+        // PUBLISH
+        // --------------------
+
+        [Authorize(Policy = "administratorPolicy")]
+        [HttpPut("{id:long}/publish")]
+        public ActionResult<EncounterDto> Publish(long id)
+        {
+            var result = _encounterService.PublishEncounter(id);
+            return Ok(result);
+        }
+
+        // --------------------
+        // ARCHIVE
+        // --------------------
+
+        [Authorize(Policy = "administratorPolicy")]
+        [HttpPut("{id:long}/archive")]
+        public ActionResult<EncounterDto> Archive(long id)
+        {
+            var result = _encounterService.ArchiveEncounter(id);
+            return Ok(result);
+        }
+
+        // --------------------
+        // REACTIVATE
+        // --------------------
+
+        [Authorize(Policy = "administratorPolicy")]
+        [HttpPut("{id:long}/reactivate")]
+        public ActionResult<EncounterDto> Reactivate(long id)
+        {
+            var result = _encounterService.ReactivateEncounter(id);
+            return Ok(result);
         }
     }
 }
