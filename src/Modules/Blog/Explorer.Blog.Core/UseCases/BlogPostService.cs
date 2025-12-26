@@ -5,17 +5,20 @@ using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Core.Domain;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Blog.Core.UseCases;
 
 public class BlogPostService : IBlogPostService
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly IInternalUserService _userService;
     private readonly IMapper _mapper;
 
-    public BlogPostService(IBlogPostRepository blogPostRepository, IMapper mapper)
+    public BlogPostService(IBlogPostRepository blogPostRepository, IInternalUserService userService, IMapper mapper)
     {
         _blogPostRepository = blogPostRepository;
+        _userService = userService;
         _mapper = mapper;
     }
 
@@ -169,6 +172,7 @@ public class BlogPostService : IBlogPostService
         var dto = _mapper.Map<BlogPostDto>(blogPost);
         dto.UpvoteCount = blogPost.GetUpvoteCount();
         dto.DownvoteCount = blogPost.GetDownvoteCount();
+        dto.AuthorUsername = _userService.GetUsernameById(blogPost.AuthorId);
         
         if (userId.HasValue)
         {

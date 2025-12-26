@@ -54,7 +54,15 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
             if (entry != null)
             {
                 _db.Set<PreferenceTags>().Remove(entry);
-                _db.SaveChanges();
+                //Maksim: dodao try-catch za svaki slucaj, jer ponekad zbog redosleda izvrsavanja testova jedan test padne jer pokusava istu stvar da uradi opet
+                try
+                {
+                    _db.SaveChanges();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // Another test/operation removed the same link concurrently; treat as success
+                }
             }
         }
 

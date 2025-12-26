@@ -1,6 +1,10 @@
-﻿using Explorer.Payments.Core.Mappers;
+﻿using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Payments.API.Public;
+using Explorer.Payments.Core.Domain.RepositoryInterfaces;
+using Explorer.Payments.Core.Mappers;
+using Explorer.Payments.Core.UseCases;
 using Explorer.Payments.Infrastructure.Database;
-using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Payments.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -20,10 +24,12 @@ public static class PaymentsStartup
     private static void SetupCore(IServiceCollection services)
     {
         // here goes DI for services from Core (PaymentService etc.)
+        services.AddScoped<IShoppingCartService, ShoppingCartService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("payments"));
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
@@ -31,5 +37,7 @@ public static class PaymentsStartup
         services.AddDbContext<PaymentsContext>(opt =>
             opt.UseNpgsql(dataSource,
                 x => x.MigrationsHistoryTable("__EFMigrationsHistory", "payments")));
+
+        // ITourPriceProvider is registered at API level (Explorer.API) so infra does not depend on other modules.
     }
 }

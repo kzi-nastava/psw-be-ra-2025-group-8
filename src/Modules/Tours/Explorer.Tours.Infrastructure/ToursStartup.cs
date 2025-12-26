@@ -1,5 +1,6 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.PersonalEquipment;
@@ -7,6 +8,7 @@ using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
+using Explorer.Tours.Core.UseCases;
 using Explorer.Tours.Core.UseCases.Administration;
 using Explorer.Tours.Core.UseCases.PersonalEquipment;
 using Explorer.Tours.Core.UseCases.Tourist;
@@ -14,8 +16,6 @@ using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Explorer.Tours.Core.UseCases.ShoppingCart;
-using Explorer.Tours.API.Public.ShoppingCart;
 using Npgsql;
 
 
@@ -40,9 +40,9 @@ public static class ToursStartup
         services.AddScoped<IReportProblemService, ReportProblemService>();
         services.AddScoped<IPersonEquipmentService, PersonEquipmentService>();
         services.AddScoped<ITourService, TourService>();
+        services.AddScoped<IInternalTourService, InternalTourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
-        services.AddScoped<IShoppingCartService, ShoppingCartService>();
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
@@ -78,7 +78,6 @@ public static class ToursStartup
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
         services.AddScoped<ITourRatingRepository, TourRatingRepository>();
         services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
-        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("tours"));
         dataSourceBuilder.EnableDynamicJson();

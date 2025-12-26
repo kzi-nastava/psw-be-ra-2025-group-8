@@ -1,7 +1,7 @@
 ﻿using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.Stakeholders.Core.Domain;
 
-namespace Explorer.Tours.Core.Domain
+namespace Explorer.Payments.Core.Domain
 {
     public class ShoppingCart : AggregateRoot
     {

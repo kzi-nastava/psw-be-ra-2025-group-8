@@ -17,8 +17,13 @@ public class ToursProfile : Profile
         // ReportProblem mapiranje sa custom logikom za IsOverdue
         CreateMap<ReportProblemDto, ReportProblem>();
         CreateMap<ReportProblem, ReportProblemDto>()
-            .ForMember(dest => dest.IsOverdue, 
-                opt => opt.MapFrom(src => src.IsOverdue()));
+            .ForMember(dest => dest.IsOverdue, opt => opt.MapFrom(src => src.IsOverdue()))
+            //Maksim: za svaki slucaj
+            .ForMember(dest => dest.Deadline, opt => opt.MapFrom(src => src.Deadline))
+            .ForMember(dest => dest.IsClosedByAdmin, opt => opt.MapFrom(src => src.IsClosedByAdmin))
+            .ForMember(dest => dest.IsAuthorPenalized, opt => opt.MapFrom(src => src.IsAuthorPenalized));
+                
+
         
         CreateMap<IssueMessageDto, IssueMessage>().ReverseMap();
         CreateMap<FacilityDto, Facility>().ReverseMap();
@@ -132,13 +137,7 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.CompletionPercentage, opt => opt.MapFrom(src => src.CompletionPercentage));
 
 
-        //mapper za shopping cart i order item
-        CreateMap<ShoppingCart, ShoppingCartDto>()
-               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
-               .ForMember(dest => dest.PurchasedItems, opt => opt.MapFrom(src => src.PurchasedItems));
-        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId));
-        CreateMap<PurchasedItem, PurchasedItemDto>();
+        
     }
 
     private static TourStatus MapStatus(string status)

@@ -1,21 +1,24 @@
 ﻿using AutoMapper;
-using Explorer.Tours.API.Dtos;
-using Explorer.Tours.API.Public.ShoppingCart;
-using Explorer.Tours.Core.Domain;
-using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Public;
+using Explorer.Payments.Core.Domain;
+using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.BuildingBlocks.Core.Exceptions;
-namespace Explorer.Tours.Core.UseCases.ShoppingCart
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Explorer.Payments.Core.UseCases
 {
     public class ShoppingCartService : IShoppingCartService
     {
         private readonly IShoppingCartRepository _cartRepository;
-        private readonly ITourRepository _tourRepository;
+        private readonly ITourPriceProvider _tourPriceProvider;
         private readonly IMapper _mapper;
 
-        public ShoppingCartService(IShoppingCartRepository cartRepository, ITourRepository tourRepository, IMapper mapper)
+        public ShoppingCartService(IShoppingCartRepository cartRepository, ITourPriceProvider tourPriceProvider, IMapper mapper)
         {
             _cartRepository = cartRepository;
-            _tourRepository = tourRepository;
+            _tourPriceProvider = tourPriceProvider;
             _mapper = mapper;
         }
 
@@ -30,6 +33,7 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             _cartRepository.Add(cart);
             return _mapper.Map<ShoppingCartDto>(cart);
         }
+
         public ShoppingCartDto GetCart(long userId)
         {
             var cart = _cartRepository.GetByUserId(userId);
@@ -87,6 +91,7 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             cart.ClearCart();
             _cartRepository.Update(cart);
         }
+
         public void DeleteCart(long userId)
         {
             var cart = _cartRepository.GetByUserId(userId);
@@ -99,7 +104,7 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             var cart = _cartRepository.GetByUserId(userId);
             if (cart == null) throw new NotFoundException("Cart not found for this user.");
 
-            var tour = _tourRepository.Get(tourId);
+            var tour = _tourPriceProvider.GetById(tourId);
             if (tour == null) throw new NotFoundException("Tour not found.");
 
             cart.PurchaseItem(tourId, tour.Price);
@@ -117,10 +122,10 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
             var tourPrices = new Dictionary<long, decimal>();
             foreach (var item in cart.Items)
             {
-                var tour = _tourRepository.Get(item.TourId);
+                var tour = _tourPriceProvider.GetById(item.TourId);
                 if (tour == null)
                     throw new NotFoundException($"Tour with ID {item.TourId} not found.");
-                
+
                 tourPrices[item.TourId] = tour.Price;
             }
 
@@ -137,7 +142,7 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
 
             foreach (var item in cart.Items)
             {
-                var tour = _tourRepository.Get(item.TourId);
+                var tour = _tourPriceProvider.GetById(item.TourId);
                 if (tour != null)
                 {
                     total += tour.Price;
@@ -146,7 +151,5 @@ namespace Explorer.Tours.Core.UseCases.ShoppingCart
 
             return total;
         }
-
-
     }
 }
