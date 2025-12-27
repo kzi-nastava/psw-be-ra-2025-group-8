@@ -2,6 +2,9 @@
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.ReposotoryInterfaces;
+using Explorer.Encounters.Core.Utils;
+using Explorer.Stakeholders.API.Internal;
+using Explorer.Tours.API.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +14,19 @@ namespace Explorer.Encounters.Core.UseCases
     public class EncounterService : IEncounterService
     {
         private readonly IEncounterRepository _encounterRepository;
+        private readonly IInternalPersonService _personService;
+        private readonly IInternalPositionService _positionService;
 
-        public EncounterService(IEncounterRepository encounterRepository)
+        private const double NearbyRangeMeters = 1000.0; // 1km
+
+        public EncounterService(
+            IEncounterRepository encounterRepository,
+            IInternalPersonService personService,
+            IInternalPositionService positionService)
         {
             _encounterRepository = encounterRepository;
+            _personService = personService;
+            _positionService = positionService;
         }
 
         public List<EncounterDto> GetAllEncounters()
@@ -30,6 +42,36 @@ namespace Explorer.Encounters.Core.UseCases
                 throw new KeyNotFoundException($"Encounter with ID {id} not found.");
 
             return MapToDto(encounter);
+        }
+
+        public List<EncounterDto> GetNearbyEncounters(long personId)
+        {
+            // Get person and their position
+            var person = _personService.GetByUserId(personId);
+            if (person == null)
+                throw new KeyNotFoundException($"Person with ID {personId} not found.");
+
+            var position = _positionService.GetByTouristId((int)person.UserId);
+            if (position == null)
+                throw new InvalidOperationException($"Position not found for user {person.UserId}.");
+
+            // Get all published encounters
+            var allEncounters = _encounterRepository.GetAll()
+                .Where(e => e.Status == EncouterStatus.Published &&
+                           e.Latitude.HasValue &&
+                           e.Longitude.HasValue)
+                .ToList();
+
+            // Filter encounters within 1km range
+            var nearbyEncounters = allEncounters
+                .Where(e => DistanceCalculator.IsWithinRange(
+                    position.Latitude, position.Longitude,
+                    e.Latitude.Value, e.Longitude.Value,
+                    NearbyRangeMeters))
+                .Select(MapToDto)
+                .ToList();
+
+            return nearbyEncounters;
         }
 
         public EncounterDto CreateEncounter(EncounterDto createDto)

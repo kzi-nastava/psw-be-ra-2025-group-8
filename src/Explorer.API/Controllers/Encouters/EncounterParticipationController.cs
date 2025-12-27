@@ -62,6 +62,18 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         // --------------------
+        // GET NEARBY ENCOUNTERS (within 1km)
+        // --------------------
+
+        [HttpGet("nearby")]
+        public ActionResult<List<EncounterDto>> GetNearbyEncounters()
+        {
+            var personId = GetPersonIdFromToken();
+            var nearbyEncounters = _encounterService.GetNearbyEncounters(personId);
+            return Ok(nearbyEncounters);
+        }
+
+        // --------------------
         // GET MY ACTIVE ENCOUNTERS
         // --------------------
 

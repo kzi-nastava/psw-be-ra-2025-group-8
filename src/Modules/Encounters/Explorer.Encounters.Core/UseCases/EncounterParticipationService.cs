@@ -2,6 +2,9 @@
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.ReposotoryInterfaces;
+using Explorer.Encounters.Core.Utils;
+using Explorer.Stakeholders.API.Internal;
+using Explorer.Tours.API.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,13 +15,21 @@ namespace Explorer.Encounters.Core.UseCases
     {
         private readonly IEncounterParticipationRepository _participationRepository;
         private readonly IEncounterRepository _encounterRepository;
+        private readonly IInternalPersonService _personService;
+        private readonly IInternalPositionService _positionService;
+
+        private const double ActivationRangeMeters = 200.0;
 
         public EncounterParticipationService(
             IEncounterParticipationRepository participationRepository,
-            IEncounterRepository encounterRepository)
+            IEncounterRepository encounterRepository,
+            IInternalPersonService personService,
+            IInternalPositionService positionService)
         {
             _participationRepository = participationRepository;
             _encounterRepository = encounterRepository;
+            _personService = personService;
+            _positionService = positionService;
         }
 
         public EncounterParticipationDto ActivateEncounter(ActivateEncounterDto activateDto)
@@ -30,6 +41,34 @@ namespace Explorer.Encounters.Core.UseCases
 
             if (encounter.Status != EncouterStatus.Published)
                 throw new InvalidOperationException("Only published encounters can be activated.");
+
+            // Check if encounter has coordinates
+            if (!encounter.Latitude.HasValue || !encounter.Longitude.HasValue)
+                throw new InvalidOperationException("Encounter does not have valid coordinates.");
+
+            // Get person and their position
+            var person = _personService.GetByUserId(activateDto.PersonId);
+            if (person == null)
+                throw new KeyNotFoundException($"Person with ID {activateDto.PersonId} not found.");
+
+            var position = _positionService.GetByTouristId((int)person.UserId);
+            if (position == null)
+                throw new InvalidOperationException($"Position not found for user {person.UserId}.");
+
+            // Check proximity (200m range)
+            var isWithinRange = DistanceCalculator.IsWithinRange(
+                position.Latitude, position.Longitude,
+                encounter.Latitude.Value, encounter.Longitude.Value,
+                ActivationRangeMeters);
+
+            if (!isWithinRange)
+            {
+                var distance = DistanceCalculator.CalculateDistance(
+                    position.Latitude, position.Longitude,
+                    encounter.Latitude.Value, encounter.Longitude.Value);
+                throw new InvalidOperationException(
+                    $"You must be within {ActivationRangeMeters}m of the encounter to activate it. Current distance: {distance:F0}m");
+            }
 
             // Check if person already has this encounter activated
             var existing = _participationRepository.GetByPersonAndEncounter(
@@ -55,10 +94,38 @@ namespace Explorer.Encounters.Core.UseCases
                 throw new KeyNotFoundException(
                     $"Participation not found for person {completeDto.PersonId} and encounter {completeDto.EncounterId}.");
 
-            // Get encounter to retrieve XP reward
+            // Get encounter to retrieve XP reward and check coordinates
             var encounter = _encounterRepository.GetById(participation.EncounterId);
             if (encounter == null)
                 throw new KeyNotFoundException($"Encounter with ID {participation.EncounterId} not found.");
+
+            // Check if encounter has coordinates
+            if (!encounter.Latitude.HasValue || !encounter.Longitude.HasValue)
+                throw new InvalidOperationException("Encounter does not have valid coordinates.");
+
+            // Get person and their position
+            var person = _personService.GetByUserId(completeDto.PersonId);
+            if (person == null)
+                throw new KeyNotFoundException($"Person with ID {completeDto.PersonId} not found.");
+
+            var position = _positionService.GetByTouristId((int)person.UserId);
+            if (position == null)
+                throw new InvalidOperationException($"Position not found for user {person.UserId}.");
+
+            // Check proximity (200m range)
+            var isWithinRange = DistanceCalculator.IsWithinRange(
+                position.Latitude, position.Longitude,
+                encounter.Latitude.Value, encounter.Longitude.Value,
+                ActivationRangeMeters);
+
+            if (!isWithinRange)
+            {
+                var distance = DistanceCalculator.CalculateDistance(
+                    position.Latitude, position.Longitude,
+                    encounter.Latitude.Value, encounter.Longitude.Value);
+                throw new InvalidOperationException(
+                    $"You must be within {ActivationRangeMeters}m of the encounter to complete it. Current distance: {distance:F0}m");
+            }
 
             participation.Complete(encounter.XPReward);
             var updated = _participationRepository.Update(participation);

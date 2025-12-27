@@ -11,6 +11,7 @@ namespace Explorer.Encounters.API.Public
     {
         List<EncounterDto> GetAllEncounters();
         EncounterDto GetEncounterById(long id);
+        List<EncounterDto> GetNearbyEncounters(long personId);
         EncounterDto CreateEncounter(EncounterDto createDto);
         EncounterDto UpdateEncounter(long id, EncounterUpdateDto updateDto);
         void DeleteEncounter(long id);

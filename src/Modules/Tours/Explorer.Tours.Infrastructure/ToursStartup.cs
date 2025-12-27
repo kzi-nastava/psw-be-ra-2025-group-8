@@ -42,6 +42,7 @@ public static class ToursStartup
         services.AddScoped<ITourService, TourService>();
         services.AddScoped<IInternalTourService, InternalTourService>();
         services.AddScoped<IPositionService, PositionService>();
+        services.AddScoped<IInternalPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
         //Minja dodao ovo
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
