@@ -155,14 +155,18 @@ public class FollowerQueryTests : BaseStakeholdersIntegrationTest
 
         // Get notification ID
         var notifications = ((OkObjectResult)receiverController.GetUnreadNotifications().Result)?.Value as List<NotificationDto>;
+        notifications.ShouldNotBeNull();
+        notifications.Count.ShouldBeGreaterThan(0);
         var notificationId = notifications!.First().Id;
 
         // Act
-        var result = receiverController.MarkNotificationAsRead(notificationId) as OkObjectResult;
+        var result = receiverController.MarkNotificationAsRead(notificationId);
 
         // Assert
         result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe(200);
+        result.ShouldBeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult.StatusCode.ShouldBe(200);
     }
 
     [Fact]

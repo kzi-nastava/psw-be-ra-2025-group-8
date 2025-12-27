@@ -46,6 +46,7 @@ public static class StakeholdersStartup
         services.AddScoped<IClubMessageService, ClubMessageService>();
 
         services.AddScoped<IWalletService, WalletService>();
+        services.AddScoped<IInternalWalletService, WalletService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
