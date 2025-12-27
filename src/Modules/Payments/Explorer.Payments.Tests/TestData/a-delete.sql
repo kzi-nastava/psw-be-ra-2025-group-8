@@ -3,6 +3,7 @@
 DELETE FROM payments."PurchasedItems";
 DELETE FROM payments."OrderItems";
 DELETE FROM payments."ShoppingCarts";
+DELETE FROM payments."Coupons";
 
 -- Also delete any test tours that might have been inserted by payments test data
 DELETE FROM tours."Tours" WHERE "Id" IN (-511, -522, -533);

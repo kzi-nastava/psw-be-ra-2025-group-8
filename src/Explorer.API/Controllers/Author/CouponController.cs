@@ -81,7 +81,7 @@ namespace Explorer.API.Controllers.Author
             }
             catch (InvalidOperationException ex)
             {
-                return Forbid(ex.Message);
+                return StatusCode(403, ex.Message);
             }
             catch (ArgumentException ex)
             {
@@ -103,7 +103,7 @@ namespace Explorer.API.Controllers.Author
             }
             catch (InvalidOperationException ex)
             {
-                return Forbid(ex.Message);
+                return StatusCode(403, ex.Message);
             }
         }
     }

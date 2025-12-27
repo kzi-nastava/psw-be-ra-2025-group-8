@@ -41,7 +41,7 @@ namespace Explorer.Payments.Core.Domain
             if (ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow)
                 throw new ArgumentException("Expiry date cannot be in the past.");
 
-            if (AuthorId <= 0)
+            if (AuthorId == 0)
                 throw new ArgumentException("Invalid author ID.");
         }
 
