@@ -15,5 +15,10 @@ public class PaymentsProfile : Profile
         CreateMap<OrderItem, OrderItemDto>().ReverseMap()
                 .ConstructUsing(dto => new OrderItem(dto.TourId));
         CreateMap<PurchasedItem, PurchasedItemDto>();
+
+        //mapper za coupon
+        CreateMap<Coupon, CouponDto>();
+        CreateMap<CreateCouponDto, Coupon>();
+        CreateMap<UpdateCouponDto, Coupon>();
     }
 }

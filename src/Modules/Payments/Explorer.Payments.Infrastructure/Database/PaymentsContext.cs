@@ -8,6 +8,7 @@ public class PaymentsContext : DbContext
     public DbSet<ShoppingCart> ShoppingCarts { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<PurchasedItem> PurchasedItems { get; set; }
+    public DbSet<Coupon> Coupons { get; set; }
     public PaymentsContext(DbContextOptions<PaymentsContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,6 +40,17 @@ public class PaymentsContext : DbContext
             builder.Property(pi => pi.TourId).IsRequired();
             builder.Property(pi => pi.Price).IsRequired().HasColumnType("decimal(18,2)");
             builder.Property(pi => pi.PurchaseDate).IsRequired();
+        });
+
+        modelBuilder.Entity<Coupon>(builder =>
+        {
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.Code).IsRequired().HasMaxLength(8);
+            builder.HasIndex(c => c.Code).IsUnique();
+            builder.Property(c => c.DiscountPercentage).IsRequired();
+            builder.Property(c => c.ExpiryDate);
+            builder.Property(c => c.TourId);
+            builder.Property(c => c.AuthorId).IsRequired();
         });
     }
 }
