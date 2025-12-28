@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Explorer.Payments.Tests.Integration.Coupon
 {
@@ -14,11 +16,27 @@ namespace Explorer.Payments.Tests.Integration.Coupon
     {
         public CouponCommandTests(PaymentsTestFactory factory) : base(factory) { }
 
-        private static CouponController CreateController(IServiceScope scope)
+        private static CouponController CreateController(IServiceScope scope, long authorId)
         {
-            return new CouponController(
+            var controller = new CouponController(
                 scope.ServiceProvider.GetRequiredService<ICouponService>()
             );
+
+            // Mock the authentication context
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", authorId.ToString()),
+                        new Claim("personId", authorId.ToString()),
+                        new Claim(ClaimTypes.Role, "author")
+                    }))
+                }
+            };
+
+            return controller;
         }
 
         [Fact]
@@ -26,7 +44,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11); // Mock author -11
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             var dto = new CreateCouponDto
@@ -37,7 +55,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var actionResult = controller.Create(-11, dto);
+            var actionResult = controller.Create(dto); // No authorId parameter
             
             // Debug: Check what type of result we got
             actionResult.Result.ShouldNotBeNull();
@@ -67,7 +85,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             var dto = new CreateCouponDto
@@ -78,7 +96,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var actionResult = controller.Create(-11, dto);
+            var actionResult = controller.Create(dto);
             var result = ((ObjectResult)actionResult.Result)?.Value as CouponDto;
 
             // Assert
@@ -98,7 +116,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -12);
 
             var dto = new CreateCouponDto
             {
@@ -108,7 +126,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var actionResult = controller.Create(-12, dto);
+            var actionResult = controller.Create(dto);
             var result = ((ObjectResult)actionResult.Result)?.Value as CouponDto;
 
             // Assert
@@ -121,7 +139,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             var dto = new CreateCouponDto
             {
@@ -130,7 +148,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var result = controller.Create(-11, dto);
+            var result = controller.Create(dto);
 
             // Assert
             result.Result.ShouldBeOfType<BadRequestObjectResult>();
@@ -141,7 +159,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // First create a coupon
@@ -151,7 +169,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 ExpiryDate = DateTime.UtcNow.AddDays(30),
                 TourId = -511
             };
-            var createActionResult = controller.Create(-11, createDto);
+            var createActionResult = controller.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
             dbContext.ChangeTracker.Clear();
 
@@ -164,7 +182,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var updateActionResult = controller.Update(created.Id, -11, updateDto);
+            var updateActionResult = controller.Update(created.Id, updateDto);
             var result = ((ObjectResult)updateActionResult.Result)?.Value as CouponDto;
 
             // Assert - Response
@@ -185,7 +203,8 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller11 = CreateController(scope, -11); // Author -11
+            var controller12 = CreateController(scope, -12); // Author -12 (different author)
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Create coupon as author -11
@@ -194,7 +213,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 DiscountPercentage = 20,
                 TourId = -511
             };
-            var createActionResult = controller.Create(-11, createDto);
+            var createActionResult = controller11.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
             dbContext.ChangeTracker.Clear();
 
@@ -205,7 +224,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var result = controller.Update(created.Id, -12, updateDto);
+            var result = controller12.Update(created.Id, updateDto);
 
             // Assert
             var objectResult = result.Result.ShouldBeOfType<ObjectResult>();
@@ -217,7 +236,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Create coupon
@@ -226,12 +245,12 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 DiscountPercentage = 20,
                 TourId = -511
             };
-            var createActionResult = controller.Create(-11, createDto);
+            var createActionResult = controller.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
             dbContext.ChangeTracker.Clear();
 
             // Act
-            var result = controller.Delete(created.Id, -11);
+            var result = controller.Delete(created.Id);
 
             // Assert - Response
             result.ShouldBeOfType<OkObjectResult>();
@@ -247,7 +266,8 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller11 = CreateController(scope, -11); // Author -11
+            var controller12 = CreateController(scope, -12); // Author -12 (different author)
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Create coupon as author -11
@@ -256,13 +276,13 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 DiscountPercentage = 20,
                 TourId = -511
             };
-            var createActionResult = controller.Create(-11, createDto);
+            var createActionResult = controller11.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
             dbContext.ChangeTracker.Clear();
 
             // Try to delete as different author -12
             // Act
-            var result = controller.Delete(created.Id, -12);
+            var result = controller12.Delete(created.Id);
 
             // Assert
             var objectResult = result.ShouldBeOfType<ObjectResult>();
@@ -274,10 +294,10 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             // Act
-            var result = controller.Delete(99999, -11);
+            var result = controller.Delete(99999);
 
             // Assert
             result.ShouldBeOfType<NotFoundObjectResult>();
@@ -288,7 +308,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             var dto = new CreateCouponDto
@@ -298,11 +318,11 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act - Create multiple coupons
-            var actionResult1 = controller.Create(-11, dto);
+            var actionResult1 = controller.Create(dto);
             var result1 = ((ObjectResult)actionResult1.Result)?.Value as CouponDto;
-            var actionResult2 = controller.Create(-11, dto);
+            var actionResult2 = controller.Create(dto);
             var result2 = ((ObjectResult)actionResult2.Result)?.Value as CouponDto;
-            var actionResult3 = controller.Create(-11, dto);
+            var actionResult3 = controller.Create(dto);
             var result3 = ((ObjectResult)actionResult3.Result)?.Value as CouponDto;
 
             // Assert - All codes should be unique
@@ -324,7 +344,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Create coupon for specific tour
@@ -333,7 +353,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 DiscountPercentage = 20,
                 TourId = -511
             };
-            var createActionResult = controller.Create(-11, createDto);
+            var createActionResult = controller.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
             dbContext.ChangeTracker.Clear();
 
@@ -345,7 +365,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var updateActionResult = controller.Update(created.Id, -11, updateDto);
+            var updateActionResult = controller.Update(created.Id, updateDto);
             var result = ((ObjectResult)updateActionResult.Result)?.Value as CouponDto;
 
             // Assert

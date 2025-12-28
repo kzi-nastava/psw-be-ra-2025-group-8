@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Explorer.Payments.Tests.Integration.Coupon
 {
@@ -14,11 +16,27 @@ namespace Explorer.Payments.Tests.Integration.Coupon
     {
         public CouponQueryTests(PaymentsTestFactory factory) : base(factory) { }
 
-        private static CouponController CreateController(IServiceScope scope)
+        private static CouponController CreateController(IServiceScope scope, long authorId)
         {
-            return new CouponController(
+            var controller = new CouponController(
                 scope.ServiceProvider.GetRequiredService<ICouponService>()
             );
+
+            // Mock the authentication context
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                    {
+                        new Claim("id", authorId.ToString()),
+                        new Claim("personId", authorId.ToString()),
+                        new Claim(ClaimTypes.Role, "author")
+                    }))
+                }
+            };
+
+            return controller;
         }
 
         [Fact]
@@ -26,7 +44,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
             var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsContext>();
 
             // Create a coupon first
@@ -36,7 +54,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 ExpiryDate = DateTime.UtcNow.AddDays(30),
                 TourId = -511
             };
-            var createActionResult = controller.Create(-11, createDto);
+            var createActionResult = controller.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
 
             // Act
@@ -56,7 +74,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             // Act
             var result = controller.GetById(99999);
@@ -70,7 +88,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -12);
 
             // Create a coupon first
             var createDto = new CreateCouponDto
@@ -78,7 +96,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 DiscountPercentage = 25,
                 TourId = -522
             };
-            var createActionResult = controller.Create(-12, createDto);
+            var createActionResult = controller.Create(createDto);
             var created = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
 
             // Act
@@ -97,7 +115,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             // Act
             var result = controller.GetByCode("INVALID1");
@@ -111,16 +129,16 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             // Create multiple coupons for author -11
             var dto1 = new CreateCouponDto { DiscountPercentage = 10, TourId = -511 };
             var dto2 = new CreateCouponDto { DiscountPercentage = 20, TourId = -522 };
             var dto3 = new CreateCouponDto { DiscountPercentage = 30, TourId = null };
 
-            controller.Create(-11, dto1);
-            controller.Create(-11, dto2);
-            controller.Create(-11, dto3);
+            controller.Create(dto1);
+            controller.Create(dto2);
+            controller.Create(dto3);
 
             // Act
             var getActionResult = controller.GetByAuthorId(-11);
@@ -137,7 +155,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -99);
 
             // Act - Get coupons for author who hasn't created any
             var getActionResult = controller.GetByAuthorId(-99);
@@ -153,14 +171,14 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             // Create coupons with different configurations
             var specificTour = new CreateCouponDto { DiscountPercentage = 15, TourId = -511 };
             var allTours = new CreateCouponDto { DiscountPercentage = 10, TourId = null };
 
-            controller.Create(-11, specificTour);
-            controller.Create(-11, allTours);
+            controller.Create(specificTour);
+            controller.Create(allTours);
 
             // Act
             var getActionResult = controller.GetByAuthorId(-11);
@@ -180,7 +198,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -12);
 
             // Create coupons with different expiry configurations
             var withExpiry = new CreateCouponDto 
@@ -196,8 +214,8 @@ namespace Explorer.Payments.Tests.Integration.Coupon
                 TourId = -522 
             };
 
-            controller.Create(-12, withExpiry);
-            controller.Create(-12, withoutExpiry);
+            controller.Create(withExpiry);
+            controller.Create(withoutExpiry);
 
             // Act
             var getActionResult = controller.GetByAuthorId(-12);
@@ -217,7 +235,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller = CreateController(scope, -11);
 
             var dto = new CreateCouponDto
             {
@@ -226,7 +244,7 @@ namespace Explorer.Payments.Tests.Integration.Coupon
             };
 
             // Act
-            var createActionResult = controller.Create(-11, dto);
+            var createActionResult = controller.Create(dto);
             var result = ((ObjectResult)createActionResult.Result)?.Value as CouponDto;
 
             // Assert
@@ -240,20 +258,22 @@ namespace Explorer.Payments.Tests.Integration.Coupon
         {
             // Arrange
             using var scope = Factory.Services.CreateScope();
-            var controller = CreateController(scope);
+            var controller11 = CreateController(scope, -11);
+            var controller12 = CreateController(scope, -12);
+            var controller13 = CreateController(scope, -13);
 
             var dto = new CreateCouponDto { DiscountPercentage = 20, TourId = -511 };
 
             // Act - Create coupons for different authors
-            controller.Create(-11, dto);
-            controller.Create(-12, dto);
-            controller.Create(-13, dto);
+            controller11.Create(dto);
+            controller12.Create(dto);
+            controller13.Create(dto);
 
-            var get11ActionResult = controller.GetByAuthorId(-11);
+            var get11ActionResult = controller11.GetByAuthorId(-11);
             var author11Coupons = ((ObjectResult)get11ActionResult.Result)?.Value as List<CouponDto>;
-            var get12ActionResult = controller.GetByAuthorId(-12);
+            var get12ActionResult = controller12.GetByAuthorId(-12);
             var author12Coupons = ((ObjectResult)get12ActionResult.Result)?.Value as List<CouponDto>;
-            var get13ActionResult = controller.GetByAuthorId(-13);
+            var get13ActionResult = controller13.GetByAuthorId(-13);
             var author13Coupons = ((ObjectResult)get13ActionResult.Result)?.Value as List<CouponDto>;
 
             // Assert - Each author should have their own coupons
