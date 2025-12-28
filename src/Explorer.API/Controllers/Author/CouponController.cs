@@ -19,12 +19,17 @@ namespace Explorer.API.Controllers.Author
         }
 
         [HttpPost]
-        public ActionResult<CouponDto> Create([FromQuery] long authorId, [FromBody] CreateCouponDto dto)
+        public ActionResult<CouponDto> Create([FromBody] CreateCouponDto dto)
         {
             try
             {
+                var authorId = GetAuthorIdFromToken();
                 var coupon = _couponService.Create(authorId, dto);
                 return Ok(coupon);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
             }
             catch (ArgumentException ex)
             {
@@ -68,12 +73,17 @@ namespace Explorer.API.Controllers.Author
         }
 
         [HttpPut("{id}")]
-        public ActionResult<CouponDto> Update(long id, [FromQuery] long authorId, [FromBody] UpdateCouponDto dto)
+        public ActionResult<CouponDto> Update(long id, [FromBody] UpdateCouponDto dto)
         {
             try
             {
+                var authorId = GetAuthorIdFromToken();
                 var coupon = _couponService.Update(id, authorId, dto);
                 return Ok(coupon);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
             }
             catch (NotFoundException ex)
             {
@@ -90,12 +100,17 @@ namespace Explorer.API.Controllers.Author
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(long id, [FromQuery] long authorId)
+        public IActionResult Delete(long id)
         {
             try
             {
+                var authorId = GetAuthorIdFromToken();
                 _couponService.Delete(id, authorId);
                 return Ok("Coupon deleted successfully.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
             }
             catch (NotFoundException ex)
             {
@@ -105,6 +120,18 @@ namespace Explorer.API.Controllers.Author
             {
                 return StatusCode(403, ex.Message);
             }
+        }
+
+        private long GetAuthorIdFromToken()
+        {
+            var authorIdClaim = User.FindFirst("id") ?? User.FindFirst("personId") ?? User.FindFirst("sub");
+            
+            if (authorIdClaim == null || !long.TryParse(authorIdClaim.Value, out long authorId))
+            {
+                throw new UnauthorizedAccessException("User ID not found in authentication token.");
+            }
+
+            return authorId;
         }
     }
 }
