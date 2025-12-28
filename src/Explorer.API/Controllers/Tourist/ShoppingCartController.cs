@@ -94,6 +94,10 @@ namespace Explorer.API.Controllers.Tourist
             {
                 return NotFound(ex.Message);
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("clear")]
         public IActionResult ClearCart([FromQuery] long userId)
@@ -105,6 +109,10 @@ namespace Explorer.API.Controllers.Tourist
                 return Ok("Cart cleared.");
             }
             catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
