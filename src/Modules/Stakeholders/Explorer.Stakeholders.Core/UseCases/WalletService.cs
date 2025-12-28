@@ -28,14 +28,49 @@ public class WalletService : IWalletService, IInternalWalletService
         return _mapper.Map<WalletDto>(wallet);
     }
 
+    public WalletDto CreateWallet(long userId)
+    {
+        // Check if wallet already exists
+        try
+        {
+            var existingWallet = _walletRepository.GetByUserId(userId);
+            if (existingWallet != null)
+                throw new InvalidOperationException($"Wallet already exists for user {userId}.");
+        }
+        catch (KeyNotFoundException)
+        {
+            // Wallet doesn't exist, we can create it
+        }
+
+        var wallet = new Wallet(userId);
+        var createdWallet = _walletRepository.Create(wallet);
+
+        return _mapper.Map<WalletDto>(createdWallet);
+    }
+
     public WalletDto DepositCoins(long userId, int amount)
     {
         if (amount <= 0)
             throw new EntityValidationException("Amount must be positive.");
 
-        var wallet = _walletRepository.GetByUserId(userId);
+        Wallet wallet;
+        try
+        {
+            wallet = _walletRepository.GetByUserId(userId);
+        }
+        catch (KeyNotFoundException)
+        {
+            // Wallet doesn't exist, create it automatically
+            wallet = new Wallet(userId);
+            wallet = _walletRepository.Create(wallet);
+        }
+
         if (wallet == null)
-            throw new NotFoundException($"Wallet not found for user {userId}.");
+        {
+            // If still null after trying to get/create, create new one
+            wallet = new Wallet(userId);
+            wallet = _walletRepository.Create(wallet);
+        }
 
         wallet.AddCoins(amount);
         var updatedWallet = _walletRepository.Update(wallet);
