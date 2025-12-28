@@ -1,5 +1,7 @@
 using Explorer.API.Middleware;
 using Explorer.API.Startup;
+using Explorer.API.Hubs;
+using Explorer.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,10 @@ builder.Services.ConfigureCors(corsPolicy);
 builder.Services.ConfigureAuth();
 
 builder.Services.RegisterModules();
+
+// SignalR configuration
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IChatNotificationService, ChatNotificationService>();
 
 var app = builder.Build();
 
@@ -28,16 +34,18 @@ else
     app.UseHsts();
 }
 
+app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
 
-app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles();
+
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
 
