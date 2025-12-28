@@ -19,7 +19,7 @@ public class WalletController : ControllerBase
     }
 
     /// <summary>
-    /// Turista može da vidi stanje svog nov?anika
+    /// Turista može da vidi stanje svog nov?anika (authenticated)
     /// </summary>
     [HttpGet("balance")]
     [Authorize(Policy = "touristPolicy")]
@@ -33,6 +33,25 @@ public class WalletController : ControllerBase
 
         var userId = long.Parse(userIdClaim);
 
+        try
+        {
+            var wallet = _walletService.GetByUserId(userId);
+            return Ok(wallet);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get wallet by userId - for testing and internal use
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(WalletDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<WalletDto> GetWalletByUserId([FromQuery] long userId)
+    {
         try
         {
             var wallet = _walletService.GetByUserId(userId);

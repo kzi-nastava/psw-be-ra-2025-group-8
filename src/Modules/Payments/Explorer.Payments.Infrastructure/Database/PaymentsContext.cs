@@ -18,14 +18,26 @@ public class PaymentsContext : DbContext
         {
             builder.HasKey(c => c.Id);
             builder.Property(c => c.UserId).IsRequired();
+            
             builder.HasMany(c => c.Items)
                    .WithOne()
                    .HasForeignKey("ShoppingCartId")
                    .OnDelete(DeleteBehavior.Cascade);
+            
+            // Configure backing field for Items collection
+            var itemsNav = builder.Metadata.FindNavigation(nameof(ShoppingCart.Items));
+            itemsNav.SetPropertyAccessMode(PropertyAccessMode.Field);
+            itemsNav.SetField("_items");
+            
             builder.HasMany(c => c.PurchasedItems)
                    .WithOne()
                    .HasForeignKey("ShoppingCartId")
                    .OnDelete(DeleteBehavior.Cascade);
+            
+            // Configure backing field for PurchasedItems collection
+            var purchasedNav = builder.Metadata.FindNavigation(nameof(ShoppingCart.PurchasedItems));
+            purchasedNav.SetPropertyAccessMode(PropertyAccessMode.Field);
+            purchasedNav.SetField("_purchasedItems");
         });
 
         modelBuilder.Entity<OrderItem>(builder =>
@@ -37,8 +49,10 @@ public class PaymentsContext : DbContext
         modelBuilder.Entity<PurchasedItem>(builder =>
         {
             builder.HasKey(pi => pi.Id);
+            builder.Property(pi => pi.UserId).IsRequired();
             builder.Property(pi => pi.TourId).IsRequired();
             builder.Property(pi => pi.Price).IsRequired().HasColumnType("decimal(18,2)");
+            builder.Property(pi => pi.AdventureCoinsSpent).IsRequired();
             builder.Property(pi => pi.PurchaseDate).IsRequired();
         });
 

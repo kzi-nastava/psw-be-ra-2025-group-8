@@ -4,6 +4,7 @@ using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Stakeholders.API.Internal;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,12 +14,18 @@ namespace Explorer.Payments.Core.UseCases
     {
         private readonly IShoppingCartRepository _cartRepository;
         private readonly ITourPriceProvider _tourPriceProvider;
+        private readonly IInternalWalletService _walletService;
         private readonly IMapper _mapper;
 
-        public ShoppingCartService(IShoppingCartRepository cartRepository, ITourPriceProvider tourPriceProvider, IMapper mapper)
+        public ShoppingCartService(
+            IShoppingCartRepository cartRepository, 
+            ITourPriceProvider tourPriceProvider, 
+            IInternalWalletService walletService,
+            IMapper mapper)
         {
             _cartRepository = cartRepository;
             _tourPriceProvider = tourPriceProvider;
+            _walletService = walletService;
             _mapper = mapper;
         }
 
@@ -107,6 +114,16 @@ namespace Explorer.Payments.Core.UseCases
             var tour = _tourPriceProvider.GetById(tourId);
             if (tour == null) throw new NotFoundException("Tour not found.");
 
+            int requiredCoins = (int)Math.Ceiling(tour.Price);
+
+            // Check if user has sufficient Adventure Coins
+            if (!_walletService.HasSufficientFunds(userId, requiredCoins))
+                throw new InvalidOperationException($"Insufficient Adventure Coins. Required: {requiredCoins}, but user doesn't have enough.");
+
+            // Deduct coins from wallet
+            _walletService.DeductCoins(userId, requiredCoins);
+
+            // Record purchase
             cart.PurchaseItem(tourId, tour.Price);
             _cartRepository.Update(cart);
         }
@@ -120,6 +137,8 @@ namespace Explorer.Payments.Core.UseCases
                 throw new InvalidOperationException("Cart is empty.");
 
             var tourPrices = new Dictionary<long, decimal>();
+            int totalRequiredCoins = 0;
+
             foreach (var item in cart.Items)
             {
                 var tour = _tourPriceProvider.GetById(item.TourId);
@@ -127,8 +146,17 @@ namespace Explorer.Payments.Core.UseCases
                     throw new NotFoundException($"Tour with ID {item.TourId} not found.");
 
                 tourPrices[item.TourId] = tour.Price;
+                totalRequiredCoins += (int)Math.Ceiling(tour.Price);
             }
 
+            // Check if user has sufficient Adventure Coins for all items
+            if (!_walletService.HasSufficientFunds(userId, totalRequiredCoins))
+                throw new InvalidOperationException($"Insufficient Adventure Coins. Required: {totalRequiredCoins} AC for all items.");
+
+            // Deduct coins from wallet
+            _walletService.DeductCoins(userId, totalRequiredCoins);
+
+            // Record purchases
             cart.PurchaseAllItems(tourPrices);
             _cartRepository.Update(cart);
         }
