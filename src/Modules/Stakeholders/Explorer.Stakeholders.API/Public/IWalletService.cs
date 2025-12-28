@@ -6,4 +6,6 @@ public interface IWalletService
 {
     WalletDto GetByUserId(long userId);
     WalletDto DepositCoins(long userId, int amount);
+    WalletDto CreateWallet(long userId);
 }
+
