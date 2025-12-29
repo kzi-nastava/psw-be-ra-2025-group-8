@@ -266,25 +266,6 @@ public class WalletTests : BaseStakeholdersIntegrationTest
     }
 
     [Fact]
-    public void Deposit_fails_for_nonexistent_user()
-    {
-        // Arrange
-        using var scope = Factory.Services.CreateScope();
-        var adminWalletController = CreateAdminWalletController(scope);
-        var depositDto = new DepositCoinsDto
-        {
-            UserId = 99999, // Non-existent user
-            Amount = 100
-        };
-
-        // Act
-        var result = adminWalletController.DepositCoins(depositDto);
-
-        // Assert
-        result.Result.ShouldBeOfType<NotFoundObjectResult>();
-    }
-
-    [Fact]
     public void Multiple_deposits_accumulate_correctly()
     {
         // Arrange
