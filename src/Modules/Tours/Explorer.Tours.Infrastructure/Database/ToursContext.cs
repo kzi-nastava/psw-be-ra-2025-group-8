@@ -35,6 +35,11 @@ public class ToursContext : DbContext
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<PurchasedItem> PurchasedItems { get; set; }
 
+    // Tour Chat
+    public DbSet<TourChatRoom> TourChatRooms { get; set; }
+    public DbSet<TourChatMember> TourChatMembers { get; set; }
+    public DbSet<TourChatMessage> TourChatMessages { get; set; }
+
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -272,6 +277,39 @@ public class ToursContext : DbContext
 
             builder.Property(tri => tri.UploadedAt)
                 .IsRequired();
+        });
+
+        // TOUR CHAT CONFIGURATION
+        modelBuilder.Entity<TourChatRoom>(builder =>
+        {
+            builder.HasKey(cr => cr.Id);
+            builder.Property(cr => cr.Name).IsRequired();
+            builder.Property(cr => cr.TourId).IsRequired();
+            
+            builder.HasMany(cr => cr.Members)
+                .WithOne()
+                .HasForeignKey("TourChatRoomId")
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            builder.HasMany(cr => cr.Messages)
+                .WithOne()
+                .HasForeignKey("TourChatRoomId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TourChatMember>(builder =>
+        {
+            builder.HasKey(m => m.Id);
+            builder.HasIndex(m => m.TourChatRoomId);
+            builder.HasIndex(m => m.UserId);
+        });
+
+        modelBuilder.Entity<TourChatMessage>(builder =>
+        {
+            builder.HasKey(m => m.Id);
+            builder.Property(m => m.Content).IsRequired();
+            builder.HasIndex(m => m.TourChatRoomId);
+            builder.HasIndex(m => m.SenderId);
         });
     }
 
