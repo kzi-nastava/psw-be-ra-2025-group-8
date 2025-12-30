@@ -19,5 +19,9 @@ namespace Explorer.Encounters.API.Dtos
         public int XPReward { get; set; }
         public DateTime? PublishedAt { get;  set; }
         public DateTime? ArchivedAt { get;  set; }
+
+        // Social encounter settings
+        public int? SocialRequiredCount { get; set; }
+        public double? SocialRangeMeters { get; set; }
     }
 }

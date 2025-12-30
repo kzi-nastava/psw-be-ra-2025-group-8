@@ -33,8 +33,12 @@ namespace Explorer.Encounters.Core.Domain
         public DateTime? PublishedAt { get; private set; }
         public DateTime? ArchivedAt { get; private set; }
 
+        // Social encounter settings
+        public int? SocialRequiredCount { get; private set; }
+        public double? SocialRangeMeters { get; private set; }
+
         // Constructor for creating a new encounter (draft)
-        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward)
+        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward, int? socialRequiredCount = null, double? socialRangeMeters = null)
         {
             Name = name;
             Description = description;
@@ -46,6 +50,8 @@ namespace Explorer.Encounters.Core.Domain
             Status = EncouterStatus.Draft;
             PublishedAt = null;
             ArchivedAt = null;
+            SocialRequiredCount = socialRequiredCount;
+            SocialRangeMeters = socialRangeMeters;
         }
 
         public Encounter() { }
@@ -81,6 +87,19 @@ namespace Explorer.Encounters.Core.Domain
         {
             Latitude = latitude;
             Longitude = longitude;
+        }
+
+        // Allow creator to set social settings
+        public void SetSocialSettings(int? requiredCount, double? rangeMeters)
+        {
+            if (requiredCount.HasValue && requiredCount <= 0)
+                throw new ArgumentException("Social required count must be greater than 0.");
+
+            if (rangeMeters.HasValue && rangeMeters <= 0)
+                throw new ArgumentException("Social range meters must be greater than 0.");
+
+            SocialRequiredCount = requiredCount;
+            SocialRangeMeters = rangeMeters;
         }
     }
 }

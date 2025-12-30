@@ -8,7 +8,11 @@ public class EncountersProfile : Profile
 {
     public EncountersProfile()
     {
-        CreateMap<EncounterDto, Encounter>().ReverseMap();
+        CreateMap<EncounterDto, Encounter>()
+            .ForMember(dest => dest.SocialRequiredCount, opt => opt.MapFrom(src => src.SocialRequiredCount))
+            .ForMember(dest => dest.SocialRangeMeters, opt => opt.MapFrom(src => src.SocialRangeMeters))
+            .ReverseMap();
+
         CreateMap<EncounterParticipationDto, EncounterParticipation>().ReverseMap();
     }
 }
