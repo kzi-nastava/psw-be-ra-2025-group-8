@@ -23,8 +23,8 @@ namespace Explorer.Tours.Core.Domain
 
         public TourChatRoom(long tourId, string tourName)
         {
-            if (tourId <= 0)
-                throw new ArgumentException("Tour ID must be positive", nameof(tourId));
+            if (tourId == 0)
+                throw new ArgumentException("Tour ID cannot be zero", nameof(tourId));
             
             if (string.IsNullOrWhiteSpace(tourName))
                 throw new ArgumentException("Tour name cannot be empty", nameof(tourName));
