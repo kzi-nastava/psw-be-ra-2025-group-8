@@ -12,9 +12,8 @@ public class PaymentsProfile : Profile
         CreateMap<ShoppingCart, ShoppingCartDto>()
                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
                .ForMember(dest => dest.PurchasedItems, opt => opt.MapFrom(src => src.PurchasedItems));
-        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId));
         CreateMap<PurchasedItem, PurchasedItemDto>();
+        CreateMap<OrderItem, OrderItemDto>();
 
         //mapper za coupon
         CreateMap<Coupon, CouponDto>();

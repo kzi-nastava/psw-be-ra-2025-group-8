@@ -54,7 +54,11 @@ namespace Explorer.Payments.Core.UseCases
                 throw new NotFoundException("Cart not found for this user.");
             }
             var dto = _mapper.Map<ShoppingCartDto>(cart);
-            dto.TotalPrice = CalculateTotalPrice(cart);
+
+            dto.Subtotal = cart.Items.Sum(i => i.OriginalPrice);
+            dto.TotalPrice = cart.Items.Sum(i => i.DiscountedPrice);
+            dto.Discount = dto.Subtotal - dto.TotalPrice;
+
             return dto;
         }
 
@@ -79,7 +83,10 @@ namespace Explorer.Payments.Core.UseCases
                 throw new NotFoundException("Cart not found for this user.");
             }
 
-            var item = _mapper.Map<OrderItem>(itemDto);
+            var tour = _tourPriceProvider.GetById(itemDto.TourId);
+            if (tour == null) throw new NotFoundException($"Tour with ID {itemDto.TourId} not found.");
+
+            var item = new OrderItem(itemDto.TourId, tour.Price, tour.Price); // discounted = original na startu
             cart.AddItem(item);
 
             _cartRepository.Update(cart);
@@ -150,7 +157,7 @@ namespace Explorer.Payments.Core.UseCases
                 var tour = _tourPriceProvider.GetById(item.TourId);
                 if (tour == null)
                     throw new NotFoundException($"Tour with ID {item.TourId} not found.");
-
+                
                 tourPrices[item.TourId] = tour.Price;
                 totalRequiredCoins += (int)Math.Ceiling(tour.Price);
             }
