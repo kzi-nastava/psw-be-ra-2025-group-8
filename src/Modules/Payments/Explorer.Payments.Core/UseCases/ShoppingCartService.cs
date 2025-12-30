@@ -5,6 +5,7 @@ using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Internal;
+using Explorer.BuildingBlocks.Core.UseCases;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,17 +17,20 @@ namespace Explorer.Payments.Core.UseCases
         private readonly ITourPriceProvider _tourPriceProvider;
         private readonly IInternalWalletService _walletService;
         private readonly IMapper _mapper;
+        private readonly IPurchaseNotificationService _purchaseNotificationService;
 
         public ShoppingCartService(
             IShoppingCartRepository cartRepository, 
             ITourPriceProvider tourPriceProvider, 
             IInternalWalletService walletService,
-            IMapper mapper)
+            IMapper mapper,
+            IPurchaseNotificationService purchaseNotificationService)
         {
             _cartRepository = cartRepository;
             _tourPriceProvider = tourPriceProvider;
             _walletService = walletService;
             _mapper = mapper;
+            _purchaseNotificationService = purchaseNotificationService;
         }
 
         public ShoppingCartDto CreateCart(long userId)
@@ -126,6 +130,7 @@ namespace Explorer.Payments.Core.UseCases
             // Record purchase
             cart.PurchaseItem(tourId, tour.Price);
             _cartRepository.Update(cart);
+            _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
 
         public void PurchaseAllItems(long userId)
@@ -138,6 +143,7 @@ namespace Explorer.Payments.Core.UseCases
 
             var tourPrices = new Dictionary<long, decimal>();
             int totalRequiredCoins = 0;
+            var purchasedTourIds = cart.Items.Select(i => i.TourId).ToList();
 
             foreach (var item in cart.Items)
             {
@@ -159,6 +165,7 @@ namespace Explorer.Payments.Core.UseCases
             // Record purchases
             cart.PurchaseAllItems(tourPrices);
             _cartRepository.Update(cart);
+            _purchaseNotificationService.NotifyToursPurchased(userId, purchasedTourIds);
         }
 
         private decimal CalculateTotalPrice(Domain.ShoppingCart cart)
