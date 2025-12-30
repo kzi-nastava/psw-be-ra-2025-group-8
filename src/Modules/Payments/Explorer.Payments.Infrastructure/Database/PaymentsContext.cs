@@ -44,6 +44,13 @@ public class PaymentsContext : DbContext
         {
             builder.HasKey(oi => oi.Id);
             builder.Property(oi => oi.TourId).IsRequired();
+            builder.Property(oi => oi.OriginalPrice).IsRequired().HasColumnType("decimal(18,2)");
+            builder.Property(oi => oi.DiscountedPrice).IsRequired().HasColumnType("decimal(18,2)");
+
+            builder.Property(oi => oi.IsBundle).IsRequired();
+            builder.Property(oi => oi.BundleId);
+            builder.Property(oi => oi.CouponId);
+            builder.Property(oi => oi.SaleId);
         });
 
         modelBuilder.Entity<PurchasedItem>(builder =>

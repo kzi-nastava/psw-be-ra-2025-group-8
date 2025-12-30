@@ -43,6 +43,8 @@ namespace Explorer.Stakeholders.Core.Domain
         IssueMessage = 0,
         General = 1,
         FollowerMessage = 2,  // Messages sent to followers
-        ClubActivity = 3       // Activities in clubs the user is a member of
+        ClubActivity = 3,       // Activities in clubs the user is a member of
+        WalletTopUp = 4, // Admin added AC 
+        PurchaseSuccess = 5
     }
 }

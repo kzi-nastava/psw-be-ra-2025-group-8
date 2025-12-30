@@ -12,12 +12,16 @@ public class WalletService : IWalletService, IInternalWalletService
 {
     private readonly IWalletRepository _walletRepository;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
-    public WalletService(IWalletRepository walletRepository, IMapper mapper)
+
+    public WalletService(IWalletRepository walletRepository, IMapper mapper, INotificationService notificationService)
     {
         _walletRepository = walletRepository;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
+
 
     public WalletDto GetByUserId(long userId)
     {
@@ -74,6 +78,17 @@ public class WalletService : IWalletService, IInternalWalletService
 
         wallet.AddCoins(amount);
         var updatedWallet = _walletRepository.Update(wallet);
+
+        // Notify user about the top-up
+        _notificationService.Create(new NotificationDto
+        {
+            UserId = userId,
+            Type = (int)NotificationType.WalletTopUp,
+            Title = "Wallet top-up",
+            Content = $"Your wallet was credited with {amount} AC. New balance: {updatedWallet.AdventureCoins} AC.",
+            RelatedEntityId = updatedWallet.Id,
+            RelatedEntityType = "Wallet"
+        });
 
         return _mapper.Map<WalletDto>(updatedWallet);
     }
