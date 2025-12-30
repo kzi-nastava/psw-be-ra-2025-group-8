@@ -158,6 +158,21 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         // --------------------
+        // CHECK ENCOUNTER STATUS
+        // --------------------
+
+        [HttpPost("{encounterId:long}/check")]
+        public ActionResult<CheckEncounterResponseDto> CheckEncounter(long encounterId, [FromBody] CheckEncounterRequestDto request)
+        {
+            var personId = GetPersonIdFromToken();
+            if (personId != request.PersonId)
+                return Forbid();
+
+            var result = _participationService.CheckEncounterActiveStatus(request);
+            return Ok(result);
+        }
+
+        // --------------------
         // HELPER METHOD
         // --------------------
 

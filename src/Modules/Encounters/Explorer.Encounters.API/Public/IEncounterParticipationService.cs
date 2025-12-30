@@ -12,5 +12,6 @@ namespace Explorer.Encounters.API.Public
         List<EncounterParticipationDto> GetParticipationsByPerson(long personId);
         List<EncounterParticipationDto> GetActiveEncountersByPerson(long personId);
         EncounterParticipationDto GetParticipation(long personId, long encounterId);
+        CheckEncounterResponseDto CheckEncounterActiveStatus(CheckEncounterRequestDto request);
     }
 }

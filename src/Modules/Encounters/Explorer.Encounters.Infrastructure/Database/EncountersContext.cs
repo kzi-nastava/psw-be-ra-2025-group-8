@@ -53,6 +53,15 @@ public class EncountersContext : DbContext
 
             entity.Property(e => e.ArchivedAt)
                 .IsRequired(false);
+
+            // Social settings
+            entity.Property(e => e.SocialRequiredCount)
+                .IsRequired(false)
+                .HasColumnType("integer");
+
+            entity.Property(e => e.SocialRangeMeters)
+                .IsRequired(false)
+                .HasColumnType("double precision");
         });
 
         // EncounterParticipation configuration
