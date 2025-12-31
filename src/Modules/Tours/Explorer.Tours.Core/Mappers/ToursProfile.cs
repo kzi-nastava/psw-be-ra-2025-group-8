@@ -78,6 +78,16 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.ArchivedAt,
                 opt => opt.MapFrom(src => src.ArchivedAt));
 
+        CreateMap<Tour, TourInBundleDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+
+        CreateMap<Bundle, BundleDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
+            .ForMember(d => d.Tours, o => o.MapFrom(s => s.BundleTours.Select(bt => bt.Tour)))
+            .ForMember(d => d.PublishedAt, o => o.MapFrom(s => s.PublishedAt))
+            .ForMember(d => d.ArchivedAt, o => o.MapFrom(s => s.ArchivedAt));
+
+
 
 
         //CreateMap<TouristPreferencesDto, TouristPreferences>().ReverseMap();
