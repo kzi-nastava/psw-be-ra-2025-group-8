@@ -37,7 +37,7 @@ public class BundleService : IBundleService
 
     public BundleDto Create(CreateBundleDto dto, int authorId)
     {
-        ValidateTourOwnership(authorId, dto.TourIds);
+        ValidateToursForBundle(authorId, dto.TourIds);
 
         var bundle = new Bundle(dto.Name, dto.Price, authorId, dto.TourIds);
         var created = _bundleRepository.Create(bundle);
@@ -50,7 +50,7 @@ public class BundleService : IBundleService
         if (bundle.AuthorId != authorId) throw new ForbiddenException("You can only modify your own bundles.");
         if (bundle.Status != BundleStatus.Draft) throw new InvalidOperationException("Only draft bundle can be updated.");
 
-        ValidateTourOwnership(authorId, dto.TourIds);
+        ValidateToursForBundle(authorId, dto.TourIds);
 
         bundle.Name = dto.Name;
         bundle.Price = dto.Price;
@@ -92,18 +92,26 @@ public class BundleService : IBundleService
         return ToDto(updated);
     }
 
-    private void ValidateTourOwnership(int authorId, List<long> tourIds)
+    private void ValidateToursForBundle(int authorId, List<long> tourIds)
     {
-        var ids = tourIds?.Distinct().ToList() ?? new List<long>();
+        var ids = (tourIds ?? new List<long>()).Distinct().ToList();
         if (ids.Count < 2) throw new ArgumentException("Bundle must contain at least 2 tours.");
 
-        // Uzimamo samo ture autora i proverimo da li su SVE iz liste njegove
-        var myTours = _tourRepository.GetByAuthor(authorId);
-        var myIds = myTours.Select(t => t.Id).ToHashSet();
+        var tours = _tourRepository.GetByIds(ids);
 
-        if (ids.Any(id => !myIds.Contains(id)))
+        // 1) sve moraju postojati
+        if (tours.Count != ids.Count)
+            throw new KeyNotFoundException("Some tours do not exist.");
+
+        // 2) sve moraju biti od autora
+        if (tours.Any(t => t.AuthorId != authorId))
             throw new ForbiddenException("You can only add your own tours to bundle.");
+
+        // 3) sve moraju biti PUBLISHED
+        if (tours.Any(t => t.Status != TourStatus.Published))
+            throw new InvalidOperationException("Only PUBLISHED tours can be added to bundle.");
     }
+
 
     private BundleDto ToDto(Bundle bundle) => _mapper.Map<BundleDto>(bundle);
 }
