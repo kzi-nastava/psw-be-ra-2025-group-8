@@ -81,5 +81,17 @@ namespace Explorer.Payments.Core.Domain
 
             _items.Clear();
         }
+
+        public void RecordDirectPurchase(long tourId, decimal price, int adventureCoinsSpent)
+        {
+            if (_purchasedItems.Any(pi => pi.TourId == tourId)) return;
+
+            var purchasedItem = UserId > 0
+                ? new PurchasedItem(UserId, tourId, price, adventureCoinsSpent)
+                : new PurchasedItem(tourId, price);
+
+            _purchasedItems.Add(purchasedItem);
+        }
+
     }
 }
