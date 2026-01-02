@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using Explorer.Tours.API.Public.Author;
+using Npgsql;
 
 namespace Explorer.Payments.Tests;
 
@@ -23,7 +24,12 @@ public class PaymentsTestFactory : BaseTestFactory<PaymentsContext>
         );
         if (paymentsDescriptor != null)
             services.Remove(paymentsDescriptor);
-        services.AddDbContext<PaymentsContext>(SetupTestContext());
+
+        // Mirror production (PaymentsStartup) JSON mapping setup
+        var paymentsDataSourceBuilder = new NpgsqlDataSourceBuilder(BuildTestConnectionString());
+        paymentsDataSourceBuilder.EnableDynamicJson();
+        var paymentsDataSource = paymentsDataSourceBuilder.Build();
+        services.AddDbContext<PaymentsContext>(opt => opt.UseNpgsql(paymentsDataSource));
 
         // STAKEHOLDERS CONTEXT
         var stakeholdersDescriptor = services.SingleOrDefault(
@@ -43,10 +49,31 @@ public class PaymentsTestFactory : BaseTestFactory<PaymentsContext>
 
         services.AddDbContext<ToursContext>(SetupTestContext());
 
-        // register mock provider and mock tour service for tests
+        // existing mocks
         services.AddScoped<ITourPriceProvider, MockTourPriceProvider>();
         services.AddScoped<ITourService, MockTourService>();
 
+        // mock bundle provider
+        var bundleInfoProviderDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(IBundleInfoProvider)
+        );
+        if (bundleInfoProviderDescriptor != null)
+            services.Remove(bundleInfoProviderDescriptor);
+
+        services.AddScoped<IBundleInfoProvider, MockBundleInfoProvider>();
+
         return services;
+    }
+
+    private static string BuildTestConnectionString()
+    {
+        var server = Environment.GetEnvironmentVariable("DATABASE_HOST") ?? "localhost";
+        var port = Environment.GetEnvironmentVariable("DATABASE_PORT") ?? "5432";
+        var database = Environment.GetEnvironmentVariable("DATABASE_SCHEMA") ?? "explorer-v1-test";
+        var user = Environment.GetEnvironmentVariable("DATABASE_USERNAME") ?? "postgres";
+        var password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD") ?? "root";
+        var pooling = Environment.GetEnvironmentVariable("DATABASE_POOLING") ?? "true";
+
+        return $"Server={server};Port={port};Database={database};User ID={user};Password={password};Pooling={pooling};Include Error Detail=True";
     }
 }
