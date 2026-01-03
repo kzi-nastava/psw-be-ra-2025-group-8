@@ -15,6 +15,10 @@ public class PaymentsProfile : Profile
         CreateMap<PurchasedItem, PurchasedItemDto>();
         CreateMap<OrderItem, OrderItemDto>();
 
+        //za kupovinu bundle-a
+        CreateMap<BundlePurchaseRecord, BundlePurchaseRecordDto>();
+
+
         //mapper za coupon
         CreateMap<Coupon, CouponDto>();
         CreateMap<CreateCouponDto, Coupon>();

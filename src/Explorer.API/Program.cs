@@ -17,6 +17,8 @@ builder.Services.RegisterModules();
 
 // Register API-level adapter that maps Tours public API to Payments core abstraction
 builder.Services.AddScoped<ITourPriceProvider, TourPriceProviderAdapter>();
+builder.Services.AddScoped<IBundleInfoProvider, BundleInfoProviderAdapter>();
+
 
 var app = builder.Build();
 

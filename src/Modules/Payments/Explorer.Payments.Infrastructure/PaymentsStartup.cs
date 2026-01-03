@@ -26,12 +26,14 @@ public static class PaymentsStartup
         // here goes DI for services from Core (PaymentService etc.)
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
         services.AddScoped<ICouponService, CouponService>();
+        services.AddScoped<IBundlePurchaseService, BundlePurchaseService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();
+        services.AddScoped<IBundlePurchaseRecordRepository, BundlePurchaseRecordRepository>();
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("payments"));
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();

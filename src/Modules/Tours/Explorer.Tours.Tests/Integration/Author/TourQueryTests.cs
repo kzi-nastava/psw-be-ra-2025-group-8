@@ -38,9 +38,13 @@ public class TourQueryTests : BaseToursIntegrationTest
 
     private static TourController CreateController(IServiceScope scope, string authorId)
     {
-        return new TourController(scope.ServiceProvider.GetRequiredService<ITourService>())
+        return new TourController(
+            scope.ServiceProvider.GetRequiredService<ITourService>(),
+            scope.ServiceProvider.GetRequiredService<IBundleService>()
+        )
         {
             ControllerContext = BuildContext(authorId)
         };
     }
+
 }

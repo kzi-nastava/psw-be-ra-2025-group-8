@@ -43,10 +43,13 @@ public static class ToursStartup
         services.AddScoped<IInternalTourService, InternalTourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
-        //Minja dodao ovo
+
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
+        services.AddScoped<IBundleService, BundleService>();
+        services.AddScoped<ITouristBundleService, TouristBundleService>();
+
         //
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
@@ -61,7 +64,9 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<IReportProblemRepository, ReportProblemRepository>();
-        //Minja dodao ovo
+        //
+        services.AddScoped<IBundleRepository, BundleRepository>();
+
         services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
         services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
         services.AddScoped<ITagsRepository, TagsRepository>();

@@ -9,6 +9,8 @@ public class PaymentsContext : DbContext
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<PurchasedItem> PurchasedItems { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<BundlePurchaseRecord> BundlePurchaseRecords { get; set; }
+
     public PaymentsContext(DbContextOptions<PaymentsContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -62,6 +64,17 @@ public class PaymentsContext : DbContext
             builder.Property(pi => pi.AdventureCoinsSpent).IsRequired();
             builder.Property(pi => pi.PurchaseDate).IsRequired();
         });
+
+        modelBuilder.Entity<BundlePurchaseRecord>(builder =>
+        {
+            builder.HasKey(r => r.Id);
+            builder.Property(r => r.TouristId).IsRequired();
+            builder.Property(r => r.BundleId).IsRequired();
+            builder.Property(r => r.Price).IsRequired().HasColumnType("decimal(18,2)");
+            builder.Property(r => r.AdventureCoinsSpent).IsRequired();
+            builder.Property(r => r.PurchaseDate).IsRequired();
+        });
+
 
         modelBuilder.Entity<Coupon>(builder =>
         {
