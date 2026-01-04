@@ -9,6 +9,7 @@ public class EncountersContext : DbContext
 
     public DbSet<Encounter> Encounters { get; set; }
     public DbSet<EncounterParticipation> EncounterParticipations { get; set; }
+    public DbSet<Challenge> Challenges { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +55,11 @@ public class EncountersContext : DbContext
             entity.Property(e => e.ArchivedAt)
                 .IsRequired(false);
 
+            // Creator
+            entity.Property(e => e.CreatorPersonId)
+                .IsRequired(false)
+                .HasColumnType("bigint");
+
             // Social settings
             entity.Property(e => e.SocialRequiredCount)
                 .IsRequired(false)
@@ -62,6 +68,22 @@ public class EncountersContext : DbContext
             entity.Property(e => e.SocialRangeMeters)
                 .IsRequired(false)
                 .HasColumnType("double precision");
+        });
+
+        // Challenge configuration
+        modelBuilder.Entity<Challenge>(entity =>
+        {
+            entity.ToTable("Challenges");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Name).IsRequired().HasColumnType("text");
+            entity.Property(c => c.Description).IsRequired(false).HasColumnType("text");
+            entity.Property(c => c.Latitude).IsRequired();
+            entity.Property(c => c.Longitude).IsRequired();
+            entity.Property(c => c.CreatorPersonId).IsRequired();
+            entity.Property(c => c.Status).HasConversion<int>().IsRequired();
+            entity.Property(c => c.XPReward).IsRequired().HasColumnType("integer");
+            entity.Property(c => c.CreatedAt).IsRequired();
+            entity.Property(c => c.ApprovedAt).IsRequired(false);
         });
 
         // EncounterParticipation configuration

@@ -6,4 +6,6 @@ public interface IInternalPersonService
 {
     PersonDto GetByUserId(long userId);
     PersonDto UpdateProfile(long personId, UpdatePersonDto dto);
+    PersonDto AddExperience(long userId, int xp);
+    PersonDto AddExperienceByPersonId(long personId, int xp);
 }

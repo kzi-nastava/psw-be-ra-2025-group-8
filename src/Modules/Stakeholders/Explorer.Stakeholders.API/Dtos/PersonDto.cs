@@ -10,4 +10,8 @@ public class PersonDto
     public string? ProfilePicture { get; set; }
     public string? Bio { get; set; }
     public string? Motto { get; set; }
+
+    // New: XP and Level
+    public int Experience { get; set; }
+    public int Level { get; set; }
 }

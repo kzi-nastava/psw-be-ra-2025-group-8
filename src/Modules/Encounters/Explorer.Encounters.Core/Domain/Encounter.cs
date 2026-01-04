@@ -33,6 +33,9 @@ namespace Explorer.Encounters.Core.Domain
         public DateTime? PublishedAt { get; private set; }
         public DateTime? ArchivedAt { get; private set; }
 
+        // Who created this encounter (person id)
+        public long? CreatorPersonId { get; set; }
+
         // Social encounter settings
         public int? SocialRequiredCount { get; private set; }
         public double? SocialRangeMeters { get; private set; }

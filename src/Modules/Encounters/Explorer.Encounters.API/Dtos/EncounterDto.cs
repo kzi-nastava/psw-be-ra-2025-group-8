@@ -20,6 +20,9 @@ namespace Explorer.Encounters.API.Dtos
         public DateTime? PublishedAt { get;  set; }
         public DateTime? ArchivedAt { get;  set; }
 
+        // Creator
+        public long CreatorPersonId { get; set; }
+
         // Social encounter settings
         public int? SocialRequiredCount { get; set; }
         public double? SocialRangeMeters { get; set; }
