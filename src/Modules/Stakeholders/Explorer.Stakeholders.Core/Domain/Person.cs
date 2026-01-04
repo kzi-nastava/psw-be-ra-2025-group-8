@@ -13,6 +13,10 @@ public class Person : Entity
     public string? Bio { get; private set; }
     public string? Motto { get; private set; }
 
+    // New: experience and level
+    public int Experience { get; private set; }
+    public int Level { get; private set; }
+
     public Person(long userId, string name, string surname, string email, string? profilePicture = null, string? bio = null, string? motto = null)
     {
         UserId = userId;
@@ -22,6 +26,8 @@ public class Person : Entity
         ProfilePicture = profilePicture;
         Bio = bio;
         Motto = motto;
+        Experience = 0;
+        Level = 1; // start at level 1
         Validate();
     }
 
@@ -34,6 +40,31 @@ public class Person : Entity
         Bio = bio;
         Motto = motto;
         Validate();
+    }
+
+    // Add experience and handle level up. Returns number of levels gained (0 or more).
+    public int AddExperience(int xp)
+    {
+        if (xp <= 0) return 0;
+
+        Experience += xp;
+        var levelsGained = 0;
+
+        // Simple progression: XP required for next level = 100 * current Level
+        while (Experience >= RequiredXpForNextLevel(Level))
+        {
+            Experience -= RequiredXpForNextLevel(Level);
+            Level++;
+            levelsGained++;
+        }
+
+        return levelsGained;
+    }
+
+    private static int RequiredXpForNextLevel(int currentLevel)
+    {
+        // Example formula: 100 * currentLevel (level 1 -> 100 XP, level 2 -> 200 XP, ...)
+        return 100 * currentLevel;
     }
 
     private void Validate()

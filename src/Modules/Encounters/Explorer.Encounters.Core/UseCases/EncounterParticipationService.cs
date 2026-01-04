@@ -100,6 +100,16 @@ namespace Explorer.Encounters.Core.UseCases
             participation.Complete(encounter.XPReward);
             var updated = _participationRepository.Update(participation);
 
+            // Award XP to person (non-fatal)
+            try
+            {
+                _personService.AddExperience(participation.PersonId, encounter.XPReward);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[XP] failed to award XP to user {participation.PersonId}: {ex.Message}");
+            }
+
             return MapToDto(updated);
         }
 
@@ -176,6 +186,16 @@ namespace Explorer.Encounters.Core.UseCases
                     {
                         p.Complete(encounter.XPReward);
                         _participationRepository.Update(p);
+
+                        // Award XP for each completed participant
+                        try
+                        {
+                            _personService.AddExperience(p.PersonId, encounter.XPReward);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[XP] failed to award XP to user {p.PersonId}: {ex.Message}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -251,6 +271,16 @@ namespace Explorer.Encounters.Core.UseCases
                             p.Complete(encounter.XPReward);
                             _participationRepository.Update(p);
                             response.CompletedPersonIds.Add(p.PersonId);
+
+                            // award xp
+                            try
+                            {
+                                _personService.AddExperience(p.PersonId, encounter.XPReward);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[XP] failed to award XP to user {p.PersonId}: {ex.Message}");
+                            }
                         }
                     }
                     catch (Exception ex)

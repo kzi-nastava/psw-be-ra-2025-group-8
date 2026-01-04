@@ -39,135 +39,117 @@ namespace Explorer.Encounters.Core.UseCases
         {
             var encounter = _encounterRepository.GetById(id);
             if (encounter == null)
-                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
+                return null;
 
             return MapToDto(encounter);
         }
 
         public List<EncounterDto> GetNearbyEncounters(long personId)
         {
-            // Get person and their position
             var person = _personService.GetByUserId(personId);
             if (person == null)
-                throw new KeyNotFoundException($"Person with ID {personId} not found.");
+                throw new KeyNotFoundException("Person not found");
 
             var position = _positionService.GetByTouristId((int)person.UserId);
             if (position == null)
-                throw new InvalidOperationException($"Position not found for user {person.UserId}.");
+                throw new InvalidOperationException("Position not found for person");
 
-            // Get all published encounters
             var allEncounters = _encounterRepository.GetAll()
-                .Where(e => e.Status == EncouterStatus.Published &&
-                           e.Latitude.HasValue &&
-                           e.Longitude.HasValue)
+                .Where(e => e.Status == EncouterStatus.Published && e.Latitude.HasValue && e.Longitude.HasValue)
                 .ToList();
 
-            // Filter encounters within 1km range
-            var nearbyEncounters = allEncounters
-                .Where(e => DistanceCalculator.IsWithinRange(
-                    position.Latitude, position.Longitude,
-                    e.Latitude.Value, e.Longitude.Value,
-                    NearbyRangeMeters))
+            var nearby = allEncounters
+                .Where(e => DistanceCalculator.IsWithinRange(position.Latitude, position.Longitude, e.Latitude.Value, e.Longitude.Value, NearbyRangeMeters))
                 .Select(MapToDto)
                 .ToList();
 
-            return nearbyEncounters;
+            return nearby;
         }
 
         public EncounterDto CreateEncounter(EncounterDto createDto)
         {
+            if (createDto.CreatorPersonId == 0)
+                throw new ArgumentException("CreatorPersonId must be provided");
+
+            var person = _personService.GetByUserId(createDto.CreatorPersonId);
+            if (person == null)
+                throw new KeyNotFoundException("Creator person not found");
+
+            if (person.Level < 10)
+                throw new UnauthorizedAccessException("You must be level 10 to create an encounter.");
+
             var encounter = MapToDomain(createDto);
-            var createdEncounter = _encounterRepository.Create(encounter);
-            return MapToDto(createdEncounter);
+            encounter.CreatorPersonId = createDto.CreatorPersonId;
+
+            var created = _encounterRepository.Create(encounter);
+            return MapToDto(created);
         }
 
         public EncounterDto UpdateEncounter(long id, EncounterUpdateDto updateDto)
         {
-            var existingEncounter = _encounterRepository.GetById(id);
-            if (existingEncounter == null)
-                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
+            var existing = _encounterRepository.GetById(id);
+            if (existing == null) throw new KeyNotFoundException("Encounter not found");
 
-            UpdateDomain(existingEncounter, updateDto);
-            var savedEncounter = _encounterRepository.Update(existingEncounter);
-
-            return MapToDto(savedEncounter);
+            UpdateDomain(existing, updateDto);
+            var updated = _encounterRepository.Update(existing);
+            return MapToDto(updated);
         }
 
         public void DeleteEncounter(long id)
         {
-            var existingEncounter = _encounterRepository.GetById(id);
-            if (existingEncounter == null)
-                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
-
             _encounterRepository.Delete(id);
         }
 
         public EncounterDto PublishEncounter(long id)
         {
-            var encounter = _encounterRepository.GetById(id);
-            if (encounter == null)
-                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
-
-            encounter.Publish();
-            var updatedEncounter = _encounterRepository.Update(encounter);
-            return MapToDto(updatedEncounter);
+            var existing = _encounterRepository.GetById(id);
+            if (existing == null) throw new KeyNotFoundException("Encounter not found");
+            existing.Publish();
+            var updated = _encounterRepository.Update(existing);
+            return MapToDto(updated);
         }
 
         public EncounterDto ArchiveEncounter(long id)
         {
-            var encounter = _encounterRepository.GetById(id);
-            if (encounter == null)
-                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
-
-            encounter.Archive();
-            var updatedEncounter = _encounterRepository.Update(encounter);
-            return MapToDto(updatedEncounter);
+            var existing = _encounterRepository.GetById(id);
+            if (existing == null) throw new KeyNotFoundException("Encounter not found");
+            existing.Archive();
+            var updated = _encounterRepository.Update(existing);
+            return MapToDto(updated);
         }
 
         public EncounterDto ReactivateEncounter(long id)
         {
-            var encounter = _encounterRepository.GetById(id);
-            if (encounter == null)
-                throw new KeyNotFoundException($"Encounter with ID {id} not found.");
-
-            encounter.Reactivate();
-            var updatedEncounter = _encounterRepository.Update(encounter);
-            return MapToDto(updatedEncounter);
+            var existing = _encounterRepository.GetById(id);
+            if (existing == null) throw new KeyNotFoundException("Encounter not found");
+            existing.Reactivate();
+            var updated = _encounterRepository.Update(existing);
+            return MapToDto(updated);
         }
 
-        // --------------------
-        // Manual mapping
-        // --------------------
-
-        private EncounterDto MapToDto(Encounter encounter)
+        private EncounterDto MapToDto(Encounter e)
         {
             return new EncounterDto
             {
-                Id = encounter.Id,
-                Name = encounter.Name,
-                Description = encounter.Description,
-                Location = encounter.Location,
-                Latitude = encounter.Latitude ?? 0,
-                Longitude = encounter.Longitude ?? 0,
-                Type = encounter.Type.ToString(),
-                XPReward = encounter.XPReward,
-                Status = encounter.Status.ToString(),
-                PublishedAt = encounter.PublishedAt,
-                ArchivedAt = encounter.ArchivedAt
+                Id = e.Id,
+                Name = e.Name,
+                Description = e.Description,
+                Location = e.Location,
+                Latitude = e.Latitude ?? 0,
+                Longitude = e.Longitude ?? 0,
+                Status = e.Status.ToString(),
+                Type = e.Type.ToString(),
+                XPReward = e.XPReward,
+                PublishedAt = e.PublishedAt,
+                ArchivedAt = e.ArchivedAt,
+                CreatorPersonId = e.CreatorPersonId ?? 0
             };
         }
 
         private Encounter MapToDomain(EncounterDto dto)
         {
-            return new Encounter(
-                dto.Name,
-                dto.Description,
-                dto.Location,
-                dto.Latitude,
-                dto.Longitude,
-                Enum.Parse<EncouterType>(dto.Type),
-                dto.XPReward
-            );
+            var enc = new Encounter(dto.Name, dto.Description, dto.Location, dto.Latitude, dto.Longitude, Enum.Parse<EncouterType>(dto.Type), dto.XPReward);
+            return enc;
         }
 
         private void UpdateDomain(Encounter existing, EncounterUpdateDto dto)
@@ -175,11 +157,10 @@ namespace Explorer.Encounters.Core.UseCases
             existing.Name = dto.Name;
             existing.Description = dto.Description;
             existing.Location = dto.Location;
-
             existing.SetCoordinates(dto.Latitude, dto.Longitude);
-
-            existing.XPReward = dto.XPReward;
             existing.Type = Enum.Parse<EncouterType>(dto.Type);
+            existing.XPReward = dto.XPReward;
+            if (!string.IsNullOrWhiteSpace(dto.Status)) existing.Status = Enum.Parse<EncouterStatus>(dto.Status);
         }
     }
 }
