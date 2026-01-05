@@ -12,11 +12,12 @@ namespace Explorer.Encounters.API.Public
         List<EncounterDto> GetAllEncounters();
         EncounterDto GetEncounterById(long id);
         List<EncounterDto> GetNearbyEncounters(long personId);
-        EncounterDto CreateEncounter(EncounterDto createDto);
+        EncounterDto CreateEncounter(EncounterDto createDto, bool skipLevelCheck = false);
         EncounterDto UpdateEncounter(long id, EncounterUpdateDto updateDto);
         void DeleteEncounter(long id);
         EncounterDto PublishEncounter(long id);
         EncounterDto ArchiveEncounter(long id);
         EncounterDto ReactivateEncounter(long id);
+        EncounterDto ApproveEncounter(long id); // admin approves pending encounter
     }
 }

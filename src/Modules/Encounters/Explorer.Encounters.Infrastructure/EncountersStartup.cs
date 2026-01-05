@@ -25,14 +25,12 @@ public static class EncountersStartup
     {
         services.AddScoped<IEncounterService, EncounterService>();
         services.AddScoped<IEncounterParticipationService, EncounterParticipationService>();
-        services.AddScoped<IChallengeService, ChallengeService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
         services.AddScoped<IEncounterRepository, EncounterRepository>();
         services.AddScoped<IEncounterParticipationRepository, EncounterParticipationRepository>();
-        services.AddScoped<IChallengeRepository, ChallengeRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("encounters"));
         dataSourceBuilder.EnableDynamicJson();

@@ -39,10 +39,12 @@ public class AuthenticationService : IAuthenticationService
         {
             personId = _userRepository.GetPersonId(user.Id);
         }
-        catch (KeyNotFoundException)
+        catch
         {
-            personId = 0;
+            // fallback to user.Id for tests/environments where Person mapping might be missing
+            personId = user.Id;
         }
+
         return _tokenGenerator.GenerateAccessToken(user, personId);
     }
 

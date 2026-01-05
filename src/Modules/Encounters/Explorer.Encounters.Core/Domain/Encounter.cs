@@ -10,6 +10,7 @@ namespace Explorer.Encounters.Core.Domain
     public enum EncouterStatus
     {
         Draft,
+        Pending,
         Published,
         Archived
     }
@@ -33,7 +34,7 @@ namespace Explorer.Encounters.Core.Domain
         public DateTime? PublishedAt { get; private set; }
         public DateTime? ArchivedAt { get; private set; }
 
-        // Who created this encounter (person id)
+        // Creator (person) - optional
         public long? CreatorPersonId { get; set; }
 
         // Social encounter settings
@@ -59,11 +60,11 @@ namespace Explorer.Encounters.Core.Domain
 
         public Encounter() { }
 
-        //Publish encounter
+        //Publish encounter (allow from Draft or Pending)
         public void Publish()
         {
-            if (Status != EncouterStatus.Draft)
-                throw new InvalidOperationException("Only draft encounters can be published.");
+            if (Status == EncouterStatus.Published)
+                throw new InvalidOperationException("Only draft or pending encounters can be published.");
 
             Status = EncouterStatus.Published;
             PublishedAt = DateTime.UtcNow;

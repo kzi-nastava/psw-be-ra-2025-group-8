@@ -14,9 +14,5 @@ public class EncountersProfile : Profile
             .ReverseMap();
 
         CreateMap<EncounterParticipationDto, EncounterParticipation>().ReverseMap();
-
-        // Challenges
-        CreateMap<CreateChallengeDto, Challenge>();
-        CreateMap<Challenge, ChallengeDto>().ReverseMap();
     }
 }

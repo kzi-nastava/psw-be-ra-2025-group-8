@@ -173,6 +173,28 @@ namespace Explorer.API.Controllers.Tourist
         }
 
         // --------------------
+        // CREATE ENCOUNTER (tourist, requires level >= 10 checked in service)
+        // --------------------
+
+        [HttpPost]
+        public ActionResult<EncounterDto> CreateEncounter([FromBody] EncounterDto dto)
+        {
+            var personId = GetPersonIdFromToken();
+            dto.CreatorPersonId = personId;
+
+            // determine role claim - support multiple claim names
+            var roleClaim = User.FindFirst("role") ?? User.FindFirst("Role") ?? User.FindFirst(ClaimTypes.Role);
+            bool isAdmin = false;
+            if (roleClaim != null && int.TryParse(roleClaim.Value, out int role))
+            {
+                isAdmin = role == 0;
+            }
+
+            var created = _encounterService.CreateEncounter(dto, skipLevelCheck: isAdmin);
+            return Ok(created);
+        }
+
+        // --------------------
         // HELPER METHOD
         // --------------------
 

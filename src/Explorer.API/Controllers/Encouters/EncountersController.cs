@@ -42,7 +42,9 @@ namespace Explorer.API.Controllers.Administration
         [HttpPost]
         public ActionResult<EncounterDto> Create([FromBody] EncounterDto encounter)
         {
-            var created = _encounterService.CreateEncounter(encounter);
+            // If caller is administrator, skip level checks so admin can create Draft/Published directly
+            var isAdmin = User.IsInRole("administrator");
+            var created = _encounterService.CreateEncounter(encounter, skipLevelCheck: isAdmin);
             return Ok(created);
         }
 
