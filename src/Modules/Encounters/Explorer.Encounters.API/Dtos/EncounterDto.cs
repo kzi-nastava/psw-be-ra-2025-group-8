@@ -20,7 +20,7 @@ namespace Explorer.Encounters.API.Dtos
         public DateTime? PublishedAt { get;  set; }
         public DateTime? ArchivedAt { get;  set; }
 
-        // Creator
+        // Creator (person) - used when creating from tourist API
         public long CreatorPersonId { get; set; }
 
         // Social encounter settings

@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Explorer.API;
+using System.IO;
+using System;
 
 namespace Explorer.BuildingBlocks.Tests;
 
@@ -41,9 +43,41 @@ public abstract class BaseTestFactory<TDbContext> : WebApplicationFactory<Progra
         try
         {
             var scriptFiles = Directory.GetFiles(scriptFolder);
-            Array.Sort(scriptFiles);
-            var script = string.Join('\n', scriptFiles.Select(File.ReadAllText));
-            context.Database.ExecuteSqlRaw(script);
+            // Sort by filename only (not full path) to preserve intended ordering like a-..., b-..., c-... across modules
+            Array.Sort(scriptFiles, (a, b) => string.Compare(Path.GetFileName(a), Path.GetFileName(b), StringComparison.OrdinalIgnoreCase));
+
+            // Execute each script file; split into individual statements and execute separately
+            foreach (var file in scriptFiles)
+            {
+                try
+                {
+                    var script = File.ReadAllText(file);
+                    if (string.IsNullOrWhiteSpace(script)) continue;
+
+                    // Split by semicolon to get individual statements. This is a simple splitter suitable for our seed scripts.
+                    var statements = script.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var stmt in statements)
+                    {
+                        var sql = stmt.Trim();
+                        if (string.IsNullOrWhiteSpace(sql)) continue;
+
+                        try
+                        {
+                            context.Database.ExecuteSqlRaw(sql);
+                        }
+                        catch (Exception exStmt)
+                        {
+                            logger.LogError(exStmt, "Error executing SQL statement from file '{File}': {Message}\nStatement: {Stmt}", Path.GetFileName(file), exStmt.Message, sql.Length > 200 ? sql.Substring(0, 200) + "..." : sql);
+                            // continue with next statement
+                        }
+                    }
+                }
+                catch (Exception exFile)
+                {
+                    logger.LogError(exFile, "Error executing SQL script file '{File}': {Message}", Path.GetFileName(file), exFile.Message);
+                    // continue with next script
+                }
+            }
         }
         catch (Exception ex)
         {

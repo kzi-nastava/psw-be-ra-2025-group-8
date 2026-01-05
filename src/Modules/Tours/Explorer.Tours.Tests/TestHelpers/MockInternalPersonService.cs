@@ -19,6 +19,20 @@ public class MockInternalPersonService : IInternalPersonService
         };
     }
 
+    public PersonDto GetByPersonId(long personId)
+    {
+        return new PersonDto
+        {
+            Id = personId,
+            UserId = personId,
+            Name = "Test",
+            Surname = "User",
+            Email = "test.user@example.com",
+            Experience = 0,
+            Level = 1
+        };
+    }
+
     public PersonDto UpdateProfile(long personId, UpdatePersonDto dto)
     {
         return new PersonDto
@@ -55,7 +69,7 @@ public class MockInternalPersonService : IInternalPersonService
 
     public PersonDto AddExperienceByPersonId(long personId, int xp)
     {
-        // Mirror AddExperience behaviour for tests
+        // Same behavior as AddExperience but by person id
         var gainedLevels = xp / 100;
         var remainingXp = xp % 100;
         return new PersonDto

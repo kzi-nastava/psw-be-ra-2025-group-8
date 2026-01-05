@@ -28,6 +28,27 @@ public class JwtGenerator : ITokenGenerator
             new("role", user.GetPrimaryRoleName())
         };
 
+        // Add standard role claim and numeric role id for compatibility with different clients
+        try
+        {
+            // ClaimTypes.Role - textual role name (e.g. "Administrator", "Author", "Tourist")
+            claims.Add(new Claim(ClaimTypes.Role, user.GetPrimaryRoleName()));
+        }
+        catch
+        {
+            // ignore if mapping fails
+        }
+
+        try
+        {
+            // roleId - numeric value of enum (e.g. 0,1,2)
+            claims.Add(new Claim("roleId", ((int)user.Role).ToString()));
+        }
+        catch
+        {
+            // ignore
+        }
+
         var jwt = CreateToken(claims, 60 * 24);
         authenticationResponse.Id = user.Id;
         authenticationResponse.AccessToken = jwt;

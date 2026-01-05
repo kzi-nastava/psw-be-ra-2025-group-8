@@ -35,6 +35,13 @@ public class PersonService : IPersonService, IInternalPersonService
         return _mapper.Map<PersonDto>(person);
     }
 
+    public PersonDto GetByPersonId(long personId)
+    {
+        var person = _personRepository.Get(personId);
+        if (person == null) throw new NotFoundException("Person not found.");
+        return _mapper.Map<PersonDto>(person);
+    }
+
     public PersonDto UpdateProfile(long personId, UpdatePersonDto dto)
     {
         var person = _personRepository.Get(personId);
