@@ -62,7 +62,6 @@ public static class StakeholdersStartup
         services.AddScoped<IFollowerRepository, FollowerRepository>();
         services.AddScoped<IFollowerMessageRepository, FollowerMessageRepository>();
 
-
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
         services.AddScoped<IClubJoinRequestRepository, ClubJoinRequestRepository>();

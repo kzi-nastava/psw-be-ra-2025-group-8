@@ -56,6 +56,9 @@ public static class ToursStartup
         services.AddScoped<ITourRatingService, TourRatingService>();
         services.AddScoped<ITourRatingImageService, TourRatingImageService>();
         services.AddScoped<ITouristTourService, TouristTourService>();
+        
+        // Tour Chat
+        services.AddScoped<ITourChatRoomService, TourChatRoomService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -83,6 +86,9 @@ public static class ToursStartup
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
         services.AddScoped<ITourRatingRepository, TourRatingRepository>();
         services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
+        
+        // Tour Chat
+        services.AddScoped<ITourChatRoomRepository, TourChatRoomRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("tours"));
         dataSourceBuilder.EnableDynamicJson();

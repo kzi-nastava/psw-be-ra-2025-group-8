@@ -2,6 +2,8 @@ using Explorer.API.Middleware;
 using Explorer.API.Startup;
 using Explorer.Payments.Core.UseCases;
 using Explorer.API.Adapters;
+using Explorer.API.Hubs;
+using Explorer.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,10 @@ builder.Services.AddScoped<ITourPriceProvider, TourPriceProviderAdapter>();
 builder.Services.AddScoped<IBundleInfoProvider, BundleInfoProviderAdapter>();
 
 
+// SignalR configuration
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IChatNotificationService, ChatNotificationService>();
+
 var app = builder.Build();
 
 // Global exception handler
@@ -35,16 +41,18 @@ else
     app.UseHsts();
 }
 
+app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
 
-app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles();
+
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
 

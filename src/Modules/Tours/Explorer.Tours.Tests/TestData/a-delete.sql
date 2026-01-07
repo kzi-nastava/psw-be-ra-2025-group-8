@@ -18,7 +18,13 @@ DELETE FROM tours."TourTags";
 
 DELETE FROM tours."KeyPointsReached";   
 DELETE FROM tours."PersonEquipment";   
-DELETE FROM tours."TourExecutions"; 
+DELETE FROM tours."TourExecutions";
+
+-- Tour Chat - must be deleted before KeyPoints and Tours
+DELETE FROM tours."TourChatMessages";
+DELETE FROM tours."TourChatMembers";
+DELETE FROM tours."TourChatRooms";
+
 DELETE FROM tours."KeyPoints";      
 DELETE FROM tours."Equipment";
 -- IssueMessages depends on ReportProblem
