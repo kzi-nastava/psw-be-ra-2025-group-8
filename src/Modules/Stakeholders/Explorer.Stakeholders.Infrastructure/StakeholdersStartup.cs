@@ -31,6 +31,7 @@ public static class StakeholdersStartup
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IInternalPersonService, PersonService>();
+        services.AddScoped<IInternalUserService, InternalUserService>();
         services.AddScoped<ITokenGenerator, JwtGenerator>();
 
 
@@ -39,11 +40,15 @@ public static class StakeholdersStartup
         services.AddScoped<IMeetupService, MeetupService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<BuildingBlocks.Core.UseCases.IIssueNotificationService, IssueNotificationServiceAdapter>();
+        services.AddScoped<Explorer.BuildingBlocks.Core.UseCases.IPurchaseNotificationService, PurchaseNotificationServiceAdapter>();
         services.AddScoped<IFollowerService, FollowerService>();
 
         //za klubove
         services.AddScoped<IClubService, ClubService>();
         services.AddScoped<IClubMessageService, ClubMessageService>();
+
+        services.AddScoped<IWalletService, WalletService>();
+        services.AddScoped<IInternalWalletService, WalletService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -60,7 +65,10 @@ public static class StakeholdersStartup
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();
         services.AddScoped<IClubJoinRequestRepository, ClubJoinRequestRepository>();
+        services.AddScoped<IClubInvitationRepository, ClubInvitationRepository>();
         services.AddScoped<IClubMessageRepository, ClubMessageRepository>();
+
+        services.AddScoped<IWalletRepository, WalletDatabaseRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("stakeholders"));
         dataSourceBuilder.EnableDynamicJson();

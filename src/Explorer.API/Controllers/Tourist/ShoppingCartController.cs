@@ -1,6 +1,6 @@
-﻿using Explorer.Tours.API.Dtos;
+﻿using Explorer.Payments.API.Dtos;
 using Explorer.Tours.API.Public.Author;
-using Explorer.Tours.API.Public.ShoppingCart;
+using Explorer.Payments.API.Public;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Explorer.BuildingBlocks.Core.Exceptions;
@@ -94,6 +94,10 @@ namespace Explorer.API.Controllers.Tourist
             {
                 return NotFound(ex.Message);
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("clear")]
         public IActionResult ClearCart([FromQuery] long userId)
@@ -105,6 +109,10 @@ namespace Explorer.API.Controllers.Tourist
                 return Ok("Cart cleared.");
             }
             catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }

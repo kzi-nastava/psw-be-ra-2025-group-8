@@ -74,11 +74,13 @@ public class FollowerCommandTests : BaseStakeholdersIntegrationTest
         controller.Follow(USER_TOURIST1_ID);
 
         // Act - Unfollow
-        var result = controller.Unfollow(USER_TOURIST1_ID) as OkObjectResult;
+        var result = controller.Unfollow(USER_TOURIST1_ID);
 
         // Assert - Response
         result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe(200);
+        result.ShouldBeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult.StatusCode.ShouldBe(200);
 
         // Assert - Database
         var stored = dbContext.Followers.FirstOrDefault(f => f.UserId == USER_TOURIST2_ID && f.FollowingUserId == USER_TOURIST1_ID);
@@ -100,7 +102,7 @@ public class FollowerCommandTests : BaseStakeholdersIntegrationTest
         result.StatusCode.ShouldBe(404);
     }
 
-  [Fact]
+    [Fact]
     public void Send_message_to_followers_successfully()
     {
         // Arrange
@@ -120,11 +122,13 @@ public class FollowerCommandTests : BaseStakeholdersIntegrationTest
         };
 
         // Act
-        var result = controller.SendMessageToFollowers(messageDto) as OkObjectResult;
+        var result = controller.SendMessageToFollowers(messageDto);
 
         // Assert - Response
         result.ShouldNotBeNull();
-        result.StatusCode.ShouldBe(200);
+        result.ShouldBeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult.StatusCode.ShouldBe(200);
 
         // Assert - Database (Message created)
         var message = dbContext.FollowerMessages

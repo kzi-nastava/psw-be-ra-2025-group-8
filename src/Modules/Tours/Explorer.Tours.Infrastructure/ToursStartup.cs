@@ -1,5 +1,6 @@
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Public.PersonalEquipment;
@@ -7,6 +8,7 @@ using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
+using Explorer.Tours.Core.UseCases;
 using Explorer.Tours.Core.UseCases.Administration;
 using Explorer.Tours.Core.UseCases.PersonalEquipment;
 using Explorer.Tours.Core.UseCases.Tourist;
@@ -14,8 +16,6 @@ using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Explorer.Tours.Core.UseCases.ShoppingCart;
-using Explorer.Tours.API.Public.ShoppingCart;
 using Npgsql;
 
 
@@ -40,13 +40,16 @@ public static class ToursStartup
         services.AddScoped<IReportProblemService, ReportProblemService>();
         services.AddScoped<IPersonEquipmentService, PersonEquipmentService>();
         services.AddScoped<ITourService, TourService>();
+        services.AddScoped<IInternalTourService, InternalTourService>();
         services.AddScoped<IPositionService, PositionService>();
         services.AddScoped<IObjectService, ObjectService>();
-        services.AddScoped<IShoppingCartService, ShoppingCartService>();
-        //Minja dodao ovo
+
         services.AddScoped<ITouristPreferencesService, TouristPreferencesService>();
         services.AddScoped<ITransportTypePreferencesService, TransportTypePreferencesService>();
         services.AddScoped<IPreferenceTagsService, PreferenceTagsService>();
+        services.AddScoped<IBundleService, BundleService>();
+        services.AddScoped<ITouristBundleService, TouristBundleService>();
+
         //
 
         services.AddScoped<ITourExecutionService, TourExecutionService>();
@@ -64,7 +67,9 @@ public static class ToursStartup
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<IReportProblemRepository, ReportProblemRepository>();
-        //Minja dodao ovo
+        //
+        services.AddScoped<IBundleRepository, BundleRepository>();
+
         services.AddScoped<ITouristPreferencesRepository, TouristPreferencesRepository>();
         services.AddScoped<ITransportTypePreferencesRepository, TransportTypePreferencesRepository>();
         services.AddScoped<ITagsRepository, TagsRepository>();
@@ -81,9 +86,6 @@ public static class ToursStartup
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
         services.AddScoped<ITourRatingRepository, TourRatingRepository>();
         services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
-        
-        // Shopping Cart
-        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         
         // Tour Chat
         services.AddScoped<ITourChatRoomRepository, TourChatRoomRepository>();

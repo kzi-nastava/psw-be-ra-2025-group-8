@@ -16,8 +16,12 @@ public class StakeholdersContext : DbContext
     public DbSet<ClubMessage> ClubMessages { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<ClubJoinRequest> ClubJoinRequests { get; set; }
+    public DbSet<ClubInvitation> ClubInvitations { get; set; }
     public DbSet<Follower> Followers { get; set; }
     public DbSet<FollowerMessage> FollowerMessages { get; set; }
+    public DbSet<Wallet> Wallets { get; set; }
+
+
     public StakeholdersContext(DbContextOptions<StakeholdersContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,6 +47,11 @@ public class StakeholdersContext : DbContext
 
         modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.ClubId);
         modelBuilder.Entity<ClubJoinRequest>().HasIndex(r => r.TouristId);
+
+        modelBuilder.Entity<ClubInvitation>().HasIndex(i => i.ClubId);
+        modelBuilder.Entity<ClubInvitation>().HasIndex(i => i.TouristId);
+
+        modelBuilder.Entity<Wallet>().HasIndex(w => w.UserId).IsUnique();
 
         ConfigureStakeholder(modelBuilder);
     }
