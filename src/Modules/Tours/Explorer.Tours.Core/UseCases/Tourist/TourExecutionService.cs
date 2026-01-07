@@ -14,6 +14,8 @@ public class TourExecutionService : ITourExecutionService
     private readonly ICrudRepository<TourExecution> _crudRepository;
     private readonly IKeyPointRepository _keyPointRepository;
     private readonly IKeyPointReachedRepository _keyPointReachedRepository;
+    private readonly ICrudRepository<Tour> _tourRepository;
+    private readonly ITourChatRoomService _chatRoomService;
     private readonly IMapper _mapper;
 
     // Proximity threshold (meters)
@@ -24,12 +26,16 @@ public class TourExecutionService : ITourExecutionService
         ICrudRepository<TourExecution> crudRepository,
         IKeyPointRepository keyPointRepository,
         IKeyPointReachedRepository keyPointReachedRepository,
+        ICrudRepository<Tour> tourRepository,
+        ITourChatRoomService chatRoomService,
         IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
         _crudRepository = crudRepository;
         _keyPointRepository = keyPointRepository;
         _keyPointReachedRepository = keyPointReachedRepository;
+        _tourRepository = tourRepository;
+        _chatRoomService = chatRoomService;
         _mapper = mapper;
     }
 
@@ -50,7 +56,7 @@ public class TourExecutionService : ITourExecutionService
     {
         // Validation: Check if tourist already has an active TourExecution
         var activeTourExecutions = _tourExecutionRepository.GetByTourist(tourExecutionDto.IdTourist)
-            .Where(te => te.Status == TourExecutionStatus.InProgress) // Only InProgress tours are considered active
+            .Where(te => te.Status == TourExecutionStatus.InProgress)
             .ToList();
 
         if (activeTourExecutions.Any())
@@ -71,6 +77,22 @@ public class TourExecutionService : ITourExecutionService
         );
 
         var result = _tourExecutionRepository.Create(tourExecution);
+
+        // Automatski dodaj korisnika u tour chat
+        try
+        {
+            var tour = _tourRepository.Get(tourExecutionDto.IdTour);
+            if (tour != null)
+            {
+                _chatRoomService.GetOrCreateTourChatRoom(tourExecutionDto.IdTour, tour.Name);
+                _chatRoomService.AddUserToTourChat(tourExecutionDto.IdTour, tourExecutionDto.IdTourist);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to add user to tour chat: {ex.Message}");
+        }
+
         return _mapper.Map<TourExecutionDto>(result);
     }
 
@@ -80,11 +102,28 @@ public class TourExecutionService : ITourExecutionService
         if (existing == null)
             throw new KeyNotFoundException($"TourExecution with id {tourExecutionDto.Id} not found.");
 
+        var oldStatus = existing.Status;
+        
         existing.UpdatePosition(tourExecutionDto.Longitude, tourExecutionDto.Latitude);
         existing.UpdateStatus(Enum.Parse<TourExecutionStatus>(tourExecutionDto.Status));
         existing.UpdateCompletionPercentage(tourExecutionDto.CompletionPercentage);
 
         var result = _tourExecutionRepository.Update(existing);
+
+        // Ukloni korisnika iz chat-a ako je završio ili napustio turu
+        if (oldStatus == TourExecutionStatus.InProgress && 
+            (existing.Status == TourExecutionStatus.Completed || existing.Status == TourExecutionStatus.Abandoned))
+        {
+            try
+            {
+                _chatRoomService.RemoveUserFromTourChat(existing.IdTour, existing.IdTourist);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to remove user from tour chat: {ex.Message}");
+            }
+        }
+
         return _mapper.Map<TourExecutionDto>(result);
     }
 
