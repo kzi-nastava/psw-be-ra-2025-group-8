@@ -32,5 +32,20 @@ namespace Explorer.Payments.Core.Domain
             DiscountedPrice = discountedPrice;
             IsBundle = false;
         }
+
+        public void ApplyCoupon(long couponId, int discountPercentage)
+        {
+            if (discountPercentage < 0 || discountPercentage > 100)
+                throw new ArgumentException("Discount percentage must be between 0 and 100.");
+
+            CouponId = couponId;
+            DiscountedPrice = OriginalPrice * (100 - discountPercentage) / 100;
+        }
+
+        public void RemoveCoupon()
+        {
+            CouponId = null;
+            DiscountedPrice = OriginalPrice;
+        }
     }
 }
