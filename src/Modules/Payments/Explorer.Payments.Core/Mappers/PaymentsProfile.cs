@@ -23,5 +23,11 @@ public class PaymentsProfile : Profile
         CreateMap<Coupon, CouponDto>();
         CreateMap<CreateCouponDto, Coupon>();
         CreateMap<UpdateCouponDto, Coupon>();
+
+        //mapper za sale
+        CreateMap<Sale, SaleDto>()
+            .ForMember(dest => dest.TourIds, opt => opt.MapFrom(src => src.TourIds.ToList()));
+        CreateMap<CreateSaleDto, Sale>();
+        CreateMap<UpdateSaleDto, Sale>();
     }
 }

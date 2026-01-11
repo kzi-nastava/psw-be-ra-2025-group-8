@@ -10,6 +10,8 @@ public class PaymentsContext : DbContext
     public DbSet<PurchasedItem> PurchasedItems { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<BundlePurchaseRecord> BundlePurchaseRecords { get; set; }
+    public DbSet<Sale> Sales { get; set; }
+    public DbSet<SaleTour> SaleTours { get; set; }
 
     public PaymentsContext(DbContextOptions<PaymentsContext> options) : base(options) { }
 
@@ -85,6 +87,32 @@ public class PaymentsContext : DbContext
             builder.Property(c => c.ExpiryDate);
             builder.Property(c => c.TourId);
             builder.Property(c => c.AuthorId).IsRequired();
+        });
+
+        modelBuilder.Entity<Sale>(builder =>
+        {
+            builder.HasKey(s => s.Id);
+            builder.Property(s => s.AuthorId).IsRequired();
+            builder.Property(s => s.StartDate).IsRequired();
+            builder.Property(s => s.EndDate).IsRequired();
+            builder.Property(s => s.DiscountPercentage).IsRequired();
+            
+            builder.HasMany(s => s.SaleTours)
+                .WithOne()
+                .HasForeignKey(st => st.SaleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            var saleToursNav = builder.Metadata.FindNavigation(nameof(Sale.SaleTours));
+            saleToursNav?.SetPropertyAccessMode(PropertyAccessMode.Field);
+            saleToursNav?.SetField("_saleTours");
+        });
+
+        modelBuilder.Entity<SaleTour>(builder =>
+        {
+            builder.HasKey(st => st.Id);
+            builder.Property(st => st.SaleId).IsRequired();
+            builder.Property(st => st.TourId).IsRequired();
+            builder.HasIndex(st => new { st.SaleId, st.TourId }).IsUnique();
         });
     }
 }

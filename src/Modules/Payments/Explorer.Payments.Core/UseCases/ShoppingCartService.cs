@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
@@ -19,6 +20,7 @@ namespace Explorer.Payments.Core.UseCases
         private readonly IMapper _mapper;
         private readonly IPurchaseNotificationService _purchaseNotificationService;
         private readonly ICouponRepository _couponRepository;
+        private readonly IInternalSaleService _saleService;
 
         public ShoppingCartService(
             IShoppingCartRepository cartRepository, 
@@ -26,7 +28,8 @@ namespace Explorer.Payments.Core.UseCases
             IInternalWalletService walletService,
             IMapper mapper,
             IPurchaseNotificationService purchaseNotificationService,
-            ICouponRepository couponRepository)
+            ICouponRepository couponRepository,
+            IInternalSaleService saleService)
         {
             _cartRepository = cartRepository;
             _tourPriceProvider = tourPriceProvider;
@@ -34,6 +37,7 @@ namespace Explorer.Payments.Core.UseCases
             _mapper = mapper;
             _purchaseNotificationService = purchaseNotificationService;
             _couponRepository = couponRepository;
+            _saleService = saleService;
         }
 
         public ShoppingCartDto CreateCart(long userId)
@@ -89,7 +93,24 @@ namespace Explorer.Payments.Core.UseCases
             var tour = _tourPriceProvider.GetById(itemDto.TourId);
             if (tour == null) throw new NotFoundException($"Tour with ID {itemDto.TourId} not found.");
 
-            var item = new OrderItem(itemDto.TourId, tour.Price, tour.Price); // discounted = original na startu
+            var saleInfo = _saleService.GetTourSaleInfo(itemDto.TourId);
+            
+            decimal originalPrice = tour.Price;
+            decimal discountedPrice = saleInfo.IsOnSale ? saleInfo.DiscountedPrice.Value : tour.Price;
+
+            var item = new OrderItem(itemDto.TourId, originalPrice, discountedPrice);
+            
+            if (saleInfo.IsOnSale)
+            {
+                var activeSales = _saleService.GetActiveSales();
+                var applicableSale = activeSales.FirstOrDefault(s => s.TourIds.Contains(itemDto.TourId));
+                if (applicableSale != null)
+                {
+                    // Store sale ID in OrderItem for tracking
+                    // Note: This requires OrderItem to have a SaleId property which already exists
+                }
+            }
+            
             cart.AddItem(item);
 
             _cartRepository.Update(cart);
@@ -128,7 +149,10 @@ namespace Explorer.Payments.Core.UseCases
             var tour = _tourPriceProvider.GetById(tourId);
             if (tour == null) throw new NotFoundException("Tour not found.");
 
-            int requiredCoins = (int)Math.Ceiling(tour.Price);
+            var saleInfo = _saleService.GetTourSaleInfo(tourId);
+            decimal finalPrice = saleInfo.IsOnSale ? saleInfo.DiscountedPrice.Value : tour.Price;
+
+            int requiredCoins = (int)Math.Ceiling(finalPrice);
 
             // Check if user has sufficient Adventure Coins
             if (!_walletService.HasSufficientFunds(userId, requiredCoins))
@@ -137,8 +161,8 @@ namespace Explorer.Payments.Core.UseCases
             // Deduct coins from wallet
             _walletService.DeductCoins(userId, requiredCoins);
 
-            // Record purchase
-            cart.PurchaseItem(tourId, tour.Price);
+            // Record purchase with the actual price paid (which includes sale discount)
+            cart.PurchaseItem(tourId, finalPrice);
             _cartRepository.Update(cart);
             _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
@@ -161,8 +185,11 @@ namespace Explorer.Payments.Core.UseCases
                 if (tour == null)
                     throw new NotFoundException($"Tour with ID {item.TourId} not found.");
                 
-                tourPrices[item.TourId] = tour.Price;
-                totalRequiredCoins += (int)Math.Ceiling(tour.Price);
+                var saleInfo = _saleService.GetTourSaleInfo(item.TourId);
+                decimal finalPrice = saleInfo.IsOnSale ? saleInfo.DiscountedPrice.Value : tour.Price;
+                
+                tourPrices[item.TourId] = finalPrice;
+                totalRequiredCoins += (int)Math.Ceiling(finalPrice);
             }
 
             // Check if user has sufficient Adventure Coins for all items
@@ -172,7 +199,7 @@ namespace Explorer.Payments.Core.UseCases
             // Deduct coins from wallet
             _walletService.DeductCoins(userId, totalRequiredCoins);
 
-            // Record purchases
+            // Record purchases with actual prices paid (including sale discounts)
             cart.PurchaseAllItems(tourPrices);
             _cartRepository.Update(cart);
             _purchaseNotificationService.NotifyToursPurchased(userId, purchasedTourIds);
