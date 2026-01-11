@@ -11,11 +11,73 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using Explorer.Tours.API.Public.Author;
 using Npgsql;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace Explorer.Payments.Tests;
 
 public class PaymentsTestFactory : BaseTestFactory<PaymentsContext>
 {
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            var serviceProvider = ReplaceNeededDbContexts(services).BuildServiceProvider();
+            using var scope = serviceProvider.CreateScope();
+            var scopedServices = scope.ServiceProvider;
+            var logger = scopedServices.GetRequiredService<ILogger<PaymentsTestFactory>>();
+
+            // Initialize Stakeholders database (for Wallets dependency)
+            var stakeholdersDb = scopedServices.GetRequiredService<StakeholdersContext>();
+            var stakeholdersPath = Path.Combine(".", "..", "..", "..", "..", "Stakeholders", "Explorer.Stakeholders.Tests", "TestData");
+            InitializeDatabase(stakeholdersDb, stakeholdersPath, logger);
+
+            // Initialize Tours database (for Tour price lookups)
+            var toursDb = scopedServices.GetRequiredService<ToursContext>();
+            var toursPath = Path.Combine(".", "..", "..", "..", "..", "Tours", "Explorer.Tours.Tests", "TestData");
+            InitializeDatabase(toursDb, toursPath, logger);
+
+            // Initialize Payments database (primary context)
+            var paymentsDb = scopedServices.GetRequiredService<PaymentsContext>();
+            var paymentsPath = Path.Combine(".", "..", "..", "..", "TestData");
+            InitializeDatabase(paymentsDb, paymentsPath, logger);
+        });
+    }
+
+    private static void InitializeDatabase(DbContext context, string scriptFolder, ILogger logger)
+    {
+        try
+        {
+            context.Database.EnsureCreated();
+            var databaseCreator = context.Database.GetService<IRelationalDatabaseCreator>();
+            databaseCreator.CreateTables();
+        }
+        catch (Exception)
+        {
+            // CreateTables throws an exception if the schema already exists. This is a workaround for multiple dbcontexts.
+        }
+
+        try
+        {
+            if (!Directory.Exists(scriptFolder))
+            {
+                logger.LogWarning("Test data folder not found: {Folder}", scriptFolder);
+                return;
+            }
+
+            var scriptFiles = Directory.GetFiles(scriptFolder, "*.sql");
+            Array.Sort(scriptFiles);
+            var script = string.Join('\n', scriptFiles.Select(File.ReadAllText));
+            context.Database.ExecuteSqlRaw(script);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred seeding the database with test data from {Folder}. Error: {Message}", scriptFolder, ex.Message);
+        }
+    }
+
     protected override IServiceCollection ReplaceNeededDbContexts(IServiceCollection services)
     {
         // PAYMENTS CONTEXT
