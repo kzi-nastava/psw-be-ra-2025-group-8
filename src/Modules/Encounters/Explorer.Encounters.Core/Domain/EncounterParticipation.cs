@@ -18,6 +18,7 @@ namespace Explorer.Encounters.Core.Domain
         public DateTime ActivatedAt { get; private set; }
         public DateTime? CompletedAt { get; private set; }
         public int? XPAwarded { get; private set; }
+        public DateTime? StartTimeInRange { get; private set; }
 
         // Constructor for creating new participation
         public EncounterParticipation(long personId, long encounterId)
@@ -32,6 +33,11 @@ namespace Explorer.Encounters.Core.Domain
 
         // EF Core constructor
         public EncounterParticipation() { }
+
+        public void UpdateStartTimeInRange(DateTime? time)
+        {
+            StartTimeInRange = time;
+        }
 
         // Complete the encounter and award XP
         public void Complete(int xpReward)

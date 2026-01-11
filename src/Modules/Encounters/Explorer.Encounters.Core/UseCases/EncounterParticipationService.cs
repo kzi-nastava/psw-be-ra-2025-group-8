@@ -51,6 +51,8 @@ namespace Explorer.Encounters.Core.UseCases
             if (pos == null)
                 throw new InvalidOperationException($"Position not found for person {person.Id} (user {person.UserId}).");
 
+            double range = encounter.ActivationRangeMeters ?? ActivationRangeMeters;
+
             var isWithinRange = DistanceCalculator.IsWithinRange(
                 pos.Latitude, pos.Longitude,
                 encounter.Latitude.Value, encounter.Longitude.Value,
@@ -205,6 +207,46 @@ namespace Explorer.Encounters.Core.UseCases
             }
         }
 
+        public EncounterParticipationDto CheckHiddenLocationProgress(long personId, long encounterId, double currentLat, double currentLon)
+        {
+            var participation = _participation_repository_get_by_person_and_encounter(personId, encounterId);
+            var encounter = _encounter_repository_get(encounterId);
+
+            if (participation.Status != ParticipationStatus.Active) return MapToDto(participation);
+            if (encounter.Type != EncouterType.LocationBased) throw new InvalidOperationException("Not a location based encounter.");
+
+            // Provera udaljenosti od TAČKE SA KOJE JE SLIKA UZETA (ImageLatitude/Longitude)
+            double distance = DistanceCalculator.CalculateDistance(
+                currentLat, currentLon,
+                encounter.ImageLatitude ?? 0, encounter.ImageLongitude ?? 0);
+
+            if (distance <= 5.0)
+            {
+                if (participation.StartTimeInRange == null)
+                {
+                    // Prvi put ušao u zonu od 5m
+                    participation.UpdateStartTimeInRange(DateTime.UtcNow);
+                }
+                else
+                {
+                    // Već je bio unutra, proveri da li je prošlo 30s
+                    if ((DateTime.UtcNow - participation.StartTimeInRange.Value).TotalSeconds >= 30)
+                    {
+                        participation.Complete(encounter.XPReward);
+                        _personService.AddExperience(participation.PersonId, encounter.XPReward);
+                    }
+                }
+            }
+            else
+            {
+                // Izašao iz zone od 5m, resetujemo tajmer
+                participation.UpdateStartTimeInRange(null);
+            }
+
+            _participationRepository.Update(participation);
+            return MapToDto(participation);
+        }
+
         public CheckEncounterResponseDto CheckEncounterActiveStatus(CheckEncounterRequestDto request)
         {
             var encounter = _encounter_repository_get(request.EncounterId);
@@ -302,7 +344,8 @@ namespace Explorer.Encounters.Core.UseCases
                 Status = participation.Status.ToString(),
                 ActivatedAt = participation.ActivatedAt,
                 CompletedAt = participation.CompletedAt,
-                XPAwarded = participation.XPAwarded
+                XPAwarded = participation.XPAwarded,
+                StartTimeInRange = participation.StartTimeInRange
             };
         }
 
