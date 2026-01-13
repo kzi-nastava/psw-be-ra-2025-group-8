@@ -47,5 +47,11 @@ namespace Explorer.Payments.Core.Domain
             CouponId = null;
             DiscountedPrice = OriginalPrice;
         }
+
+        public void ApplySale(long saleId)
+        {
+            if (saleId == 0) throw new ArgumentException("Invalid sale ID.");
+            SaleId = saleId;
+        }
     }
 }

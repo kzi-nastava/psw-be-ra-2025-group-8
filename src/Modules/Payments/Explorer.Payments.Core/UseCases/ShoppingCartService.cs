@@ -106,8 +106,7 @@ namespace Explorer.Payments.Core.UseCases
                 var applicableSale = activeSales.FirstOrDefault(s => s.TourIds.Contains(itemDto.TourId));
                 if (applicableSale != null)
                 {
-                    // Store sale ID in OrderItem for tracking
-                    // Note: This requires OrderItem to have a SaleId property which already exists
+                    item.ApplySale(applicableSale.Id);
                 }
             }
             
@@ -152,6 +151,12 @@ namespace Explorer.Payments.Core.UseCases
             var saleInfo = _saleService.GetTourSaleInfo(tourId);
             decimal finalPrice = saleInfo.IsOnSale ? saleInfo.DiscountedPrice.Value : tour.Price;
 
+            // If the item is in the cart, use its stored context (original price + sale/coupon ids)
+            var cartItem = cart.Items.FirstOrDefault(i => i.TourId == tourId);
+            var originalPrice = cartItem?.OriginalPrice ?? tour.Price;
+            var saleId = cartItem?.SaleId;
+            var couponId = cartItem?.CouponId;
+
             int requiredCoins = (int)Math.Ceiling(finalPrice);
 
             // Check if user has sufficient Adventure Coins
@@ -162,7 +167,7 @@ namespace Explorer.Payments.Core.UseCases
             _walletService.DeductCoins(userId, requiredCoins);
 
             // Record purchase with the actual price paid (which includes sale discount)
-            cart.PurchaseItem(tourId, finalPrice);
+            cart.PurchaseItem(tourId, originalPrice, finalPrice, saleId, couponId);
             _cartRepository.Update(cart);
             _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
@@ -250,7 +255,7 @@ namespace Explorer.Payments.Core.UseCases
 
             _walletService.DeductCoins(userId, requiredCoins);
 
-            cart.PurchaseItem(tourId, discountedPrice);
+            cart.PurchaseItem(tourId, tour.Price, discountedPrice, saleId: null, couponId: coupon.Id);
             _cartRepository.Update(cart);
             _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
