@@ -11,6 +11,9 @@ namespace Explorer.Payments.Core.Domain
 
         public SaleTour(long saleId, long tourId)
         {
+            // Explicit ID generation to avoid relying on database identity configuration.
+            // Test databases and existing schemas may not have identity/sequence set up for this table.
+            Id = Random.Shared.NextInt64(long.MinValue, -1);
             SaleId = saleId;
             TourId = tourId;
         }

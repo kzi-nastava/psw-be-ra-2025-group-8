@@ -37,7 +37,10 @@ namespace Explorer.Payments.Infrastructure.Database.Repositories
             
             // Update Sale and add new SaleTours
             _context.Entry(existingSale).CurrentValues.SetValues(sale);
-            _context.Entry(existingSale).Property("_saleTours").CurrentValue = sale.SaleTours;
+
+            // Replace child collection via navigation metadata (backing field is configured in PaymentsContext)
+            var saleToursNav = _context.Entry(existingSale).Collection(s => s.SaleTours);
+            saleToursNav.CurrentValue = sale.SaleTours.ToList();
             
             _context.SaveChanges();
             return SalesWithIncludes().First(s => s.Id == sale.Id);

@@ -46,7 +46,7 @@ namespace Explorer.Payments.Core.Domain
 
         private void Validate()
         {
-            if (AuthorId <= 0)
+            if (AuthorId == 0)
                 throw new ArgumentException("Invalid author ID.");
 
             if (StartDate < DateTime.UtcNow.Date)

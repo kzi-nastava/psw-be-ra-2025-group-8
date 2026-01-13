@@ -110,6 +110,7 @@ public class PaymentsContext : DbContext
         modelBuilder.Entity<SaleTour>(builder =>
         {
             builder.HasKey(st => st.Id);
+            builder.Property(st => st.Id).ValueGeneratedNever();
             builder.Property(st => st.SaleId).IsRequired();
             builder.Property(st => st.TourId).IsRequired();
             builder.HasIndex(st => new { st.SaleId, st.TourId }).IsUnique();
