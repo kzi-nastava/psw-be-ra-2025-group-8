@@ -13,5 +13,6 @@ namespace Explorer.Encounters.API.Public
         List<EncounterParticipationDto> GetActiveEncountersByPerson(long personId);
         EncounterParticipationDto GetParticipation(long personId, long encounterId);
         CheckEncounterResponseDto CheckEncounterActiveStatus(CheckEncounterRequestDto request);
+        EncounterParticipationDto CheckHiddenLocationProgress(long personId, long encounterId, double userLat, double userLng);
     }
 }

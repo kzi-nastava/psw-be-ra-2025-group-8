@@ -16,5 +16,9 @@ namespace Explorer.Encounters.API.Dtos
         public string Status { get; set; }
         public string Type { get; set; }
         public int XPReward { get; set; }
+        public string? ImageUrl { get; set; }
+        public double? ImageLatitude { get; set; }
+        public double? ImageLongitude { get; set; }
+        public double? ActivationRangeMeters { get; set; }
     }
 }

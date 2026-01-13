@@ -41,8 +41,16 @@ namespace Explorer.Encounters.Core.Domain
         public int? SocialRequiredCount { get; private set; }
         public double? SocialRangeMeters { get; private set; }
 
+        // Hidden location encouter
+        public string? ImageUrl { get; set; }
+        public double? ImageLatitude { get; set; }
+        public double? ImageLongitude { get; set; }
+        public double? ActivationRangeMeters { get; set; }
+
         // Constructor for creating a new encounter (draft)
-        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward, int? socialRequiredCount = null, double? socialRangeMeters = null)
+        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward,
+                     int? socialRequiredCount = null, double? socialRangeMeters = null,
+                     string? imageUrl = null, double? imageLat = null, double? imageLon = null, double? activationRange = null)
         {
             Name = name;
             Description = description;
@@ -52,10 +60,12 @@ namespace Explorer.Encounters.Core.Domain
             Type = type;
             XPReward = xpReward;
             Status = EncouterStatus.Draft;
-            PublishedAt = null;
-            ArchivedAt = null;
             SocialRequiredCount = socialRequiredCount;
             SocialRangeMeters = socialRangeMeters;
+            ImageUrl = imageUrl;
+            ImageLatitude = imageLat;
+            ImageLongitude = imageLon;
+            ActivationRangeMeters = activationRange;
         }
 
         public Encounter() { }
@@ -104,6 +114,14 @@ namespace Explorer.Encounters.Core.Domain
 
             SocialRequiredCount = requiredCount;
             SocialRangeMeters = rangeMeters;
+        }
+
+        public void SetHiddenLocationSettings(string imageUrl, double imageLat, double imageLon, double range)
+        {
+            ImageUrl = imageUrl;
+            ImageLatitude = imageLat;
+            ImageLongitude = imageLon;
+            ActivationRangeMeters = range;
         }
     }
 }

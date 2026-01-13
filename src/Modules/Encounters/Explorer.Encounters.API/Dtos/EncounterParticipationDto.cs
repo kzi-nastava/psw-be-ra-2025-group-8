@@ -10,6 +10,7 @@ namespace Explorer.Encounters.API.Dtos
         public DateTime ActivatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public int? XPAwarded { get; set; }
+        public DateTime? StartTimeInRange { get; set; }
     }
 
     public class ActivateEncounterDto

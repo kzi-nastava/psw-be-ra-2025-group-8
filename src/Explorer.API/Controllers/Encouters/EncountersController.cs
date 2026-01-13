@@ -107,5 +107,27 @@ namespace Explorer.API.Controllers.Administration
             var result = _encounterService.ReactivateEncounter(id);
             return Ok(result);
         }
+
+        [Authorize(Policy = "administratorPolicy")]
+        [HttpPost("upload")]
+        public ActionResult<string> UploadImage(IFormFile image)
+        {
+            if (image == null || image.Length == 0) return BadRequest("No image uploaded");
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "encounter");
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+            var fullPath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                image.CopyTo(stream);
+            }
+
+            return Ok(fileName);
+        }
     }
 }

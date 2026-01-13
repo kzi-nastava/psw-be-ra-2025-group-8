@@ -181,7 +181,11 @@ namespace Explorer.Encounters.Core.UseCases
                 ArchivedAt = encounter.ArchivedAt,
                 CreatorPersonId = encounter.CreatorPersonId ?? 0,
                 SocialRequiredCount = encounter.SocialRequiredCount,
-                SocialRangeMeters = encounter.SocialRangeMeters
+                SocialRangeMeters = encounter.SocialRangeMeters,
+                ImageUrl = encounter.ImageUrl,
+                ImageLatitude = encounter.ImageLatitude,
+                ImageLongitude = encounter.ImageLongitude,
+                ActivationRangeMeters = encounter.ActivationRangeMeters
             };
         }
 
@@ -193,14 +197,18 @@ namespace Explorer.Encounters.Core.UseCases
                 dto.Location,
                 dto.Latitude,
                 dto.Longitude,
-                Enum.Parse<EncouterType>(dto.Type),
+                Enum.Parse<EncouterType>(dto.Type, true),
                 dto.XPReward,
                 dto.SocialRequiredCount,
-                dto.SocialRangeMeters
+                dto.SocialRangeMeters,
+                dto.ImageUrl,
+                dto.ImageLatitude,
+                dto.ImageLongitude,
+                dto.ActivationRangeMeters
             );
 
             // attempt to set status from dto if provided
-            if (!string.IsNullOrWhiteSpace(dto.Status) && Enum.TryParse<EncouterStatus>(dto.Status, out var status))
+            if (!string.IsNullOrWhiteSpace(dto.Status) && Enum.TryParse<EncouterStatus>(dto.Status, true, out var status))
             {
                 enc.Status = status;
             }
@@ -218,6 +226,10 @@ namespace Explorer.Encounters.Core.UseCases
 
             existing.XPReward = dto.XPReward;
             existing.Type = Enum.Parse<EncouterType>(dto.Type);
+            existing.ImageUrl = dto.ImageUrl;
+            existing.ImageLatitude = dto.ImageLatitude;
+            existing.ImageLongitude = dto.ImageLongitude;
+            existing.ActivationRangeMeters = dto.ActivationRangeMeters;
             if (!string.IsNullOrWhiteSpace(dto.Status)) existing.Status = Enum.Parse<EncouterStatus>(dto.Status);
         }
     }

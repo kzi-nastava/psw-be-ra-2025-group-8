@@ -194,6 +194,22 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(created);
         }
 
+        [HttpPost("{encounterId:long}/check-location")]
+        public ActionResult<EncounterParticipationDto> CheckLocation(long encounterId, [FromBody] CheckEncounterRequestDto request)
+        {
+            var personId = GetPersonIdFromToken();
+            if (personId != request.PersonId)
+                return Forbid();
+
+            var result = _participationService.CheckHiddenLocationProgress(
+                personId,
+                encounterId,
+                request.Latitude,
+                request.Longitude);
+
+            return Ok(result);
+        }
+
         // --------------------
         // HELPER METHOD
         // --------------------

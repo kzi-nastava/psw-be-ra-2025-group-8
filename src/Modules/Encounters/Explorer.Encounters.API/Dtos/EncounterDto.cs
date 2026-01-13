@@ -26,5 +26,11 @@ namespace Explorer.Encounters.API.Dtos
         // Social encounter settings
         public int? SocialRequiredCount { get; set; }
         public double? SocialRangeMeters { get; set; }
+
+        // hidden location encounter
+        public string? ImageUrl { get; set; }
+        public double? ImageLatitude { get; set; }
+        public double? ImageLongitude { get; set; }
+        public double? ActivationRangeMeters { get; set; }
     }
 }
