@@ -38,13 +38,14 @@ namespace Explorer.API.Controllers.Administration
         // CREATE
         // --------------------
 
-        [Authorize(Policy = "administratorPolicy")]
+        [Authorize(Policy = "authorAdminPolicy")]
         [HttpPost]
         public ActionResult<EncounterDto> Create([FromBody] EncounterDto encounter)
         {
-            // If caller is administrator, skip level checks so admin can create Draft/Published directly
-            var isAdmin = User.IsInRole("administrator");
-            var created = _encounterService.CreateEncounter(encounter, skipLevelCheck: isAdmin);
+            // If caller is administrator or author, skip level checks so admin or author can create Draft/Published directly
+            var skipLevelCheck = User.IsInRole("administrator") || User.IsInRole("author");
+
+            var created = _encounterService.CreateEncounter(encounter, skipLevelCheck: skipLevelCheck);
             return Ok(created);
         }
 
@@ -108,7 +109,7 @@ namespace Explorer.API.Controllers.Administration
             return Ok(result);
         }
 
-        [Authorize(Policy = "administratorPolicy")]
+        [Authorize(Policy = "authorAdminPolicy")]
         [HttpPost("upload")]
         public ActionResult<string> UploadImage(IFormFile image)
         {
