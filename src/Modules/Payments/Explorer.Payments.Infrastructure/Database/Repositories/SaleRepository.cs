@@ -32,18 +32,29 @@ namespace Explorer.Payments.Infrastructure.Database.Repositories
             if (existingSale == null)
                 throw new KeyNotFoundException($"Sale with ID {sale.Id} not found.");
 
-            // Remove old SaleTours
-            _context.SaleTours.RemoveRange(existingSale.SaleTours);
-            
-            // Update Sale and add new SaleTours
-            _context.Entry(existingSale).CurrentValues.SetValues(sale);
+            // Capture desired tour IDs from the incoming aggregate before we touch tracked entities
+            var desiredTourIds = sale.TourIds.ToList();
 
-            // Replace child collection via navigation metadata (backing field is configured in PaymentsContext)
-            var saleToursNav = _context.Entry(existingSale).Collection(s => s.SaleTours);
-            saleToursNav.CurrentValue = sale.SaleTours.ToList();
-            
+            // Update scalar values only (avoid touching navigation/backing-field collections)
+            existingSale.Update(sale.StartDate, sale.EndDate, sale.DiscountPercentage, desiredTourIds);
+            _context.Entry(existingSale).State = EntityState.Modified;
+
+            // Replace SaleTours by deleting existing rows and inserting new rows
+            // Materialize to avoid "Collection was modified" when EF updates navigation collection tracking.
+            var oldSaleTours = existingSale.SaleTours.ToList();
+            _context.SaleTours.RemoveRange(oldSaleTours);
+
+            var newSaleTours = desiredTourIds
+                .Distinct()
+                .Select(tourId => new SaleTour(existingSale.Id, tourId))
+                .ToList();
+
+            _context.SaleTours.AddRange(newSaleTours);
+
             _context.SaveChanges();
-            return SalesWithIncludes().First(s => s.Id == sale.Id);
+
+            // Reload aggregate with includes to ensure navigation/collection is populated
+            return SalesWithIncludes().AsNoTracking().First(s => s.Id == sale.Id);
         }
 
         public void Delete(long id)
