@@ -197,7 +197,7 @@ namespace Explorer.Encounters.Core.UseCases
                 dto.Location,
                 dto.Latitude,
                 dto.Longitude,
-                Enum.Parse<EncouterType>(dto.Type),
+                Enum.Parse<EncouterType>(dto.Type, true),
                 dto.XPReward,
                 dto.SocialRequiredCount,
                 dto.SocialRangeMeters,
@@ -208,7 +208,7 @@ namespace Explorer.Encounters.Core.UseCases
             );
 
             // attempt to set status from dto if provided
-            if (!string.IsNullOrWhiteSpace(dto.Status) && Enum.TryParse<EncouterStatus>(dto.Status, out var status))
+            if (!string.IsNullOrWhiteSpace(dto.Status) && Enum.TryParse<EncouterStatus>(dto.Status, true, out var status))
             {
                 enc.Status = status;
             }

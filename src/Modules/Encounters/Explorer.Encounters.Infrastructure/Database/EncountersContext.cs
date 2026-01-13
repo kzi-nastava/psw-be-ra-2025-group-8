@@ -62,6 +62,23 @@ public class EncountersContext : DbContext
             entity.Property(e => e.SocialRangeMeters)
                 .IsRequired(false)
                 .HasColumnType("double precision");
+
+            // Hidden location settings
+            entity.Property(e => e.ImageUrl)
+                .IsRequired(false)
+                .HasColumnType("text");
+
+            entity.Property(e => e.ImageLatitude)
+                .IsRequired(false)
+                .HasColumnType("double precision");
+
+            entity.Property(e => e.ImageLongitude)
+                .IsRequired(false)
+                .HasColumnType("double precision");
+
+            entity.Property(e => e.ActivationRangeMeters)
+                .IsRequired(false)
+                .HasColumnType("double precision");
         });
 
         // EncounterParticipation configuration
@@ -69,8 +86,13 @@ public class EncountersContext : DbContext
         {
             entity.ToTable("EncounterParticipations");
 
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.Id)
+                .ValueGeneratedOnAdd();
             // Composite primary key - ensures one participation per person per encounter
-            entity.HasKey(p => new { p.PersonId, p.EncounterId });
+            entity.HasIndex(p => new { p.PersonId, p.EncounterId })
+                .IsUnique();
 
             entity.Property(p => p.PersonId)
                 .IsRequired();
