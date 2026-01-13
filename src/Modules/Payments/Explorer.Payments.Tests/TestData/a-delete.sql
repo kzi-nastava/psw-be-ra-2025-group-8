@@ -7,5 +7,3 @@ DELETE FROM payments."Coupons";
 DELETE FROM payments."SaleTours";
 DELETE FROM payments."Sales";
 
--- Also delete any test tours that might have been inserted by payments test data
---DELETE FROM tours."Tours" WHERE "Id" IN (-511, -522, -533);

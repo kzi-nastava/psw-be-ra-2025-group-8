@@ -9,19 +9,23 @@ namespace Explorer.Payments.Tests.TestHelpers
 {
     public class MockTourPriceProvider : ITourPriceProvider
     {
-        private static readonly Dictionary<long, (decimal Price, int AuthorId)> Tours = new()
+        private static readonly Dictionary<long, (decimal Price, int AuthorId)> TourData = new()
         {
-            { -511, (50m, -11) },
-            { -522, (100m, -11) },
-            { -533, (70m, -11) }
-            ,{ -544, (80m, -12) }
-            // Add other seeded IDs if needed
+            { -511, (50m, -11) },   // Beogradska avantura - Author -11
+            { -522, (100m, -11) },  // Planinska tura - Author -11
+            { -533, (70m, -11) }    // Dunavska ruta - Author -11
         };
 
         public TourPriceDto? GetById(long id)
         {
-            if (!Tours.TryGetValue(id, out var t)) return null;
-            return new TourPriceDto { Id = id, Price = t.Price, AuthorId = t.AuthorId };
+            if (!TourData.TryGetValue(id, out var data)) return null;
+            return new TourPriceDto 
+            { 
+                Id = id, 
+                Price = data.Price,
+                AuthorId = data.AuthorId
+            };
         }
     }
 }
+
