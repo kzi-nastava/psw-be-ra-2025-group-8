@@ -19,8 +19,8 @@ namespace Explorer.Payments.Core.Domain
         public Sale(long authorId, DateTime startDate, DateTime endDate, int discountPercentage, List<long> tourIds)
         {
             AuthorId = authorId;
-            StartDate = startDate;
-            EndDate = endDate;
+            StartDate = EnsureUtc(startDate);
+            EndDate = EnsureUtc(endDate);
             DiscountPercentage = discountPercentage;
             SetTours(tourIds ?? new List<long>());
             Validate();
@@ -28,11 +28,21 @@ namespace Explorer.Payments.Core.Domain
 
         public void Update(DateTime startDate, DateTime endDate, int discountPercentage, List<long> tourIds)
         {
-            StartDate = startDate;
-            EndDate = endDate;
+            StartDate = EnsureUtc(startDate);
+            EndDate = EnsureUtc(endDate);
             DiscountPercentage = discountPercentage;
             SetTours(tourIds ?? new List<long>());
             Validate();
+        }
+
+        private static DateTime EnsureUtc(DateTime dt)
+        {
+            return dt.Kind switch
+            {
+                DateTimeKind.Utc => dt,
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+                _ => dt.ToUniversalTime()
+            };
         }
 
         private void SetTours(List<long> tourIds)
