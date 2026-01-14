@@ -1,5 +1,6 @@
 ﻿using Explorer.API.Controllers.Tourist;
 using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Encounters.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
 using Microsoft.AspNetCore.Mvc;
@@ -165,9 +166,11 @@ namespace Explorer.Tours.Tests.Integration.Tourist
 
         private static TourExecutionController CreateController(IServiceScope scope)
         {
-            return new TourExecutionController(scope.ServiceProvider.GetRequiredService<ITourExecutionService>())
+            return new TourExecutionController(
+                scope.ServiceProvider.GetRequiredService<ITourExecutionService>(),
+              scope.ServiceProvider.GetRequiredService<IEncounterParticipationService>())
             {
-                ControllerContext = BuildContext("-1")
+     ControllerContext = BuildContext("-1")
             };
         }
     }

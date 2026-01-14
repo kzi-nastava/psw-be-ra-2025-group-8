@@ -1,4 +1,5 @@
 ﻿using Explorer.API.Controllers.Tourist;
+using Explorer.Encounters.API.Public;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Infrastructure.Database;
@@ -133,19 +134,24 @@ public class TourExecutionKeyPointTests : BaseToursIntegrationTest
     public void GetReachedKeyPoints_ReturnsAllReachedKeyPoints()
     {
         // Arrange
-        using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope);
+     using var scope = Factory.Services.CreateScope();
+ var controller = new TourExecutionController(
+          scope.ServiceProvider.GetRequiredService<ITourExecutionService>(),
+        scope.ServiceProvider.GetRequiredService<IEncounterParticipationService>())
+        {
+ ControllerContext = BuildContext("-21")  // TourExecution -1 belongs to tourist -21
+    };
 
-        // TourExecution -1 ima najmanje 2 dostignuta keypointa (može biti više zbog drugih testova)
+     // TourExecution -1 ima najmanje 2 dostignuta keypointa (može biti više zbog drugih testova)
         long tourExecutionId = -1;
 
         // Act
-        var result = ((ObjectResult)controller.GetReachedKeyPoints(tourExecutionId).Result)?.Value as List<KeyPointReachedDto>;
+      var result = ((ObjectResult)controller.GetReachedKeyPoints(tourExecutionId).Result)?.Value as List<KeyPointReachedDto>;
 
         // Assert
         result.ShouldNotBeNull();
-        result.Count.ShouldBeGreaterThanOrEqualTo(2);  // Najmanje 2 (seed data)
-        result.Any(kpr => kpr.KeyPointOrder == 1).ShouldBeTrue();
+   result.Count.ShouldBeGreaterThanOrEqualTo(2);  // Najmanje 2 (seed data)
+    result.Any(kpr => kpr.KeyPointOrder == 1).ShouldBeTrue();
         result.Any(kpr => kpr.KeyPointOrder == 2).ShouldBeTrue();
     }
 
@@ -154,16 +160,21 @@ public class TourExecutionKeyPointTests : BaseToursIntegrationTest
     {
         // Arrange
         using var scope = Factory.Services.CreateScope();
-        var controller = CreateController(scope);
+        var controller = new TourExecutionController(
+          scope.ServiceProvider.GetRequiredService<ITourExecutionService>(),
+scope.ServiceProvider.GetRequiredService<IEncounterParticipationService>())
+  {
+            ControllerContext = BuildContext("-21")  // TourExecution -4 belongs to tourist -21
+        };
 
         // TourExecution -4 nema dostignutih keypointa
         long tourExecutionId = -4;
 
         // Act
-        var result = ((ObjectResult)controller.GetReachedKeyPoints(tourExecutionId).Result)?.Value as List<KeyPointReachedDto>;
+   var result = ((ObjectResult)controller.GetReachedKeyPoints(tourExecutionId).Result)?.Value as List<KeyPointReachedDto>;
 
         // Assert
-        result.ShouldNotBeNull();
+      result.ShouldNotBeNull();
         result.Count.ShouldBe(0);
     }
 
@@ -190,9 +201,10 @@ public class TourExecutionKeyPointTests : BaseToursIntegrationTest
     private static TourExecutionController CreateController(IServiceScope scope)
     {
         return new TourExecutionController(
-         scope.ServiceProvider.GetRequiredService<ITourExecutionService>())
+          scope.ServiceProvider.GetRequiredService<ITourExecutionService>(),
+        scope.ServiceProvider.GetRequiredService<IEncounterParticipationService>())
         {
-            ControllerContext = BuildContext("-21")  // Tourist ID = -21 (from SQL test data)
-        };
+          ControllerContext = BuildContext("-21")  // Most test data belongs to tourist -21
+    };
     }
 }
