@@ -7,7 +7,9 @@
         public string Description { get; set; } = string.Empty;
         public List<string> ImageUrls { get; set; } = new();
         public long OwnerId { get; set; }
+        public string? OwnerUsername { get; set; }
         public List<long> MemberIds { get; set; } = new();
+        public List<string>? MemberUsernames { get; set; }
         // new status exposed to API (string)
         public string Status { get; set; } = "Active";
     }

@@ -1,30 +1,36 @@
 -- Deleting in the correct order to respect foreign key constraints
 -- First, we delete child tables (tables that have foreign keys)
-DELETE FROM tours."ShoppingCarts";
-DELETE FROM tours."OrderItems";
--- PreferenceTags depends on TouristPreferences and Tags
 
-DELETE FROM tours."TourRatings";
-DELETE FROM tours."PreferenceTags";
+-- PreferenceTags depends on TouristPreferences and Tags
+TRUNCATE TABLE tours."TourRatingImages" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."TourRatings" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."BundleTours" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."Bundles" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."PreferenceTags" RESTART IDENTITY CASCADE;
 -- TransportTypePreferences depends on TouristPreferences  
-DELETE FROM tours."TransportTypePreferences";
+TRUNCATE TABLE tours."TransportTypePreferences" RESTART IDENTITY CASCADE;
 
 -- TouristPreferences depends on People
-DELETE FROM tours."TouristPreferences";
+TRUNCATE TABLE tours."TouristPreferences" RESTART IDENTITY CASCADE;
 -- Tags is independent, but PreferenceTags depends on it (already deleted)
-DELETE FROM tours."Tags";
+TRUNCATE TABLE tours."Tags" RESTART IDENTITY CASCADE;
 
-DELETE FROM tours."TourEquipment";
-DELETE FROM tours."TourTags";
+TRUNCATE TABLE tours."TourTransportTimes" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."TourEquipment" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."TourTags" RESTART IDENTITY CASCADE;
 
-DELETE FROM tours."KeyPointsReached";   
-DELETE FROM tours."PersonEquipment";   
-DELETE FROM tours."TourExecutions"; 
-DELETE FROM tours."KeyPoints";      
-DELETE FROM tours."Equipment";
+TRUNCATE TABLE tours."KeyPointsReached" RESTART IDENTITY CASCADE;   
+TRUNCATE TABLE tours."PersonEquipment" RESTART IDENTITY CASCADE;   
+TRUNCATE TABLE tours."TourExecutions" RESTART IDENTITY CASCADE; 
+TRUNCATE TABLE tours."TourChatMessages" RESTART IDENTITY CASCADE; 
+TRUNCATE TABLE tours."TourChatMembers" RESTART IDENTITY CASCADE; 
+TRUNCATE TABLE tours."TourChatRooms" RESTART IDENTITY CASCADE; 
+TRUNCATE TABLE tours."KeyPoints" RESTART IDENTITY CASCADE;      
+TRUNCATE TABLE tours."Equipment" RESTART IDENTITY CASCADE;
 -- IssueMessages depends on ReportProblem
-DELETE FROM tours."IssueMessages";
-DELETE FROM tours."ReportProblem";
-DELETE FROM tours."Tours";
-DELETE FROM tours."Facilities";
-DELETE FROM tours."Monument";
+TRUNCATE TABLE tours."IssueMessages" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."ReportProblem" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."Tours" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."Facilities" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE tours."Monument" RESTART IDENTITY CASCADE;
+

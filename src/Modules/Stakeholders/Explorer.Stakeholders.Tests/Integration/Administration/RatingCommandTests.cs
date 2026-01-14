@@ -65,15 +65,17 @@ public class RatingCommandTests : BaseStakeholdersIntegrationTest
         var controller = CreateController(scope, AUTHOR_USER_ID_UPDATE);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
+        var oldRating = dbContext.Ratings.FirstOrDefault(i => i.Id == -4);
+        oldRating.ShouldNotBeNull();
+        var oldGrade = oldRating.Grade;
+        var oldComment = oldRating.Comment;
+        var oldCreationDate = oldRating.CreationDate;
+
         var updatedEntity = new RatingNoIdDto
         {
             Grade = 3,
             Comment = "Izmenjeno u testu."
         };
-
-        var oldRating = dbContext.Ratings.FirstOrDefault(i => i.Id == -4);
-        oldRating.ShouldNotBeNull();
-        var oldCreationDate = oldRating.CreationDate;
 
         // Act
         var actionResult = controller.UpdateByCurrentUser(updatedEntity);
@@ -86,10 +88,19 @@ public class RatingCommandTests : BaseStakeholdersIntegrationTest
         result.Comment.ShouldBe(updatedEntity.Comment);
 
         // Assert - Database
+        dbContext.ChangeTracker.Clear();
         var storedEntity = dbContext.Ratings.FirstOrDefault(i => i.Id == -4);
         storedEntity.ShouldNotBeNull();
         storedEntity.Comment.ShouldBe(updatedEntity.Comment);
         storedEntity.CreationDate.ShouldBeGreaterThan(oldCreationDate);
+        
+        // Restore original state for other tests
+        var restoreEntity = new RatingNoIdDto
+        {
+            Grade = oldGrade,
+            Comment = oldComment
+        };
+        controller.UpdateByCurrentUser(restoreEntity);
     }
 
     // UPDATE TEST (Neuspeh: Korisnik koji pokušava da ažurira nema kreiranu ocenu)
@@ -119,6 +130,11 @@ public class RatingCommandTests : BaseStakeholdersIntegrationTest
         var controller = CreateController(scope, AUTHOR_USER_ID_DELETE);
         var dbContext = scope.ServiceProvider.GetRequiredService<StakeholdersContext>();
 
+        // Save original rating data
+        var originalRating = dbContext.Ratings.FirstOrDefault(i => i.Id == RATING_ID_TO_DELETE);
+        var originalGrade = originalRating?.Grade ?? 3;
+        var originalComment = originalRating?.Comment ?? "Ova ocena se briše.";
+
         // Act
         var actionResult = controller.DeleteByCurrentUser();
         var result = actionResult as OkResult;
@@ -128,8 +144,18 @@ public class RatingCommandTests : BaseStakeholdersIntegrationTest
         result.StatusCode.ShouldBe(200);
 
         // Assert - Database
+        dbContext.ChangeTracker.Clear();
         var storedEntity = dbContext.Ratings.FirstOrDefault(i => i.Id == RATING_ID_TO_DELETE);
         storedEntity.ShouldBeNull();
+        
+        // Restore deleted rating for other tests
+        var ratingService = scope.ServiceProvider.GetRequiredService<IRatingService>();
+        var restoreDto = new RatingNoIdDto
+        {
+            Grade = originalGrade,
+            Comment = originalComment
+        };
+        controller.Create(restoreDto);
     }
 
     // DELETE TEST (Neuspeh: Korisnik koji pokušava da briše nema kreiranu ocenu)

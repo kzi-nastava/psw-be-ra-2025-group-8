@@ -5,17 +5,20 @@ using AutoMapper;
 using Explorer.Blog.API.Dtos;
 using Explorer.Blog.API.Public;
 using Explorer.Blog.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 
 namespace Explorer.Blog.Core.UseCases;
 
 public class BlogCommentService : IBlogCommentService
 {
     private readonly IBlogPostRepository _blogPostRepository;
+    private readonly IInternalUserService _userService;
     private readonly IMapper _mapper;
 
-    public BlogCommentService(IBlogPostRepository blogPostRepository, IMapper mapper)
+    public BlogCommentService(IBlogPostRepository blogPostRepository, IInternalUserService userService, IMapper mapper)
     {
         _blogPostRepository = blogPostRepository;
+        _userService = userService;
         _mapper = mapper;
     }
 
@@ -37,7 +40,9 @@ public class BlogCommentService : IBlogCommentService
 
             _blogPostRepository.Update(blogPost);
 
-            return _mapper.Map<CommentDto>(newComment);
+            var commentDto = _mapper.Map<CommentDto>(newComment);
+            commentDto.PersonUsername = _userService.GetUsernameById(personId);
+            return commentDto;
         }
         catch (InvalidOperationException e)
         {
@@ -58,9 +63,17 @@ public class BlogCommentService : IBlogCommentService
         if (blogPost == null)
             throw new KeyNotFoundException($"Blog Post with ID {blogId} not found.");
 
-        return _mapper.Map<List<CommentDto>>(
+        var comments = _mapper.Map<List<CommentDto>>(
             blogPost.Comments.OrderByDescending(c => c.CreationTime).ToList()
         );
+
+        // Enrich each comment with username
+        foreach (var comment in comments)
+        {
+            comment.PersonUsername = _userService.GetUsernameById(comment.PersonId);
+        }
+
+        return comments;
     }
 
     public CommentDto Update(long userId, long commentId, CommentCreationDto commentData)
@@ -81,7 +94,9 @@ public class BlogCommentService : IBlogCommentService
 
             _blogPostRepository.Update(blogPost);
 
-            return _mapper.Map<CommentDto>(updatedComment);
+            var commentDto = _mapper.Map<CommentDto>(updatedComment);
+            commentDto.PersonUsername = _userService.GetUsernameById(userId);
+            return commentDto;
         }
         catch (KeyNotFoundException)
         {

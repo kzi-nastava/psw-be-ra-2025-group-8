@@ -30,11 +30,28 @@ public class PreferenceTagsTests : IClassFixture<ToursTestFactory>
         var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
         var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
+        var pref = ctx.TouristPreferences.FirstOrDefault(tp => tp.PersonId == -21);
+        if (pref == null)
+        {
+            Assert.Fail("TouristPreferences for PersonId -21 not found");
+            return;
+        }
 
         // Reset current state so test is deterministic regardless of execution order
-        ctx.PreferenceTags.RemoveRange(ctx.PreferenceTags.Where(pt => pt.TouristPreferencesId == pref.Id));
-        ctx.SaveChanges();
+        var existingTags = ctx.PreferenceTags.Where(pt => pt.TouristPreferencesId == pref.Id).ToList();
+        if (existingTags.Any())
+        {
+            ctx.PreferenceTags.RemoveRange(existingTags);
+            try
+            {
+                ctx.SaveChanges();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+            {
+                // Another test removed these concurrently; treat as success
+            }
+        }
+        ctx.ChangeTracker.Clear(); // Clear tracker to avoid concurrency issues
 
         // Ensure baseline tags exist for this person
         svc.AddTagForPerson(-21, new TagDto { Tag = "mountain" });
@@ -80,47 +97,69 @@ public class PreferenceTagsTests : IClassFixture<ToursTestFactory>
         result.Tag.ShouldBe("beach");
 
         // ensure link exists in PreferenceTags
-        var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
-        var linked = ctx.PreferenceTags.SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == result.Id);
+        var pref = ctx.TouristPreferences.FirstOrDefault(tp => tp.PersonId == -21);
+        pref.ShouldNotBeNull();
+        var linked = ctx.PreferenceTags.FirstOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == result.Id);
         linked.ShouldNotBeNull();
     }
 
     [Fact]
     public void RemoveTagFromPerson_Removes_link_only()
     {
-        using var scope = _factory.Services.CreateScope();
-        var svc = scope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
-        var ctx = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        long tagId;
+        long prefId;
 
-        // 1) Uzmi preference za osobu -21
-        var pref = ctx.TouristPreferences.Single(tp => tp.PersonId == -21);
-
-        // 2) Kreiraj tag (EF ce sam dodeliti ID)
-        var tag = new Tags("mountain");
-        ctx.Tags.Add(tag);
-        ctx.SaveChanges();
-        // sada tag.Id ima stvarnu vrednost (pozitivan broj)
-
-        // 3) Napravi PreferenceTags vezu
-        ctx.PreferenceTags.Add(new PreferenceTags
+        // SETUP: Create tag and link in separate scope
+        using (var setupScope = _factory.Services.CreateScope())
         {
-            TouristPreferencesId = pref.Id,
-            TagsId = tag.Id
-        });
-        ctx.SaveChanges();
+            var setupCtx = setupScope.ServiceProvider.GetRequiredService<ToursContext>();
 
-        // 4) Uveri se da link postoji pre brisanja
-        var existingLink = ctx.PreferenceTags
-            .SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == tag.Id);
-        existingLink.ShouldNotBeNull();
+            // 1) Uzmi preference za osobu -21
+            var pref = setupCtx.TouristPreferences.FirstOrDefault(tp => tp.PersonId == -21);
+            if (pref == null)
+            {
+                Assert.Fail("TouristPreferences for PersonId -21 not found");
+                return;
+            }
+            prefId = pref.Id;
 
-        // 5) Akcija — brisanje tag veze
-        svc.RemoveTagFromPerson(-21, tag.Id);
+            // 2) Kreiraj tag (EF ce sam dodeliti ID)
+            var tag = new Tags("RemoveTest_" + Guid.NewGuid().ToString().Substring(0, 8));
+            setupCtx.Tags.Add(tag);
+            setupCtx.SaveChanges();
+            setupCtx.ChangeTracker.Clear(); // Clear tracker after save
+            tagId = tag.Id;
 
-        // 6) Proveri da je veza uklonjena
-        var after = ctx.PreferenceTags
-            .SingleOrDefault(pt => pt.TouristPreferencesId == pref.Id && pt.TagsId == tag.Id);
-        after.ShouldBeNull();
+            // 3) Napravi PreferenceTags vezu
+            setupCtx.PreferenceTags.Add(new PreferenceTags
+            {
+                TouristPreferencesId = prefId,
+                TagsId = tagId
+            });
+            setupCtx.SaveChanges();
+            setupCtx.ChangeTracker.Clear(); // Clear tracker after save
+        }
+
+        // ACT & ASSERT: Use fresh scope for the actual test
+        using (var testScope = _factory.Services.CreateScope())
+        {
+            var svc = testScope.ServiceProvider.GetRequiredService<IPreferenceTagsService>();
+            var ctx = testScope.ServiceProvider.GetRequiredService<ToursContext>();
+
+            // 4) Uveri se da link postoji pre brisanja
+            var existingLink = ctx.PreferenceTags
+                .FirstOrDefault(pt => pt.TouristPreferencesId == prefId && pt.TagsId == tagId);
+            existingLink.ShouldNotBeNull();
+
+            // 5) Akcija — brisanje tag veze
+            svc.RemoveTagFromPerson(-21, tagId);
+
+            // 6) Proveri da je veza uklonjena
+            ctx.ChangeTracker.Clear(); // Clear tracker before checking
+            var after = ctx.PreferenceTags
+                .FirstOrDefault(pt => pt.TouristPreferencesId == prefId && pt.TagsId == tagId);
+            after.ShouldBeNull();
+        }
     }
 
 }

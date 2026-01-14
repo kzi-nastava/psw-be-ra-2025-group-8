@@ -4,6 +4,7 @@ public class TourExecutionDto
 {
     public int Id { get; set; }
     public int IdTour { get; set; }
+    public string? TourName { get; set; }
     public double Longitude { get; set; }
     public double Latitude { get; set; }
     public double CompletionPercentage { get; set; }

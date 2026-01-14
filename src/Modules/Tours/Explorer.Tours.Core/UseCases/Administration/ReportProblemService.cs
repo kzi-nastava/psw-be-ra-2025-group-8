@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Administration;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.Core.Domain;
 using System;
 using System.Collections.Generic;
@@ -19,6 +21,8 @@ namespace Explorer.Tours.Core.UseCases.Administration
         private readonly IReportProblemRepository _reportProblemRepository;
         private readonly ICrudRepository<Tour> _tourRepository;
         private readonly IIssueNotificationService _notificationService;
+        private readonly IInternalTourService _internalTourService;
+        private readonly IInternalUserService _internalUserService;
         private readonly IMapper _mapper;
 
         public ReportProblemService(
@@ -26,12 +30,16 @@ namespace Explorer.Tours.Core.UseCases.Administration
             IReportProblemRepository reportProblemRepository,
             ICrudRepository<Tour> tourRepository,
             IIssueNotificationService notificationService,
+            IInternalTourService internalTourService,
+            IInternalUserService internalUserService,
             IMapper mapper)
         {
             _crudRepository = repository;
             _reportProblemRepository = reportProblemRepository;
             _tourRepository = tourRepository;
             _notificationService = notificationService;
+            _internalTourService = internalTourService;
+            _internalUserService = internalUserService;
             _mapper = mapper;
         }
 
@@ -39,7 +47,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
         {
             var result = _crudRepository.GetPaged(page, pageSize);
 
-            var items = result.Results.Select(_mapper.Map<ReportProblemDto>).ToList();
+            var items = result.Results.Select(rp => EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(rp))).ToList();
             return new PagedResult<ReportProblemDto>(items, result.TotalCount);
         }
 
@@ -72,7 +80,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 // Notification failed, but report is already created - silent fail
             }
   
-            return _mapper.Map<ReportProblemDto>(result);
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(result));
         }
 
         public ReportProblemDto Update(ReportProblemDto entity)
@@ -80,7 +88,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             // Since ReportProblem properties are mutable now, we can map and update.
             var domainEntity = _mapper.Map<ReportProblem>(entity);
             var result = _crudRepository.Update(domainEntity);
-            return _mapper.Map<ReportProblemDto>(result);
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(result));
         }
 
         public void Delete(long id)
@@ -112,7 +120,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 // Notification failed - silent fail
             }
       
-            return _mapper.Map<ReportProblemDto>(updated);
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(updated));
         }
 
         // Novi metod: Tourist mark resolved/unresolved
@@ -121,7 +129,7 @@ namespace Explorer.Tours.Core.UseCases.Administration
             var report = _crudRepository.Get(reportId);
             report.MarkResolved(resolved, comment);
             var updated = _crudRepository.Update(report);
-            return _mapper.Map<ReportProblemDto>(updated);
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(updated));
         }
 
         // Dodavanje poruke u prijavu problema
@@ -151,21 +159,104 @@ namespace Explorer.Tours.Core.UseCases.Administration
                 // Notification failed - silent fail
             }
   
-            return _mapper.Map<IssueMessageDto>(addedMessage);
+            var messageDto = _mapper.Map<IssueMessageDto>(addedMessage);
+            messageDto.AuthorUsername = _internalUserService.GetUsernameById(authorId);
+            return messageDto;
         }
 
         // Dobijanje svih poruka za prijavu
         public List<IssueMessageDto> GetMessages(int reportId)
         {
             var report = _reportProblemRepository.GetWithMessages(reportId);
-            return _mapper.Map<List<IssueMessageDto>>(report.Messages);
+            var messages = _mapper.Map<List<IssueMessageDto>>(report.Messages);
+            
+            // Enrich each message with author username
+            foreach (var message in messages)
+            {
+                message.AuthorUsername = _internalUserService.GetUsernameById(message.AuthorId);
+            }
+            
+            return messages;
         }
 
         // Dobijanje pojedinačne prijave po Id-u
         public ReportProblemDto GetById(int reportId)
         {
             var report = _reportProblemRepository.GetWithMessages(reportId);
-            return _mapper.Map<ReportProblemDto>(report);
+            var dto = _mapper.Map<ReportProblemDto>(report);
+            
+            // Enrich messages with author usernames
+            if (dto.Messages != null)
+            {
+                foreach (var message in dto.Messages)
+                {
+                    message.AuthorUsername = _internalUserService.GetUsernameById(message.AuthorId);
+                }
+            }
+            
+            return EnrichReportProblemDto(dto);
         }
+        // Administrator postavlja rok za rešavanje
+        public ReportProblemDto SetDeadline(int reportId, DateTime deadline)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.SetDeadline(deadline);
+            var updated = _crudRepository.Update(report);
+
+            // Pošalji notifikaciju autoru ture
+            var tour = _tourRepository.Get(updated.TourId);
+            _notificationService.NotifyAboutNewMessage(
+                updated.TouristId,           // Pošiljalac može biti turistički ID, ali ovde je OK koristiti turistu jer sistem zna oba korisnika
+                tour.AuthorId,               // Autor dobija obaveštenje
+                reportId,
+                $"Administrator je postavio rok za rešavanje problema do {deadline:dd.MM.yyyy. HH:mm}.",
+                0                            // 0 = sistem / administrator
+            );
+
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(updated));
+        }
+
+        // Administrator zatvara problem bez kazne
+        public ReportProblemDto CloseIssueByAdmin(int reportId)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.CloseOrPenalize(false);
+            var updated = _crudRepository.Update(report);
+
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(updated));
+        }
+
+        // Administrator penalizuje autora (npr. zatvara turu)
+        public ReportProblemDto PenalizeAuthor(int reportId)
+        {
+            var report = _crudRepository.Get(reportId);
+            report.CloseOrPenalize(true);
+            var updated = _crudRepository.Update(report);
+
+            // Moguće: deaktivacija ture (ugasi turu)
+            var tour = _tourRepository.Get(updated.TourId);
+            if (tour != null)
+            {
+                tour.Status = TourStatus.Archived; // ili 0 ako je enum int
+                _tourRepository.Update(tour);
+            }
+
+            return EnrichReportProblemDto(_mapper.Map<ReportProblemDto>(updated));
+        }
+
+        // Helper method to enrich ReportProblemDto with tour name, tourist username, and author username
+        private ReportProblemDto EnrichReportProblemDto(ReportProblemDto dto)
+        {
+            dto.TourName = _internalTourService.GetTourNameById(dto.TourId);
+            dto.TouristUsername = _internalUserService.GetUsernameById(dto.TouristId);
+            
+            if (dto.AuthorId.HasValue)
+            {
+                dto.AuthorUsername = _internalUserService.GetUsernameById(dto.AuthorId.Value);
+            }
+            
+            return dto;
+        }
+
     }
 }

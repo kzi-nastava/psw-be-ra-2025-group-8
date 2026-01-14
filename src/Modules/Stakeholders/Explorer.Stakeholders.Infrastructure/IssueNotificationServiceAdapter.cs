@@ -14,7 +14,7 @@ namespace Explorer.Stakeholders.Infrastructure
         {
     _notificationService = notificationService;
             _personRepository = personRepository;
-  }
+        }
 
         public void NotifyAboutNewMessage(long touristUserId, long tourAuthorUserId, long reportProblemId, string messageContent, long messageSenderUserId)
         {

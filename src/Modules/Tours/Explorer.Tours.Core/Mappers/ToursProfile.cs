@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.Domain;
+using System.Linq;
 using static Explorer.Tours.Core.Domain.TourExecution;
 
 namespace Explorer.Tours.Core.Mappers;
@@ -17,8 +18,13 @@ public class ToursProfile : Profile
         // ReportProblem mapiranje sa custom logikom za IsOverdue
         CreateMap<ReportProblemDto, ReportProblem>();
         CreateMap<ReportProblem, ReportProblemDto>()
-            .ForMember(dest => dest.IsOverdue, 
-                opt => opt.MapFrom(src => src.IsOverdue()));
+            .ForMember(dest => dest.IsOverdue, opt => opt.MapFrom(src => src.IsOverdue()))
+            //Maksim: za svaki slucaj
+            .ForMember(dest => dest.Deadline, opt => opt.MapFrom(src => src.Deadline))
+            .ForMember(dest => dest.IsClosedByAdmin, opt => opt.MapFrom(src => src.IsClosedByAdmin))
+            .ForMember(dest => dest.IsAuthorPenalized, opt => opt.MapFrom(src => src.IsAuthorPenalized));
+                
+
         
         CreateMap<IssueMessageDto, IssueMessage>().ReverseMap();
         CreateMap<FacilityDto, Facility>().ReverseMap();
@@ -72,6 +78,16 @@ public class ToursProfile : Profile
                 opt => opt.MapFrom(src => src.PublishedAt))
             .ForMember(dest => dest.ArchivedAt,
                 opt => opt.MapFrom(src => src.ArchivedAt));
+
+        CreateMap<Tour, TourInBundleDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+
+        CreateMap<Bundle, BundleDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
+            .ForMember(d => d.Tours, o => o.MapFrom(s => s.BundleTours.Select(bt => bt.Tour)))
+            .ForMember(d => d.PublishedAt, o => o.MapFrom(s => s.PublishedAt))
+            .ForMember(d => d.ArchivedAt, o => o.MapFrom(s => s.ArchivedAt));
+
 
 
 
@@ -132,11 +148,17 @@ public class ToursProfile : Profile
             .ForMember(dest => dest.CompletionPercentage, opt => opt.MapFrom(src => src.CompletionPercentage));
 
 
-        //mapper za shopping cart i order item
-        CreateMap<ShoppingCart, ShoppingCartDto>()
-               .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
-        CreateMap<OrderItem, OrderItemDto>().ReverseMap()
-                .ConstructUsing(dto => new OrderItem(dto.TourId));
+        
+        // Tour Chat mappings
+        CreateMap<TourChatRoom, TourChatRoomDto>()
+            .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.Members.Count(m => m.IsActive)))
+            .ForMember(dest => dest.LastMessage, opt => opt.MapFrom(src => src.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()));
+
+        CreateMap<TourChatMember, TourChatMemberDto>()
+            .ForMember(dest => dest.UserName, opt => opt.Ignore());
+
+        CreateMap<TourChatMessage, TourChatMessageDto>()
+            .ForMember(dest => dest.SenderName, opt => opt.Ignore());
     }
 
     private static TourStatus MapStatus(string status)

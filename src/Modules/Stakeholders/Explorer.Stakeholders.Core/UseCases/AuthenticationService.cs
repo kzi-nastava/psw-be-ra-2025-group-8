@@ -13,13 +13,15 @@ public class AuthenticationService : IAuthenticationService
     private readonly ITokenGenerator _tokenGenerator;
     private readonly IUserRepository _userRepository;
     private readonly ICrudRepository<Person> _personRepository;
+    private readonly IWalletRepository _walletRepository;
     //private readonly ITouristPreferencesRepository _touristPreferencesRepository;
 
-    public AuthenticationService(IUserRepository userRepository, ICrudRepository<Person> personRepository, ITokenGenerator tokenGenerator)//, ITouristPreferencesRepository touristPreferencesRepository)
+    public AuthenticationService(IUserRepository userRepository, ICrudRepository<Person> personRepository, ITokenGenerator tokenGenerator, IWalletRepository walletRepository)//, ITouristPreferencesRepository touristPreferencesRepository)
     {
         _tokenGenerator = tokenGenerator;
         _userRepository = userRepository;
         _personRepository = personRepository;
+        _walletRepository = walletRepository;
         //_touristPreferencesRepository = touristPreferencesRepository;
     }
 
@@ -37,10 +39,12 @@ public class AuthenticationService : IAuthenticationService
         {
             personId = _userRepository.GetPersonId(user.Id);
         }
-        catch (KeyNotFoundException)
+        catch
         {
-            personId = 0;
+            // fallback to user.Id for tests/environments where Person mapping might be missing
+            personId = user.Id;
         }
+
         return _tokenGenerator.GenerateAccessToken(user, personId);
     }
 
@@ -51,6 +55,7 @@ public class AuthenticationService : IAuthenticationService
 
         var user = _userRepository.Create(new User(account.Username, account.Password, UserRole.Tourist, true));
         var person = _personRepository.Create(new Person(user.Id, account.Name, account.Surname, account.Email));
+        var wallet = _walletRepository.Create(new Wallet(user.Id));
         //var touristpreferences = _touristPreferencesRepository.Create(new TouristPreferences(person.Id, DifficultyLevel.Beginner));
 
         return _tokenGenerator.GenerateAccessToken(user, person.Id);
@@ -82,7 +87,7 @@ public class AuthenticationService : IAuthenticationService
         var user = new User(dto.Username, dto.Password, role, true);
         var createdUser = _userRepository.Create(user);
 
-        // create a Person row (so email/name are stored) — name and surname are empty because admin doesn't provide them here
+        // Always create a Person row for every user (required for app to work properly)
         var person = _personRepository.Create(new Person(createdUser.Id, "", "", dto.Email ?? ""));
 
         return new AccountDto

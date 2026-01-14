@@ -1,4 +1,4 @@
-﻿using Explorer.Stakeholders.Core.Domain;
+using Explorer.Stakeholders.Core.Domain;
 using Explorer.Tours.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +21,9 @@ public class ToursContext : DbContext
     public DbSet<TourTransportTime> TourTransportTimes { get; set; }
     public DbSet<TourRating> TourRatings { get; set; }
     public DbSet<TourRatingImage> TourRatingImages { get; set; }
+    public DbSet<Bundle> Bundles { get; set; }
+    public DbSet<BundleTour> BundleTours { get; set; }
+
 
 
     //Preference
@@ -31,8 +34,12 @@ public class ToursContext : DbContext
     public DbSet<TourTag> TourTags { get; set; }
 
 
-    public DbSet<ShoppingCart> ShoppingCarts { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
+
+
+    // Tour Chat
+    public DbSet<TourChatRoom> TourChatRooms { get; set; }
+    public DbSet<TourChatMember> TourChatMembers { get; set; }
+    public DbSet<TourChatMessage> TourChatMessages { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -82,6 +89,41 @@ public class ToursContext : DbContext
                 .HasForeignKey("TourId")           // shadow FK column TourId
                 .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
         });
+
+        modelBuilder.Entity<Bundle>(builder =>
+        {
+            builder.HasKey(b => b.Id);
+
+            builder.Property(b => b.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(b => b.Price)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(b => b.AuthorId).IsRequired();
+            builder.Property(b => b.Status).IsRequired();
+
+            builder.Property(b => b.PublishedAt).IsRequired(false);
+            builder.Property(b => b.ArchivedAt).IsRequired(false);
+
+            builder.HasMany(b => b.BundleTours)
+                .WithOne(bt => bt.Bundle)
+                .HasForeignKey(bt => bt.BundleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BundleTour>(builder =>
+        {
+            builder.HasKey(bt => new { bt.BundleId, bt.TourId });
+
+            builder.HasOne(bt => bt.Tour)
+                .WithMany()
+                .HasForeignKey(bt => bt.TourId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
 
         // TourTransportTime CONFIGURATION
         modelBuilder.Entity<TourTransportTime>(builder =>
@@ -143,6 +185,12 @@ public class ToursContext : DbContext
                     .HasColumnName("Longitude")
                     .IsRequired();
             });
+
+            builder.Property(kp => kp.EncounterId)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.IsEncounterRequired)
+                .HasDefaultValue(false);
         });
 
 
@@ -225,21 +273,19 @@ public class ToursContext : DbContext
             .Property(m => m.AuthorId).IsRequired();
         modelBuilder.Entity<IssueMessage>()
             .Property(m => m.CreatedAt).IsRequired();
-        //za shopping cart i order item
-        modelBuilder.Entity<ShoppingCart>(builder =>
-        {
-            builder.HasKey(c => c.Id);
-            builder.Property(c => c.UserId).IsRequired();
-            builder.HasMany(c => c.Items)
-                   .WithOne()
-                   .HasForeignKey("ShoppingCartId")
-                   .OnDelete(DeleteBehavior.Cascade);
-        });
 
-        modelBuilder.Entity<OrderItem>(builder =>
+        // Explicit mapping for new ReportProblem columns
+        modelBuilder.Entity<ReportProblem>(builder =>
         {
-            builder.HasKey(oi => oi.Id);
-            builder.Property(oi => oi.TourId).IsRequired();
+            builder.Property(rp => rp.Deadline)
+                   .IsRequired(false);
+
+            // keep these nullable in the domain; set default false in DB to avoid seed issues
+            builder.Property(rp => rp.IsClosedByAdmin)
+                   .HasDefaultValue(false);
+
+            builder.Property(rp => rp.IsAuthorPenalized)
+                   .HasDefaultValue(false);
         });
 
         // TourRatingImage CONFIGURATION
@@ -259,6 +305,39 @@ public class ToursContext : DbContext
 
             builder.Property(tri => tri.UploadedAt)
                 .IsRequired();
+        });
+
+        // TOUR CHAT CONFIGURATION
+        modelBuilder.Entity<TourChatRoom>(builder =>
+        {
+            builder.HasKey(cr => cr.Id);
+            builder.Property(cr => cr.Name).IsRequired();
+            builder.Property(cr => cr.TourId).IsRequired();
+            
+            builder.HasMany(cr => cr.Members)
+                .WithOne()
+                .HasForeignKey("TourChatRoomId")
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            builder.HasMany(cr => cr.Messages)
+                .WithOne()
+                .HasForeignKey("TourChatRoomId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TourChatMember>(builder =>
+        {
+            builder.HasKey(m => m.Id);
+            builder.HasIndex(m => m.TourChatRoomId);
+            builder.HasIndex(m => m.UserId);
+        });
+
+        modelBuilder.Entity<TourChatMessage>(builder =>
+        {
+            builder.HasKey(m => m.Id);
+            builder.Property(m => m.Content).IsRequired();
+            builder.HasIndex(m => m.TourChatRoomId);
+            builder.HasIndex(m => m.SenderId);
         });
     }
 

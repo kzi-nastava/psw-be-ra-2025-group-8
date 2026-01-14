@@ -1,5 +1,4 @@
 using AutoMapper;
-using Explorer.BuildingBlocks.Core.Domain;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.Core.Domain;
 
@@ -38,7 +37,13 @@ public class StakeholderProfile : Profile
             .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
         CreateMap<ClubJoinRequestDto, ClubJoinRequest>();
 
+        CreateMap<ClubInvitation, ClubInvitationDto>()
+            .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+        CreateMap<ClubInvitationDto, ClubInvitation>();
+
         //mapper za poruke kluba
         CreateMap<ClubMessage, ClubMessageDto>().ReverseMap();
+
+        CreateMap<Wallet, WalletDto>().ReverseMap();
     }
 }

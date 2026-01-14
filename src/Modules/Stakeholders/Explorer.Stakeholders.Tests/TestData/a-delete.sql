@@ -1,16 +1,19 @@
 ﻿-- Deleting in the correct order to respect foreign key constraints
 -- First, we delete child tables (tables that have foreign keys)
 
-DELETE FROM stakeholders."ClubJoinRequests";
-DELETE FROM stakeholders."Notifications";
-DELETE FROM stakeholders."FollowerMessages";
-DELETE FROM stakeholders."Followers";
-DELETE FROM stakeholders."Ratings";
-DELETE FROM stakeholders."Messages";
-DELETE FROM stakeholders."ClubMessages";
+TRUNCATE TABLE stakeholders."ClubInvitations" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."ClubJoinRequests" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Notifications" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."FollowerMessages" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Followers" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Ratings" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Messages" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."ClubMessages" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Wallets" RESTART IDENTITY CASCADE;
 -- People depends on Users
-DELETE FROM stakeholders."People";
+TRUNCATE TABLE stakeholders."People" RESTART IDENTITY CASCADE;
 -- Users is the root table (has no dependencies)
-DELETE FROM stakeholders."Users";
-DELETE FROM stakeholders."Meetups";
-DELETE FROM stakeholders."Clubs";
+TRUNCATE TABLE stakeholders."Users" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Meetups" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE stakeholders."Clubs" RESTART IDENTITY CASCADE;
+

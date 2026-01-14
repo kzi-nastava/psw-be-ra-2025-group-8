@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Stakeholders\Explorer.Stakeholders.Core\Explorer.Stakeholders.Core.csproj" />
+    <ProjectReference Include="..\..\Tours\Explorer.Tours.Core\Explorer.Tours.Core.csproj" />
+    <ProjectReference Include="..\Explorer.Payments.API\Explorer.Payments.API\Explorer.Payments.API.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -16,4 +16,5 @@ public interface ITourExecutionService
     CheckKeyPointResponseDto CheckKeyPoint(CheckKeyPointRequestDto request);
     List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId);
     KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder);
+    AvailableEncountersAtKeyPointDto CheckEncountersAtKeyPoint(CheckEncountersAtKeyPointRequestDto request);
 }

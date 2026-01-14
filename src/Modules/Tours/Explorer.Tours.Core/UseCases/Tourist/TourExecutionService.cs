@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Encounters.API.Internal;
 using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
@@ -14,6 +16,10 @@ public class TourExecutionService : ITourExecutionService
     private readonly ICrudRepository<TourExecution> _crudRepository;
     private readonly IKeyPointRepository _keyPointRepository;
     private readonly IKeyPointReachedRepository _keyPointReachedRepository;
+    private readonly IInternalTourService _internalTourService;
+    private readonly IInternalEncounterService _encounterService;
+    private readonly ICrudRepository<Tour> _tourRepository;
+    private readonly ITourChatRoomService _chatRoomService;
     private readonly IMapper _mapper;
 
     // Proximity threshold (meters)
@@ -24,33 +30,50 @@ public class TourExecutionService : ITourExecutionService
         ICrudRepository<TourExecution> crudRepository,
         IKeyPointRepository keyPointRepository,
         IKeyPointReachedRepository keyPointReachedRepository,
+        ICrudRepository<Tour> tourRepository,
+        ITourChatRoomService chatRoomService,
+        IInternalTourService internalTourService,
+        IInternalEncounterService encounterService,
         IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
         _crudRepository = crudRepository;
         _keyPointRepository = keyPointRepository;
         _keyPointReachedRepository = keyPointReachedRepository;
+        _tourRepository = tourRepository;
+        _chatRoomService = chatRoomService;
+        _internalTourService = internalTourService;
+        _encounterService = encounterService;
         _mapper = mapper;
     }
 
     public PagedResult<TourExecutionDto> GetPaged(int page, int pageSize)
     {
         var result = _crudRepository.GetPaged(page, pageSize);
-        var items = result.Results.Select(_mapper.Map<TourExecutionDto>).ToList();
+        var items = result.Results.Select(te =>
+        {
+            var dto = _mapper.Map<TourExecutionDto>(te);
+            dto.TourName = _internalTourService.GetTourNameById(te.IdTour);
+            return dto;
+        }).ToList();
         return new PagedResult<TourExecutionDto>(items, result.TotalCount);
     }
 
     public TourExecutionDto Get(int id)
     {
         var tourExecution = _tourExecutionRepository.Get(id);
-        return tourExecution != null ? _mapper.Map<TourExecutionDto>(tourExecution) : null;
+        if (tourExecution == null) return null;
+        
+        var dto = _mapper.Map<TourExecutionDto>(tourExecution);
+        dto.TourName = _internalTourService.GetTourNameById(tourExecution.IdTour);
+        return dto;
     }
 
     public TourExecutionDto Create(TourExecutionDto tourExecutionDto)
     {
         // Validation: Check if tourist already has an active TourExecution
         var activeTourExecutions = _tourExecutionRepository.GetByTourist(tourExecutionDto.IdTourist)
-            .Where(te => te.Status == TourExecutionStatus.InProgress) // Only InProgress tours are considered active
+            .Where(te => te.Status == TourExecutionStatus.InProgress)
             .ToList();
 
         if (activeTourExecutions.Any())
@@ -71,7 +94,25 @@ public class TourExecutionService : ITourExecutionService
         );
 
         var result = _tourExecutionRepository.Create(tourExecution);
-        return _mapper.Map<TourExecutionDto>(result);
+
+        // Automatski dodaj korisnika u tour chat
+        try
+        {
+            var tour = _tourRepository.Get(tourExecutionDto.IdTour);
+            if (tour != null)
+            {
+                _chatRoomService.GetOrCreateTourChatRoom(tourExecutionDto.IdTour, tour.Name);
+                _chatRoomService.AddUserToTourChat(tourExecutionDto.IdTour, tourExecutionDto.IdTourist);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to add user to tour chat: {ex.Message}");
+        }
+
+        var dto = _mapper.Map<TourExecutionDto>(result);
+        dto.TourName = _internalTourService.GetTourNameById(result.IdTour);
+        return dto;
     }
 
     public TourExecutionDto Update(TourExecutionDto tourExecutionDto)
@@ -80,30 +121,63 @@ public class TourExecutionService : ITourExecutionService
         if (existing == null)
             throw new KeyNotFoundException($"TourExecution with id {tourExecutionDto.Id} not found.");
 
+        var oldStatus = existing.Status;
+        
         existing.UpdatePosition(tourExecutionDto.Longitude, tourExecutionDto.Latitude);
         existing.UpdateStatus(Enum.Parse<TourExecutionStatus>(tourExecutionDto.Status));
         existing.UpdateCompletionPercentage(tourExecutionDto.CompletionPercentage);
 
         var result = _tourExecutionRepository.Update(existing);
-        return _mapper.Map<TourExecutionDto>(result);
+
+        // Ukloni korisnika iz chat-a ako je završio ili napustio turu
+        if (oldStatus == TourExecutionStatus.InProgress && 
+            (existing.Status == TourExecutionStatus.Completed || existing.Status == TourExecutionStatus.Abandoned))
+        {
+            try
+            {
+                _chatRoomService.RemoveUserFromTourChat(existing.IdTour, existing.IdTourist);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to remove user from tour chat: {ex.Message}");
+            }
+        }
+
+        var dto = _mapper.Map<TourExecutionDto>(result);
+        dto.TourName = _internalTourService.GetTourNameById(result.IdTour);
+        return dto;
     }
 
     public TourExecutionDto GetByTouristAndTour(int touristId, int tourId)
     {
         var tourExecution = _tourExecutionRepository.GetByTouristAndTour(touristId, tourId);
-        return tourExecution != null ? _mapper.Map<TourExecutionDto>(tourExecution) : null;
+        if (tourExecution == null) return null;
+        
+        var dto = _mapper.Map<TourExecutionDto>(tourExecution);
+        dto.TourName = _internalTourService.GetTourNameById(tourExecution.IdTour);
+        return dto;
     }
 
     public List<TourExecutionDto> GetByTourist(int touristId)
     {
         var executions = _tourExecutionRepository.GetByTourist(touristId);
-        return executions.Select(_mapper.Map<TourExecutionDto>).ToList();
+        return executions.Select(te =>
+        {
+            var dto = _mapper.Map<TourExecutionDto>(te);
+            dto.TourName = _internalTourService.GetTourNameById(te.IdTour);
+            return dto;
+        }).ToList();
     }
 
     public List<TourExecutionDto> GetByTour(int tourId)
     {
         var executions = _tourExecutionRepository.GetByTour(tourId);
-        return executions.Select(_mapper.Map<TourExecutionDto>).ToList();
+        return executions.Select(te =>
+        {
+            var dto = _mapper.Map<TourExecutionDto>(te);
+            dto.TourName = _internalTourService.GetTourNameById(te.IdTour);
+            return dto;
+        }).ToList();
     }
 
     public void Delete(int id)
@@ -180,10 +254,133 @@ public class TourExecutionService : ITourExecutionService
         };
     }
 
+    public AvailableEncountersAtKeyPointDto CheckEncountersAtKeyPoint(CheckEncountersAtKeyPointRequestDto request)
+    {
+  // Load TourExecution
+        var tourExecution = _crudRepository.Get(request.TourExecutionId);
+        if (tourExecution == null)
+     throw new KeyNotFoundException($"TourExecution with id {request.TourExecutionId} not found.");
+
+      // Get all keypoints for this tour
+        var keyPoints = _keyPointRepository.GetByTour(tourExecution.IdTour);
+   if (!keyPoints.Any())
+        {
+   return new AvailableEncountersAtKeyPointDto
+       {
+  IsAtKeyPoint = false,
+  Message = "This tour has no key points.",
+ AvailableEncounters = new List<EncounterInfoDto>()
+  };
+        }
+
+     // Find nearest keypoint
+     KeyPoint nearestKeyPoint = null;
+        double minDistance = double.MaxValue;
+
+        foreach (var kp in keyPoints)
+      {
+   var distance = CalculateDistance(
+    request.Latitude, request.Longitude,
+         kp.Location.Latitude, kp.Location.Longitude);
+
+        if (distance < minDistance)
+      {
+     minDistance = distance;
+        nearestKeyPoint = kp;
+  }
+      }
+
+ if (nearestKeyPoint == null)
+        {
+     return new AvailableEncountersAtKeyPointDto
+ {
+  IsAtKeyPoint = false,
+      Message = "No key points found.",
+             AvailableEncounters = new List<EncounterInfoDto>()
+     };
+        }
+
+        var isAtKeyPoint = minDistance <= KEYPOINT_PROXIMITY_METERS;
+   var response = new AvailableEncountersAtKeyPointDto
+      {
+   KeyPointOrder = nearestKeyPoint.Order,
+    KeyPointName = nearestKeyPoint.Name,
+     IsAtKeyPoint = isAtKeyPoint,
+            DistanceToKeyPointMeters = minDistance,
+    AvailableEncounters = new List<EncounterInfoDto>(),
+   HasRequiredEncounter = nearestKeyPoint.IsEncounterRequired
+        };
+
+     if (!isAtKeyPoint)
+        {
+       response.Message = $"You are {minDistance:F0} meters away from key point '{nearestKeyPoint.Name}'. Get closer to access encounters.";
+  return response;
+     }
+
+// Turista je na ključnoj tački - učitaj encounter ako postoji
+     if (nearestKeyPoint.EncounterId.HasValue)
+  {
+       try
+   {
+    var encounter = _encounterService.GetEncounterById(nearestKeyPoint.EncounterId.Value);
+  if (encounter != null)
+ {
+      // Map EncounterDto to EncounterInfoDto
+     var encounterInfo = new EncounterInfoDto
+ {
+    Id = encounter.Id,
+   Name = encounter.Name,
+  Description = encounter.Description,
+         Latitude = encounter.Latitude,
+       Longitude = encounter.Longitude,
+    Type = encounter.Type,
+   Status = encounter.Status,
+   XPReward = encounter.XPReward
+       };
+ response.AvailableEncounters.Add(encounterInfo);
+  
+            if (nearestKeyPoint.IsEncounterRequired)
+    {
+ response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! You must complete the encounter '{encounter.Name}' to proceed.";
+            }
+    else
+  {
+ response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! An optional encounter '{encounter.Name}' is available.";
+         }
+    }
+       else
+        {
+      response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! The encounter is no longer available.";
+      }
+    }
+    catch (Exception)
+     {
+  response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! The encounter could not be loaded.";
+ }
+  }
+  else
+      {
+ response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! No encounters are available at this location.";
+        }
+
+      return response;
+    }
+
     public List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId)
     {
         var reachedKeyPoints = _keyPointReachedRepository.GetByTourExecution(tourExecutionId);
-        return reachedKeyPoints.Select(_mapper.Map<KeyPointReachedDto>).ToList();
+        
+        // Get the tour execution to know which tour we're dealing with
+        var tourExecution = _crudRepository.Get(tourExecutionId);
+        if (tourExecution == null)
+            throw new KeyNotFoundException($"TourExecution with id {tourExecutionId} not found.");
+        
+        return reachedKeyPoints.Select(kpr =>
+        {
+            var dto = _mapper.Map<KeyPointReachedDto>(kpr);
+            dto.KeyPointName = _internalTourService.GetKeyPointNameByTourAndOrder(tourExecution.IdTour, kpr.KeyPointOrder);
+            return dto;
+        }).ToList();
     }
 
     public KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder)

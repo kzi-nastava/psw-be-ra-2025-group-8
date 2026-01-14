@@ -10,7 +10,9 @@ namespace Explorer.Tours.API.Dtos
     {
         public int Id { get; set; }
         public int TourId { get; set; }
+        public string? TourName { get; set; }
         public int TouristId { get; set; }
+        public string? TouristUsername { get; set; }
         public int Category { get; set; }
         public int Priority { get; set; }
         public string Description { get; set; }
@@ -18,6 +20,7 @@ namespace Explorer.Tours.API.Dtos
 
         // Author response
         public int? AuthorId { get; set; }
+        public string? AuthorUsername { get; set; }
         public string? AuthorResponse { get; set; }
         public DateTime? AuthorResponseTime { get; set; }
 
@@ -31,5 +34,11 @@ namespace Explorer.Tours.API.Dtos
 
         // Property koji označava da li je problem star više od 5 dana i nije rešen
         public bool IsOverdue { get; set; }
+
+        // Deadline
+        public DateTime? Deadline { get; set; }
+        public bool? IsClosedByAdmin { get; set; }
+        public bool? IsAuthorPenalized { get; set; }
+
     }
 }
