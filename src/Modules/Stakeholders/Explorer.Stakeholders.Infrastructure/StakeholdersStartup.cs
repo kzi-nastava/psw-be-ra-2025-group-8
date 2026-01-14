@@ -53,7 +53,8 @@ public static class StakeholdersStartup
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
-        services.AddScoped(typeof(ICrudRepository<Person>), typeof(CrudDatabaseRepository<Person, StakeholdersContext>));
+        // Use PersonDbRepository which implements ICrudRepository<Person> and provides fallback lookup by UserId
+        services.AddScoped(typeof(ICrudRepository<Person>), typeof(PersonDbRepository));
         services.AddScoped<IUserRepository, UserDatabaseRepository>();
         services.AddScoped<IRatingRepository, RatingDbRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
@@ -61,7 +62,6 @@ public static class StakeholdersStartup
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IFollowerRepository, FollowerRepository>();
         services.AddScoped<IFollowerMessageRepository, FollowerMessageRepository>();
-
 
         //za klubove
         services.AddScoped<IClubRepository, ClubDbRepository>();

@@ -1,11 +1,13 @@
-﻿using Explorer.Tours.API.Public.Tourist;
+﻿
 using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Internal;
+using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Tours.Core.UseCases.Tourist
 {
-    public class PositionService : IPositionService
+    public class PositionService : IPositionService, IInternalPositionService
     {
         private readonly IPositionRepository _repo;
 
