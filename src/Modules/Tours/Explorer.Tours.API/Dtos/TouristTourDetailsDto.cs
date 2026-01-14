@@ -23,5 +23,9 @@ namespace Explorer.Tours.API.Dtos
 
         public double AverageRating { get; set; }
         public List<TourReviewDto> Reviews { get; set; }
+
+        public bool IsOnSale { get; set; }
+        public decimal? OriginalPrice { get; set; }
+        public int? DiscountPercentage { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Explorer.Payments.API.Internal;
 using Explorer.Stakeholders.API.Internal;
 using Explorer.Stakeholders.API.Public;
 using Explorer.Tours.API.Dtos;
@@ -17,6 +18,7 @@ public class TouristTourService : ITouristTourService
     private readonly IPersonEquipmentRepository _personEquipmentRepository;
     private readonly IPreferenceTagsRepository _preferenceTagsRepository;
     private readonly ITouristPreferencesRepository _touristPreferencesRepository;
+    private readonly IInternalSaleService _saleService;
 
 
     public TouristTourService(
@@ -26,6 +28,7 @@ public class TouristTourService : ITouristTourService
         IPersonEquipmentRepository personEquipmentRepository,
         IPreferenceTagsRepository preferenceTagsRepository,
         ITouristPreferencesRepository touristPreferencesRepository,
+        IInternalSaleService saleService,
         IMapper mapper)
     {
         _tourRepository = tourRepository;
@@ -34,6 +37,7 @@ public class TouristTourService : ITouristTourService
         _personEquipmentRepository = personEquipmentRepository;
         _preferenceTagsRepository = preferenceTagsRepository;
         _touristPreferencesRepository = touristPreferencesRepository;
+        _saleService = saleService;
         _mapper = mapper;
     }
 
@@ -204,39 +208,75 @@ public class TouristTourService : ITouristTourService
         return tours.Select(MapPreview).ToList();
     }
 
+    public List<TouristTourPreviewDto> GetToursOnSale(bool sortByDiscount = false)
+    {
+        var activeSales = _saleService.GetActiveSales();
+        
+        var tourIds = activeSales
+            .SelectMany(s => s.TourIds)
+            .Distinct()
+            .ToList();
+
+        var tours = _tourRepository
+            .GetAll()
+            .Where(t => t.Status == TourStatus.Published && tourIds.Contains(t.Id))
+            .ToList();
+
+        var result = tours.Select(MapPreview).ToList();
+
+        if (sortByDiscount)
+        {
+            result = result
+                .OrderByDescending(t => t.DiscountPercentage ?? 0)
+                .ToList();
+        }
+
+        return result;
+    }
+
     // =======================================================
     // Private helpers
     // =======================================================
 
     private TouristTourPreviewDto MapPreview(Tour tour)
     {
+        var saleInfo = _saleService.GetTourSaleInfo(tour.Id);
+        
         return new TouristTourPreviewDto
         {
             Id = tour.Id,
             Name = tour.Name,
             Description = tour.Description,
-            Price = tour.Price,
+            Price = saleInfo.IsOnSale ? saleInfo.DiscountedPrice.Value : tour.Price,
             Tags = tour.TourTags.Select(tt => tt.Tags.Tag).ToList(),
             RequiredEquipment = tour.RequiredEquipment.Select(eq => eq.Equipment.Name).ToList(),
             FirstKeyPoint = MapFirstKeyPoint(tour),
             AverageRating = CalculateAverage(tour.Id),
-            Author = _profileProvider.GetByUserId(tour.AuthorId).Name
+            Author = _profileProvider.GetByUserId(tour.AuthorId).Name,
+            IsOnSale = saleInfo.IsOnSale,
+            OriginalPrice = saleInfo.IsOnSale ? saleInfo.OriginalPrice : null,
+            DiscountPercentage = saleInfo.DiscountPercentage
         };
     }
 
     private TouristTourDetailsDto MapDetails(Tour tour)
     {
+        var saleInfo = _saleService.GetTourSaleInfo(tour.Id);
+        
         return new TouristTourDetailsDto
         {
             Id = tour.Id,
             Name = tour.Name,
             Description = tour.Description,
             Difficulty = tour.Difficulty,
-            Price = tour.Price,
+            Price = saleInfo.IsOnSale ? saleInfo.DiscountedPrice.Value : tour.Price,
             LengthInKilometers = tour.LengthInKilometers,
             Tags = tour.TourTags.Select(tt => tt.Tags.Tag).ToList(),
             RequiredEquipment = tour.RequiredEquipment.Select(eq => eq.Equipment.Name).ToList(),
-            Author = _profileProvider.GetByUserId(tour.AuthorId).Name
+            Author = _profileProvider.GetByUserId(tour.AuthorId).Name,
+            IsOnSale = saleInfo.IsOnSale,
+            OriginalPrice = saleInfo.IsOnSale ? saleInfo.OriginalPrice : null,
+            DiscountPercentage = saleInfo.DiscountPercentage
         };
     }
 

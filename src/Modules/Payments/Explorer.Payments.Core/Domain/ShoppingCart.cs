@@ -45,15 +45,15 @@ namespace Explorer.Payments.Core.Domain
             _items.Clear();
         }
 
-        public void PurchaseItem(long tourId, decimal price)
+        public void PurchaseItem(long tourId, decimal originalPrice, decimal price, long? saleId = null, long? couponId = null)
         {
             var item = _items.FirstOrDefault(i => i.TourId == tourId);
             if (item == null) throw new KeyNotFoundException("Item not found in cart.");
 
             int adventureCoinsSpent = (int)Math.Ceiling(price);
             var purchasedItem = UserId > 0 
-                ? new PurchasedItem(UserId, tourId, price, adventureCoinsSpent)
-                : new PurchasedItem(tourId, price); // Fallback for backward compatibility
+                ? new PurchasedItem(UserId, tourId, originalPrice, price, adventureCoinsSpent, saleId, couponId)
+                : new PurchasedItem(tourId, originalPrice, price, saleId, couponId); // Fallback for backward compatibility
             
             _purchasedItems.Add(purchasedItem);
             _items.Remove(item);
@@ -73,8 +73,8 @@ namespace Explorer.Payments.Core.Domain
 
                 int adventureCoinsSpent = (int)Math.Ceiling(tourPrices[item.TourId]);
                 var purchasedItem = UserId > 0
-                    ? new PurchasedItem(UserId, item.TourId, tourPrices[item.TourId], adventureCoinsSpent)
-                    : new PurchasedItem(item.TourId, tourPrices[item.TourId]); // Fallback for backward compatibility
+                    ? new PurchasedItem(UserId, item.TourId, item.OriginalPrice, tourPrices[item.TourId], adventureCoinsSpent, item.SaleId, item.CouponId)
+                    : new PurchasedItem(item.TourId, item.OriginalPrice, tourPrices[item.TourId], item.SaleId, item.CouponId); // Fallback for backward compatibility
                 
                 _purchasedItems.Add(purchasedItem);
             }
@@ -87,8 +87,8 @@ namespace Explorer.Payments.Core.Domain
             if (_purchasedItems.Any(pi => pi.TourId == tourId)) return;
 
             var purchasedItem = UserId > 0
-                ? new PurchasedItem(UserId, tourId, price, adventureCoinsSpent)
-                : new PurchasedItem(tourId, price);
+                ? new PurchasedItem(UserId, tourId, price, price, adventureCoinsSpent)
+                : new PurchasedItem(tourId, price, price);
 
             _purchasedItems.Add(purchasedItem);
         }

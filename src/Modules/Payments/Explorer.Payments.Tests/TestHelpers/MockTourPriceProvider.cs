@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +13,8 @@ namespace Explorer.Payments.Tests.TestHelpers
         {
             { -511, (50m, -11) },   // Beogradska avantura - Author -11
             { -522, (100m, -11) },  // Planinska tura - Author -11
-            { -533, (70m, -11) }    // Dunavska ruta - Author -11
+            { -533, (70m, -11) },   // Dunavska ruta - Author -11
+            { -544, (80m, -12) }    // Tura autora -12 (za unauthorized test)
         };
 
         public TourPriceDto? GetById(long id)
