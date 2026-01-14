@@ -5,6 +5,7 @@ using Explorer.Encounters.Core.Mappers;
 using Explorer.Encounters.Infrastructure.Database;
 using Explorer.BuildingBlocks.Infrastructure.Database;
 using Explorer.Encounters.API.Public;
+using Explorer.Encounters.API.Internal;
 using Explorer.Encounters.Core.UseCases;
 using Explorer.Encounters.Core.Domain.ReposotoryInterfaces;
 using Explorer.Encounters.Infrastructure.Database.Repositories;
@@ -24,6 +25,7 @@ public static class EncountersStartup
     private static void SetupCore(IServiceCollection services)
     {
         services.AddScoped<IEncounterService, EncounterService>();
+        services.AddScoped<IInternalEncounterService, EncounterService>();
         services.AddScoped<IEncounterParticipationService, EncounterParticipationService>();
     }
 

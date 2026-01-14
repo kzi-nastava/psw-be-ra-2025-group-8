@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Encounters.API.Internal;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Tourist;
@@ -16,6 +17,7 @@ public class TourExecutionService : ITourExecutionService
     private readonly IKeyPointRepository _keyPointRepository;
     private readonly IKeyPointReachedRepository _keyPointReachedRepository;
     private readonly IInternalTourService _internalTourService;
+    private readonly IInternalEncounterService _encounterService;
     private readonly ICrudRepository<Tour> _tourRepository;
     private readonly ITourChatRoomService _chatRoomService;
     private readonly IMapper _mapper;
@@ -31,6 +33,7 @@ public class TourExecutionService : ITourExecutionService
         ICrudRepository<Tour> tourRepository,
         ITourChatRoomService chatRoomService,
         IInternalTourService internalTourService,
+        IInternalEncounterService encounterService,
         IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
@@ -40,6 +43,7 @@ public class TourExecutionService : ITourExecutionService
         _tourRepository = tourRepository;
         _chatRoomService = chatRoomService;
         _internalTourService = internalTourService;
+        _encounterService = encounterService;
         _mapper = mapper;
     }
 
@@ -248,6 +252,118 @@ public class TourExecutionService : ITourExecutionService
             KeyPointReached = false,
             LastActivity = tourExecution.LastActivity
         };
+    }
+
+    public AvailableEncountersAtKeyPointDto CheckEncountersAtKeyPoint(CheckEncountersAtKeyPointRequestDto request)
+    {
+  // Load TourExecution
+        var tourExecution = _crudRepository.Get(request.TourExecutionId);
+        if (tourExecution == null)
+     throw new KeyNotFoundException($"TourExecution with id {request.TourExecutionId} not found.");
+
+      // Get all keypoints for this tour
+        var keyPoints = _keyPointRepository.GetByTour(tourExecution.IdTour);
+   if (!keyPoints.Any())
+        {
+   return new AvailableEncountersAtKeyPointDto
+       {
+  IsAtKeyPoint = false,
+  Message = "This tour has no key points.",
+ AvailableEncounters = new List<EncounterInfoDto>()
+  };
+        }
+
+     // Find nearest keypoint
+     KeyPoint nearestKeyPoint = null;
+        double minDistance = double.MaxValue;
+
+        foreach (var kp in keyPoints)
+      {
+   var distance = CalculateDistance(
+    request.Latitude, request.Longitude,
+         kp.Location.Latitude, kp.Location.Longitude);
+
+        if (distance < minDistance)
+      {
+     minDistance = distance;
+        nearestKeyPoint = kp;
+  }
+      }
+
+ if (nearestKeyPoint == null)
+        {
+     return new AvailableEncountersAtKeyPointDto
+ {
+  IsAtKeyPoint = false,
+      Message = "No key points found.",
+             AvailableEncounters = new List<EncounterInfoDto>()
+     };
+        }
+
+        var isAtKeyPoint = minDistance <= KEYPOINT_PROXIMITY_METERS;
+   var response = new AvailableEncountersAtKeyPointDto
+      {
+   KeyPointOrder = nearestKeyPoint.Order,
+    KeyPointName = nearestKeyPoint.Name,
+     IsAtKeyPoint = isAtKeyPoint,
+            DistanceToKeyPointMeters = minDistance,
+    AvailableEncounters = new List<EncounterInfoDto>(),
+   HasRequiredEncounter = nearestKeyPoint.IsEncounterRequired
+        };
+
+     if (!isAtKeyPoint)
+        {
+       response.Message = $"You are {minDistance:F0} meters away from key point '{nearestKeyPoint.Name}'. Get closer to access encounters.";
+  return response;
+     }
+
+// Turista je na ključnoj tački - učitaj encounter ako postoji
+     if (nearestKeyPoint.EncounterId.HasValue)
+  {
+       try
+   {
+    var encounter = _encounterService.GetEncounterById(nearestKeyPoint.EncounterId.Value);
+  if (encounter != null)
+ {
+      // Map EncounterDto to EncounterInfoDto
+     var encounterInfo = new EncounterInfoDto
+ {
+    Id = encounter.Id,
+   Name = encounter.Name,
+  Description = encounter.Description,
+         Latitude = encounter.Latitude,
+       Longitude = encounter.Longitude,
+    Type = encounter.Type,
+   Status = encounter.Status,
+   XPReward = encounter.XPReward
+       };
+ response.AvailableEncounters.Add(encounterInfo);
+  
+            if (nearestKeyPoint.IsEncounterRequired)
+    {
+ response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! You must complete the encounter '{encounter.Name}' to proceed.";
+            }
+    else
+  {
+ response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! An optional encounter '{encounter.Name}' is available.";
+         }
+    }
+       else
+        {
+      response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! The encounter is no longer available.";
+      }
+    }
+    catch (Exception)
+     {
+  response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! The encounter could not be loaded.";
+ }
+  }
+  else
+      {
+ response.Message = $"You have reached key point '{nearestKeyPoint.Name}'! No encounters are available at this location.";
+        }
+
+      return response;
     }
 
     public List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId)

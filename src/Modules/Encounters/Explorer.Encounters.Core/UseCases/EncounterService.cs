@@ -1,4 +1,5 @@
 ﻿using Explorer.Encounters.API.Dtos;
+using Explorer.Encounters.API.Internal;
 using Explorer.Encounters.API.Public;
 using Explorer.Encounters.Core.Domain;
 using Explorer.Encounters.Core.Domain.ReposotoryInterfaces;
@@ -11,7 +12,7 @@ using System.Linq;
 
 namespace Explorer.Encounters.Core.UseCases
 {
-    public class EncounterService : IEncounterService
+    public class EncounterService : IEncounterService, IInternalEncounterService
     {
         private readonly IEncounterRepository _encounterRepository;
         private readonly IInternalPersonService _personService;

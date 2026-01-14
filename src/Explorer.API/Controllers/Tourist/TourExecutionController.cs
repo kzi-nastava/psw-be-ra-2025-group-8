@@ -1,4 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Encounters.API.Dtos;
+using Explorer.Encounters.API.Public;
 using Explorer.Stakeholders.Infrastructure.Authentication;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
@@ -14,10 +16,14 @@ namespace Explorer.API.Controllers.Tourist;
 public class TourExecutionController : ControllerBase
 {
     private readonly ITourExecutionService _tourExecutionService;
+    private readonly IEncounterParticipationService _encounterParticipationService;
 
-    public TourExecutionController(ITourExecutionService tourExecutionService)
+    public TourExecutionController(
+        ITourExecutionService tourExecutionService,
+    IEncounterParticipationService encounterParticipationService)
     {
         _tourExecutionService = tourExecutionService;
+        _encounterParticipationService = encounterParticipationService;
     }
 
     [HttpGet]
@@ -105,6 +111,24 @@ public class TourExecutionController : ControllerBase
         }
     }
 
+    [HttpPost("check-encounters-at-keypoint")]
+    public ActionResult<AvailableEncountersAtKeyPointDto> CheckEncountersAtKeyPoint([FromBody] CheckEncountersAtKeyPointRequestDto request)
+    {
+        try
+        {
+            var result = _tourExecutionService.CheckEncountersAtKeyPoint(request);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Explorer.BuildingBlocks.Core.Exceptions.NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("{tourExecutionId:long}/reached-keypoints")]
     public ActionResult<List<KeyPointReachedDto>> GetReachedKeyPoints(long tourExecutionId)
     {
@@ -164,6 +188,41 @@ public class TourExecutionController : ControllerBase
             return NotFound(new { message = "No active tour found" });
         
         return Ok(activeTour);
+    }
+
+    [HttpPost("{tourExecutionId:long}/activate-encounter/{encounterId:long}")]
+    public ActionResult<EncounterParticipationDto> ActivateEncounter(long tourExecutionId, long encounterId)
+    {
+ try
+        {
+            // Security check: verify TourExecution belongs to logged-in tourist
+            var touristId = GetTouristIdFromToken();
+        
+  var tourExecution = _tourExecutionService.Get((int)tourExecutionId);
+            if (tourExecution == null)
+                return NotFound(new { message = "TourExecution not found" });
+      
+            if (tourExecution.IdTourist != touristId)
+     return Forbid(); // 403 - not your tour execution
+
+    // Activate encounter
+var activateDto = new ActivateEncounterDto
+            {
+           PersonId = touristId,
+       EncounterId = encounterId
+       };
+
+       var result = _encounterParticipationService.ActivateEncounter(activateDto);
+            return Ok(result);
+  }
+        catch (InvalidOperationException ex)
+        {
+ return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+  {
+        return NotFound(new { message = ex.Message });
+        }
     }
 
     private int GetTouristIdFromToken()
