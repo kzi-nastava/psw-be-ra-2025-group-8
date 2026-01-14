@@ -82,7 +82,7 @@ namespace Explorer.Tours.Core.UseCases.Tourist
             if (chatRoom == null)
                 throw new KeyNotFoundException($"Chat room with ID {chatRoomId} not found");
 
-            if (!chatRoom.IsMember(userId))
+            if (!chatRoom.IsMember(userId) && !chatRoom.Messages.Any(m => m.SenderId == userId))
                 throw new UnauthorizedAccessException("You are not a member of this chat room");
 
             return _mapper.Map<List<TourChatMessageDto>>(chatRoom.Messages.OrderBy(m => m.SentAt).ToList());
