@@ -19,5 +19,18 @@ namespace Explorer.Encounters.API.Dtos
         public int XPReward { get; set; }
         public DateTime? PublishedAt { get;  set; }
         public DateTime? ArchivedAt { get;  set; }
+
+        // Creator (person) - used when creating from tourist API
+        public long CreatorPersonId { get; set; }
+
+        // Social encounter settings
+        public int? SocialRequiredCount { get; set; }
+        public double? SocialRangeMeters { get; set; }
+
+        // hidden location encounter
+        public string? ImageUrl { get; set; }
+        public double? ImageLatitude { get; set; }
+        public double? ImageLongitude { get; set; }
+        public double? ActivationRangeMeters { get; set; }
     }
 }

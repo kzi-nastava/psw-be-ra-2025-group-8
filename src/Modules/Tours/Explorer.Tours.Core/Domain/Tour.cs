@@ -70,7 +70,7 @@ namespace Explorer.Tours.Core.Domain
         }
 
         // Adding a key point to the tour
-        public KeyPoint AddKeyPoint(string name, string description, string imageUrl, string secret, GeoCoordinate location)
+        public KeyPoint AddKeyPoint(string name, string description, string imageUrl, string secret, GeoCoordinate location, long? encounterId = null, bool isEncounterRequired = false)
         {
             if (Status != TourStatus.Draft)
                 throw new InvalidOperationException("Key points can only be added while the tour is in preparation.");
@@ -79,7 +79,7 @@ namespace Explorer.Tours.Core.Domain
 
             var order = KeyPoints.Count + 1;
 
-            var keyPoint = new KeyPoint(name, description, imageUrl, secret, location, order);
+            var keyPoint = new KeyPoint(name, description, imageUrl, secret, location, order, encounterId, isEncounterRequired);
             KeyPoints.Add(keyPoint);
 
             RecalculateLength();

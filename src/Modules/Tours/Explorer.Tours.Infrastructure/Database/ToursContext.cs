@@ -185,6 +185,12 @@ public class ToursContext : DbContext
                     .HasColumnName("Longitude")
                     .IsRequired();
             });
+
+            builder.Property(kp => kp.EncounterId)
+                .IsRequired(false);
+
+            builder.Property(kp => kp.IsEncounterRequired)
+                .HasDefaultValue(false);
         });
 
 

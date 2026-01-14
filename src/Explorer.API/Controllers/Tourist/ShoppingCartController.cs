@@ -168,5 +168,45 @@ namespace Explorer.API.Controllers.Tourist
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("purchase/item/coupon")]
+        public IActionResult PurchaseItemWithCoupon([FromQuery] long userId, [FromQuery] long tourId, [FromQuery] string couponCode)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseItemWithCoupon(userId, tourId, couponCode);
+                return Ok("Item purchased successfully with coupon.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("purchase/all/coupon")]
+        public IActionResult PurchaseAllItemsWithCoupon([FromQuery] long userId, [FromQuery] string couponCode)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseAllItemsWithCoupon(userId, couponCode);
+                return Ok("All items purchased successfully with coupon.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

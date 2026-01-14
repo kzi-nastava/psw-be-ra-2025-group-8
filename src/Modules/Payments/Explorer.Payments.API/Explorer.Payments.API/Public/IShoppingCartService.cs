@@ -13,5 +13,7 @@ namespace Explorer.Payments.API.Public
         void DeleteCart(long userId);
         void PurchaseItem(long userId, long tourId);
         void PurchaseAllItems(long userId);
+        void PurchaseItemWithCoupon(long userId, long tourId, string couponCode);
+        void PurchaseAllItemsWithCoupon(long userId, string couponCode);
     }
 }

@@ -34,6 +34,7 @@
     <Folder Include="Controllers\Public\" />
     <Folder Include="Controllers\Author\" />
     <Folder Include="Controllers\Tourist\" />
+    <Folder Include="wwwroot\images\encounter\" />
   </ItemGroup>
 
 </Project>

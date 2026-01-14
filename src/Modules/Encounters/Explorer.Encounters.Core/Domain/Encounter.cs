@@ -10,6 +10,7 @@ namespace Explorer.Encounters.Core.Domain
     public enum EncouterStatus
     {
         Draft,
+        Pending,
         Published,
         Archived
     }
@@ -33,8 +34,23 @@ namespace Explorer.Encounters.Core.Domain
         public DateTime? PublishedAt { get; private set; }
         public DateTime? ArchivedAt { get; private set; }
 
+        // Creator (person) - optional
+        public long? CreatorPersonId { get; set; }
+
+        // Social encounter settings
+        public int? SocialRequiredCount { get; private set; }
+        public double? SocialRangeMeters { get; private set; }
+
+        // Hidden location encouter
+        public string? ImageUrl { get; set; }
+        public double? ImageLatitude { get; set; }
+        public double? ImageLongitude { get; set; }
+        public double? ActivationRangeMeters { get; set; }
+
         // Constructor for creating a new encounter (draft)
-        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward)
+        public Encounter(string name, string description, string location, double? latitude, double? longitude, EncouterType type, int xpReward,
+                     int? socialRequiredCount = null, double? socialRangeMeters = null,
+                     string? imageUrl = null, double? imageLat = null, double? imageLon = null, double? activationRange = null)
         {
             Name = name;
             Description = description;
@@ -44,17 +60,21 @@ namespace Explorer.Encounters.Core.Domain
             Type = type;
             XPReward = xpReward;
             Status = EncouterStatus.Draft;
-            PublishedAt = null;
-            ArchivedAt = null;
+            SocialRequiredCount = socialRequiredCount;
+            SocialRangeMeters = socialRangeMeters;
+            ImageUrl = imageUrl;
+            ImageLatitude = imageLat;
+            ImageLongitude = imageLon;
+            ActivationRangeMeters = activationRange;
         }
 
         public Encounter() { }
 
-        //Publish encounter
+        //Publish encounter (allow from Draft or Pending)
         public void Publish()
         {
-            if (Status != EncouterStatus.Draft)
-                throw new InvalidOperationException("Only draft encounters can be published.");
+            if (Status == EncouterStatus.Published)
+                throw new InvalidOperationException("Only draft or pending encounters can be published.");
 
             Status = EncouterStatus.Published;
             PublishedAt = DateTime.UtcNow;
@@ -81,6 +101,27 @@ namespace Explorer.Encounters.Core.Domain
         {
             Latitude = latitude;
             Longitude = longitude;
+        }
+
+        // Allow creator to set social settings
+        public void SetSocialSettings(int? requiredCount, double? rangeMeters)
+        {
+            if (requiredCount.HasValue && requiredCount <= 0)
+                throw new ArgumentException("Social required count must be greater than 0.");
+
+            if (rangeMeters.HasValue && rangeMeters <= 0)
+                throw new ArgumentException("Social range meters must be greater than 0.");
+
+            SocialRequiredCount = requiredCount;
+            SocialRangeMeters = rangeMeters;
+        }
+
+        public void SetHiddenLocationSettings(string imageUrl, double imageLat, double imageLon, double range)
+        {
+            ImageUrl = imageUrl;
+            ImageLatitude = imageLat;
+            ImageLongitude = imageLon;
+            ActivationRangeMeters = range;
         }
     }
 }

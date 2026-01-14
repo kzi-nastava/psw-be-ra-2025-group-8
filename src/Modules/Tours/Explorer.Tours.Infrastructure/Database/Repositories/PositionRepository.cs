@@ -1,5 +1,6 @@
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using System.Linq;
 
 namespace Explorer.Tours.Infrastructure.Database.Repositories;
 
@@ -14,8 +15,11 @@ public class PositionRepository : IPositionRepository
 
     public Position GetByTouristId(int touristId)
     {
+        // Return the most recently updated position for the tourist to avoid stale records
         return _context.Positions
-        .FirstOrDefault(p => p.TouristId == touristId);
+            .Where(p => p.TouristId == touristId)
+            .OrderByDescending(p => p.UpdatedAt)
+            .FirstOrDefault();
     }
 
     public Position Create(Position position)

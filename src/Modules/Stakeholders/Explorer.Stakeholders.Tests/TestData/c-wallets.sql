@@ -5,6 +5,10 @@
 INSERT INTO stakeholders."Wallets"("Id", "UserId", "AdventureCoins")
 VALUES (-1, -1, 0);
 
+-- Wallet for author -2
+INSERT INTO stakeholders."Wallets"("Id", "UserId", "AdventureCoins")
+VALUES (-2, -2, 5000);
+
 -- Wallets for authors (need AC for ShoppingCart tests)
 INSERT INTO stakeholders."Wallets"("Id", "UserId", "AdventureCoins")
 VALUES (-11, -11, 5000);
@@ -24,4 +28,5 @@ VALUES (-22, -22, 500);
 
 INSERT INTO stakeholders."Wallets"("Id", "UserId", "AdventureCoins")
 VALUES (-23, -23, 2000);
+
 
