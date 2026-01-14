@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.Core.Domain;
+using System.Linq;
 using static Explorer.Tours.Core.Domain.TourExecution;
 
 namespace Explorer.Tours.Core.Mappers;
@@ -148,6 +149,16 @@ public class ToursProfile : Profile
 
 
         
+        // Tour Chat mappings
+        CreateMap<TourChatRoom, TourChatRoomDto>()
+            .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.Members.Count(m => m.IsActive)))
+            .ForMember(dest => dest.LastMessage, opt => opt.MapFrom(src => src.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault()));
+
+        CreateMap<TourChatMember, TourChatMemberDto>()
+            .ForMember(dest => dest.UserName, opt => opt.Ignore());
+
+        CreateMap<TourChatMessage, TourChatMessageDto>()
+            .ForMember(dest => dest.SenderName, opt => opt.Ignore());
     }
 
     private static TourStatus MapStatus(string status)
