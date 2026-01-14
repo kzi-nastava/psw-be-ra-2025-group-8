@@ -18,8 +18,11 @@
     {
         public long Id { get; set; }
         public long TourId { get; set; }
+        public decimal OriginalPrice { get; set; }
         public decimal Price { get; set; }
         public DateTime PurchaseDate { get; set; }
+        public long? SaleId { get; set; }
+        public long? CouponId { get; set; }
     }
 
     public class ShoppingCartDto

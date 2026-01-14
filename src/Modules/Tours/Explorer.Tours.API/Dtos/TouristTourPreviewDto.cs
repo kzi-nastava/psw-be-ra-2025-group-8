@@ -20,5 +20,9 @@ namespace Explorer.Tours.API.Dtos
 
         public List<string> Tags { get; set; }
         public List<string> RequiredEquipment { get; set; }
+
+        public bool IsOnSale { get; set; }
+        public decimal? OriginalPrice { get; set; }
+        public int? DiscountPercentage { get; set; }
     }
 }

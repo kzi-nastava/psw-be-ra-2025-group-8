@@ -1,4 +1,5 @@
 ﻿using Explorer.BuildingBlocks.Infrastructure.Database;
+using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.Payments.Core.Mappers;
@@ -27,6 +28,8 @@ public static class PaymentsStartup
         services.AddScoped<IShoppingCartService, ShoppingCartService>();
         services.AddScoped<ICouponService, CouponService>();
         services.AddScoped<IBundlePurchaseService, BundlePurchaseService>();
+        services.AddScoped<ISaleService, SaleService>();
+        services.AddScoped<IInternalSaleService, SaleService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -34,6 +37,7 @@ public static class PaymentsStartup
         services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<IBundlePurchaseRecordRepository, BundlePurchaseRecordRepository>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("payments"));
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();

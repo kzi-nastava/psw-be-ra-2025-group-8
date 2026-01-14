@@ -20,5 +20,6 @@ namespace Explorer.Tours.API.Public.Tourist
         List<TouristTourPreviewDto> GetPublishedTours(List<int> difficulties, int? minPrice, int? maxPrice);
         List<KeyPointDto> GetTourKeyPoints(long tourId);
         List<TouristTourPreviewDto> SearchToursByLocation(TourSearchByLocationDto searchDto);
+        List<TouristTourPreviewDto> GetToursOnSale(bool sortByDiscount = false);
     }
 }

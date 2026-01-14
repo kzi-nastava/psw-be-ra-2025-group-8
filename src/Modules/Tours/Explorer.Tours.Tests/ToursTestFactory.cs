@@ -1,5 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.BuildingBlocks.Tests;
+using Explorer.Payments.Infrastructure.Database;
 using Explorer.Stakeholders.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Tests.TestHelpers;
@@ -34,6 +35,11 @@ public class ToursTestFactory : BaseTestFactory<ToursContext>
             var toursDb = scopedServices.GetRequiredService<ToursContext>();
             var toursPath = Path.Combine(".", "..", "..", "..", "TestData");
             InitializeDatabase(toursDb, toursPath, logger);
+
+            // Initialize Payments database (required for sale lookups in TouristTourService)
+            var paymentsDb = scopedServices.GetRequiredService<PaymentsContext>();
+            var paymentsPath = Path.Combine(".", "..", "..", "..", "..", "Payments", "Explorer.Payments.Tests", "TestData");
+            InitializeDatabase(paymentsDb, paymentsPath, logger);
         });
     }
 
@@ -86,6 +92,15 @@ public class ToursTestFactory : BaseTestFactory<ToursContext>
             services.Remove(stakeholdersDescriptor);
 
         services.AddDbContext<StakeholdersContext>(SetupTestContext());
+
+        // PAYMENTS CONTEXT (needed because Tours depends on IInternalSaleService)
+        var paymentsDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(DbContextOptions<PaymentsContext>)
+        );
+        if (paymentsDescriptor != null)
+            services.Remove(paymentsDescriptor);
+
+        services.AddDbContext<PaymentsContext>(SetupTestContext());
 
         // Mock notification service
         services.AddScoped<IIssueNotificationService, MockIssueNotificationService>();
