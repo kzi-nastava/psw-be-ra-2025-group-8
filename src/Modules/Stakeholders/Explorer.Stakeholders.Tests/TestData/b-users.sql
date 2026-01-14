@@ -1,5 +1,17 @@
 ﻿INSERT INTO stakeholders."Users"(
     "Id", "Username", "Password", "Role", "IsActive")
+VALUES (-100, 'integration_admin@example.com', 'admin', 0, true);
+
+INSERT INTO stakeholders."Users"(
+    "Id", "Username", "Password", "Role", "IsActive")
+VALUES (-101, 'existing_user1@example.com', 'password1', 2, true);
+
+INSERT INTO stakeholders."Users"(
+    "Id", "Username", "Password", "Role", "IsActive")
+VALUES (-102, 'existing_user2@example.com', 'password2', 2, false);
+
+INSERT INTO stakeholders."Users"(
+    "Id", "Username", "Password", "Role", "IsActive")
 VALUES (-1, 'admin@gmail.com', 'admin', 0, true);
 
 INSERT INTO stakeholders."Users"(

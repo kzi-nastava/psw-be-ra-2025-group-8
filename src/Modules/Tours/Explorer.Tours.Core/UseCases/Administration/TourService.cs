@@ -105,7 +105,9 @@ public class TourService : ITourService
             keyPointDto.Description ?? string.Empty,
             keyPointDto.ImageUrl ?? string.Empty,
             string.Empty, // Secret is managed separately, not through public DTO
-            location
+            location,
+            keyPointDto.EncounterId,
+            keyPointDto.IsEncounterRequired
         );
 
         // saving changes through repository
