@@ -10,10 +10,12 @@ public class KeyPoint : Entity
     public string Secret { get; private set; }
     public int Order { get; internal set; }   // keypoint order within the tour
     public GeoCoordinate Location { get; private set; }
+    public long? EncounterId { get; private set; }
+    public bool IsEncounterRequired { get; private set; }
 
     private KeyPoint() { } // For EF
 
-    public KeyPoint(string name, string description, string imageUrl, string secret, GeoCoordinate location, int order)
+    public KeyPoint(string name, string description, string imageUrl, string secret, GeoCoordinate location, int order, long? encounterId = null, bool isEncounterRequired = false)
     {
         SetName(name);
         Description = description ?? string.Empty;
@@ -21,6 +23,8 @@ public class KeyPoint : Entity
         Secret = secret ?? string.Empty;
         Location = location ?? throw new ArgumentNullException(nameof(location));
         Order = order;
+        EncounterId = encounterId;
+        IsEncounterRequired = isEncounterRequired;
     }
 
     public void UpdateBasicInfo(string name, string description, string imageUrl, string secret)
@@ -37,5 +41,17 @@ public class KeyPoint : Entity
             throw new ArgumentException("Key point name is required.", nameof(name));
 
         Name = name.Trim();
+    }
+
+    public void AddEncounter(long encounterId, bool isRequired)
+    {
+        EncounterId = encounterId;
+        IsEncounterRequired = isRequired;
+    }
+
+    public void RemoveEncounter()
+    {
+        EncounterId = null;
+        IsEncounterRequired = false;
     }
 }

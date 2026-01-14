@@ -9,5 +9,7 @@
         public int Order { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public long? EncounterId { get; set; }
+        public bool IsEncounterRequired { get; set; }
     }
 }
