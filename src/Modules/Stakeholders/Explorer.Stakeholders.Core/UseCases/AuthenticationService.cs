@@ -87,7 +87,7 @@ public class AuthenticationService : IAuthenticationService
         var user = new User(dto.Username, dto.Password, role, true);
         var createdUser = _userRepository.Create(user);
 
-        // create a Person row (so email/name are stored) — name and surname are empty because admin doesn't provide them here
+        // Always create a Person row for every user (required for app to work properly)
         var person = _personRepository.Create(new Person(createdUser.Id, "", "", dto.Email ?? ""));
 
         return new AccountDto

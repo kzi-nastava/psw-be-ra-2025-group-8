@@ -19,7 +19,9 @@ public class TourPriceProviderAdapter : ITourPriceProvider
         return new Explorer.Payments.Core.UseCases.TourPriceDto
         {
             Id = tour.Id,
-            Price = tour.Price
+            Price = tour.Price,
+            AuthorId = tour.AuthorId
         };
     }
 }
+

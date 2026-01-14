@@ -13,11 +13,15 @@ namespace Explorer.API.Controllers.Author;
 public class TourController : ControllerBase
 {
     private readonly ITourService _tourService;
+    private readonly IBundleService _bundleService;
 
-    public TourController(ITourService tourService)
+
+    public TourController(ITourService tourService, IBundleService bundleService)
     {
         _tourService = tourService;
+        _bundleService = bundleService;
     }
+
 
     [HttpGet]
     public ActionResult<PagedResult<TourDto>> GetAll([FromQuery] int page, [FromQuery] int pageSize)
@@ -94,8 +98,6 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
-    // PUT api/author/tour/{id}/publish
-    // Publishing a tour
     [HttpPut("{id:long}/publish")]
     public ActionResult<TourDto> Publish(long id)
     {
@@ -104,15 +106,31 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
-    // PUT api/author/tour/{id}/archive
-    // Archiving a tour
+
     [HttpPut("{id:long}/archive")]
     public ActionResult<TourDto> Archive(long id)
     {
         var authorId = GetAuthorIdFromToken();
+
+        var bundles = _bundleService.GetByAuthor(authorId) ?? new List<BundleDto>();
+
+        var blockingBundle = bundles.FirstOrDefault(b =>
+            !string.Equals(b.Status, "Archived", StringComparison.OrdinalIgnoreCase) &&
+            (b.Tours?.Any(t => t.Id == id) ?? false)
+        );
+
+        if (blockingBundle != null)
+        {
+            var bundleName = string.IsNullOrWhiteSpace(blockingBundle.Name) ? "the bundle" : blockingBundle.Name;
+            throw new InvalidOperationException(
+                $"You are trying to archive a tour that is currently in a bundle. Firstly archive {bundleName}!"
+            );
+        }
+
         var result = _tourService.Archive(id, authorId);
         return Ok(result);
     }
+
 
     // PUT api/author/tour/{id}/reactivate
     // Reactivating an archived tour

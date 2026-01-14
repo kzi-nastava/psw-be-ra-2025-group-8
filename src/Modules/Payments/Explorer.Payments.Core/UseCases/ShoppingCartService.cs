@@ -4,6 +4,8 @@ using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.Stakeholders.API.Internal;
+using Explorer.BuildingBlocks.Core.UseCases;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,13 +15,25 @@ namespace Explorer.Payments.Core.UseCases
     {
         private readonly IShoppingCartRepository _cartRepository;
         private readonly ITourPriceProvider _tourPriceProvider;
+        private readonly IInternalWalletService _walletService;
         private readonly IMapper _mapper;
+        private readonly IPurchaseNotificationService _purchaseNotificationService;
+        private readonly ICouponRepository _couponRepository;
 
-        public ShoppingCartService(IShoppingCartRepository cartRepository, ITourPriceProvider tourPriceProvider, IMapper mapper)
+        public ShoppingCartService(
+            IShoppingCartRepository cartRepository, 
+            ITourPriceProvider tourPriceProvider, 
+            IInternalWalletService walletService,
+            IMapper mapper,
+            IPurchaseNotificationService purchaseNotificationService,
+            ICouponRepository couponRepository)
         {
             _cartRepository = cartRepository;
             _tourPriceProvider = tourPriceProvider;
+            _walletService = walletService;
             _mapper = mapper;
+            _purchaseNotificationService = purchaseNotificationService;
+            _couponRepository = couponRepository;
         }
 
         public ShoppingCartDto CreateCart(long userId)
@@ -43,7 +57,11 @@ namespace Explorer.Payments.Core.UseCases
                 throw new NotFoundException("Cart not found for this user.");
             }
             var dto = _mapper.Map<ShoppingCartDto>(cart);
-            dto.TotalPrice = CalculateTotalPrice(cart);
+
+            dto.Subtotal = cart.Items.Sum(i => i.OriginalPrice);
+            dto.TotalPrice = cart.Items.Sum(i => i.DiscountedPrice);
+            dto.Discount = dto.Subtotal - dto.TotalPrice;
+
             return dto;
         }
 
@@ -68,7 +86,10 @@ namespace Explorer.Payments.Core.UseCases
                 throw new NotFoundException("Cart not found for this user.");
             }
 
-            var item = _mapper.Map<OrderItem>(itemDto);
+            var tour = _tourPriceProvider.GetById(itemDto.TourId);
+            if (tour == null) throw new NotFoundException($"Tour with ID {itemDto.TourId} not found.");
+
+            var item = new OrderItem(itemDto.TourId, tour.Price, tour.Price); // discounted = original na startu
             cart.AddItem(item);
 
             _cartRepository.Update(cart);
@@ -107,8 +128,19 @@ namespace Explorer.Payments.Core.UseCases
             var tour = _tourPriceProvider.GetById(tourId);
             if (tour == null) throw new NotFoundException("Tour not found.");
 
+            int requiredCoins = (int)Math.Ceiling(tour.Price);
+
+            // Check if user has sufficient Adventure Coins
+            if (!_walletService.HasSufficientFunds(userId, requiredCoins))
+                throw new InvalidOperationException($"Insufficient Adventure Coins. Required: {requiredCoins}, but user doesn't have enough.");
+
+            // Deduct coins from wallet
+            _walletService.DeductCoins(userId, requiredCoins);
+
+            // Record purchase
             cart.PurchaseItem(tourId, tour.Price);
             _cartRepository.Update(cart);
+            _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
 
         public void PurchaseAllItems(long userId)
@@ -120,17 +152,30 @@ namespace Explorer.Payments.Core.UseCases
                 throw new InvalidOperationException("Cart is empty.");
 
             var tourPrices = new Dictionary<long, decimal>();
+            int totalRequiredCoins = 0;
+            var purchasedTourIds = cart.Items.Select(i => i.TourId).ToList();
+
             foreach (var item in cart.Items)
             {
                 var tour = _tourPriceProvider.GetById(item.TourId);
                 if (tour == null)
                     throw new NotFoundException($"Tour with ID {item.TourId} not found.");
-
+                
                 tourPrices[item.TourId] = tour.Price;
+                totalRequiredCoins += (int)Math.Ceiling(tour.Price);
             }
 
+            // Check if user has sufficient Adventure Coins for all items
+            if (!_walletService.HasSufficientFunds(userId, totalRequiredCoins))
+                throw new InvalidOperationException($"Insufficient Adventure Coins. Required: {totalRequiredCoins} AC for all items.");
+
+            // Deduct coins from wallet
+            _walletService.DeductCoins(userId, totalRequiredCoins);
+
+            // Record purchases
             cart.PurchaseAllItems(tourPrices);
             _cartRepository.Update(cart);
+            _purchaseNotificationService.NotifyToursPurchased(userId, purchasedTourIds);
         }
 
         private decimal CalculateTotalPrice(Domain.ShoppingCart cart)
@@ -150,6 +195,113 @@ namespace Explorer.Payments.Core.UseCases
             }
 
             return total;
+        }
+
+        public void PurchaseItemWithCoupon(long userId, long tourId, string couponCode)
+        {
+            var cart = _cartRepository.GetByUserId(userId);
+            if (cart == null) throw new NotFoundException("Cart not found for this user.");
+
+            var tour = _tourPriceProvider.GetById(tourId);
+            if (tour == null) throw new NotFoundException("Tour not found.");
+
+            var coupon = _couponRepository.GetByCode(couponCode);
+            if (coupon == null) throw new NotFoundException($"Coupon with code {couponCode} not found.");
+
+            if (!coupon.IsValid())
+                throw new InvalidOperationException("Coupon has expired.");
+
+            if (!coupon.AppliesTo(tourId, tour.AuthorId))
+                throw new InvalidOperationException("Coupon is not valid for this tour or author.");
+
+            // Apply discount
+            var discountedPrice = tour.Price * (100 - coupon.DiscountPercentage) / 100;
+            int requiredCoins = (int)Math.Ceiling(discountedPrice);
+
+            if (!_walletService.HasSufficientFunds(userId, requiredCoins))
+                throw new InvalidOperationException($"Insufficient Adventure Coins. Required: {requiredCoins} AC after discount.");
+
+            _walletService.DeductCoins(userId, requiredCoins);
+
+            cart.PurchaseItem(tourId, discountedPrice);
+            _cartRepository.Update(cart);
+            _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
+        }
+
+        public void PurchaseAllItemsWithCoupon(long userId, string couponCode)
+        {
+            var cart = _cartRepository.GetByUserId(userId);
+            if (cart == null) throw new NotFoundException("Cart not found for this user.");
+
+            if (!cart.Items.Any())
+                throw new InvalidOperationException("Cart is empty.");
+
+            var coupon = _couponRepository.GetByCode(couponCode);
+            if (coupon == null) throw new NotFoundException($"Coupon with code {couponCode} not found.");
+
+            if (!coupon.IsValid())
+                throw new InvalidOperationException("Coupon has expired.");
+
+            var tourPrices = new Dictionary<long, decimal>();
+            int totalRequiredCoins = 0;
+            var purchasedTourIds = cart.Items.Select(i => i.TourId).ToList();
+
+            // Find the most expensive tour from the author or the specific tour if TourId is set
+            OrderItem itemToDiscount = null;
+            decimal maxPrice = 0;
+
+            foreach (var item in cart.Items)
+            {
+                var tour = _tourPriceProvider.GetById(item.TourId);
+                if (tour == null)
+                    throw new NotFoundException($"Tour with ID {item.TourId} not found.");
+
+                if (coupon.TourId.HasValue)
+                {
+                    // Specific tour coupon
+                    if (item.TourId == coupon.TourId.Value && tour.AuthorId == coupon.AuthorId)
+                    {
+                        itemToDiscount = item;
+                        break;
+                    }
+                }
+                else
+                {
+                    // Author coupon - find most expensive
+                    if (tour.AuthorId == coupon.AuthorId && tour.Price > maxPrice)
+                    {
+                        maxPrice = tour.Price;
+                        itemToDiscount = item;
+                    }
+                }
+            }
+
+            if (itemToDiscount == null)
+                throw new InvalidOperationException("No applicable tours found for this coupon.");
+
+            // Calculate total with discount
+            foreach (var item in cart.Items)
+            {
+                var tour = _tourPriceProvider.GetById(item.TourId);
+                decimal price = tour.Price;
+
+                if (item.TourId == itemToDiscount.TourId)
+                {
+                    price = tour.Price * (100 - coupon.DiscountPercentage) / 100;
+                }
+
+                tourPrices[item.TourId] = price;
+                totalRequiredCoins += (int)Math.Ceiling(price);
+            }
+
+            if (!_walletService.HasSufficientFunds(userId, totalRequiredCoins))
+                throw new InvalidOperationException($"Insufficient Adventure Coins. Required: {totalRequiredCoins} AC after discount.");
+
+            _walletService.DeductCoins(userId, totalRequiredCoins);
+
+            cart.PurchaseAllItems(tourPrices);
+            _cartRepository.Update(cart);
+            _purchaseNotificationService.NotifyToursPurchased(userId, purchasedTourIds);
         }
     }
 }

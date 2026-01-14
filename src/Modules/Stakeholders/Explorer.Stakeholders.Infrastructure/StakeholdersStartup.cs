@@ -40,6 +40,7 @@ public static class StakeholdersStartup
         services.AddScoped<IMeetupService, MeetupService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<BuildingBlocks.Core.UseCases.IIssueNotificationService, IssueNotificationServiceAdapter>();
+        services.AddScoped<Explorer.BuildingBlocks.Core.UseCases.IPurchaseNotificationService, PurchaseNotificationServiceAdapter>();
         services.AddScoped<IFollowerService, FollowerService>();
 
         //za klubove
@@ -47,6 +48,7 @@ public static class StakeholdersStartup
         services.AddScoped<IClubMessageService, ClubMessageService>();
 
         services.AddScoped<IWalletService, WalletService>();
+        services.AddScoped<IInternalWalletService, WalletService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)

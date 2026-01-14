@@ -33,10 +33,16 @@ public class UserDatabaseRepository : IUserRepository
     public long GetPersonId(long userId)
     {
         var person = _dbContext.People.FirstOrDefault(i => i.UserId == userId);
-        if (person == null)
+        if (person == null) 
         {
-            // Fallback: in test seed Person.Id often equals User.Id; return userId to allow tests to proceed
-            return userId;
+            // Auto-create Person if missing (fallback for legacy users)
+            var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null) throw new KeyNotFoundException("User not found.");
+            
+            var newPerson = new Person(userId, "", "", $"{user.Username}@temp.com");
+            _dbContext.People.Add(newPerson);
+            _dbContext.SaveChanges();
+            return newPerson.Id;
         }
         return person.Id;
     }

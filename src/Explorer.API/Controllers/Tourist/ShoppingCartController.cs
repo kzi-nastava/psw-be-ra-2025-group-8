@@ -94,6 +94,10 @@ namespace Explorer.API.Controllers.Tourist
             {
                 return NotFound(ex.Message);
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
         [HttpDelete("clear")]
         public IActionResult ClearCart([FromQuery] long userId)
@@ -105,6 +109,10 @@ namespace Explorer.API.Controllers.Tourist
                 return Ok("Cart cleared.");
             }
             catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
             }
@@ -146,6 +154,46 @@ namespace Explorer.API.Controllers.Tourist
             {
                 _shoppingCartService.PurchaseAllItems(userId);
                 return Ok("All items purchased successfully.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("purchase/item/coupon")]
+        public IActionResult PurchaseItemWithCoupon([FromQuery] long userId, [FromQuery] long tourId, [FromQuery] string couponCode)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseItemWithCoupon(userId, tourId, couponCode);
+                return Ok("Item purchased successfully with coupon.");
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("purchase/all/coupon")]
+        public IActionResult PurchaseAllItemsWithCoupon([FromQuery] long userId, [FromQuery] string couponCode)
+        {
+            try
+            {
+                _shoppingCartService.PurchaseAllItemsWithCoupon(userId, couponCode);
+                return Ok("All items purchased successfully with coupon.");
             }
             catch (NotFoundException ex)
             {

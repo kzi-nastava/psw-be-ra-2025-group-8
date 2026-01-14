@@ -1,8 +1,7 @@
 -- Deleting in the correct order to respect foreign key constraints
 -- First, we delete child tables (tables that have foreign keys)
-DELETE FROM payments."PurchasedItems";
-DELETE FROM payments."OrderItems";
-DELETE FROM payments."ShoppingCarts";
+TRUNCATE TABLE payments."PurchasedItems" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE payments."OrderItems" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE payments."ShoppingCarts" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE payments."Coupons" RESTART IDENTITY CASCADE;
 
--- Also delete any test tours that might have been inserted by payments test data
-DELETE FROM tours."Tours" WHERE "Id" IN (-511, -522, -533);

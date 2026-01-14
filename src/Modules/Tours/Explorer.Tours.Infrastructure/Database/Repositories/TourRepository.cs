@@ -79,6 +79,14 @@ public class TourRepository : ITourRepository
             .FirstOrDefault(t => t.Id == id);
     }
 
+    public List<Tour> GetByIds(IEnumerable<long> ids)
+    {
+        var idList = ids.Distinct().ToList();
+        return _context.Tours.Where(t => idList.Contains(t.Id)).ToList();
+    }
+
+
+
     public List<Tour> SearchByLocation(double latitude, double longitude, double distanceInKm)
     {
         var allPublishedTours = ToursWithIncludes()

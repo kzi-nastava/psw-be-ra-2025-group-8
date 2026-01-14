@@ -175,16 +175,29 @@ public class ReportProblemCommandTests : BaseToursIntegrationTest
         using var scope = Factory.Services.CreateScope();
         var controller = CreateController(scope);
         var dbContext = scope.ServiceProvider.GetRequiredService<ToursContext>();
+        
+        // First create a ReportProblem to delete (to avoid dependency on test data)
+        var newEntity = new ReportProblemDto
+        {
+            TourId = -1, // Use existing negative TourId from test data
+            TouristId = 1,
+            Category = 0, // Technical
+            Priority = 2, // High
+            Description = "Test problem to be deleted"
+        };
+        var created = ((ObjectResult)controller.Create(newEntity).Result)?.Value as ReportProblemDto;
+        created.ShouldNotBeNull();
+        var idToDelete = created!.Id;
 
         // Act
-        var result = (OkResult)controller.Delete(-2);
+        var result = (OkResult)controller.Delete(idToDelete);
 
         // Assert - Response
         result.ShouldNotBeNull();
         result.StatusCode.ShouldBe(200);
 
         // Assert - Database
-        var storedEntity = dbContext.ReportProblem.FirstOrDefault(i => i.Id == -2);
+        var storedEntity = dbContext.ReportProblem.FirstOrDefault(i => i.Id == idToDelete);
         storedEntity.ShouldBeNull();
     }
 

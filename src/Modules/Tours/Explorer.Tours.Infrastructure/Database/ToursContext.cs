@@ -21,6 +21,9 @@ public class ToursContext : DbContext
     public DbSet<TourTransportTime> TourTransportTimes { get; set; }
     public DbSet<TourRating> TourRatings { get; set; }
     public DbSet<TourRatingImage> TourRatingImages { get; set; }
+    public DbSet<Bundle> Bundles { get; set; }
+    public DbSet<BundleTour> BundleTours { get; set; }
+
 
 
     //Preference
@@ -81,6 +84,41 @@ public class ToursContext : DbContext
                 .HasForeignKey("TourId")           // shadow FK column TourId
                 .OnDelete(DeleteBehavior.Cascade); // deleting KeyPoints when Tour is deleted
         });
+
+        modelBuilder.Entity<Bundle>(builder =>
+        {
+            builder.HasKey(b => b.Id);
+
+            builder.Property(b => b.Name)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            builder.Property(b => b.Price)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(b => b.AuthorId).IsRequired();
+            builder.Property(b => b.Status).IsRequired();
+
+            builder.Property(b => b.PublishedAt).IsRequired(false);
+            builder.Property(b => b.ArchivedAt).IsRequired(false);
+
+            builder.HasMany(b => b.BundleTours)
+                .WithOne(bt => bt.Bundle)
+                .HasForeignKey(bt => bt.BundleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BundleTour>(builder =>
+        {
+            builder.HasKey(bt => new { bt.BundleId, bt.TourId });
+
+            builder.HasOne(bt => bt.Tour)
+                .WithMany()
+                .HasForeignKey(bt => bt.TourId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
 
         // TourTransportTime CONFIGURATION
         modelBuilder.Entity<TourTransportTime>(builder =>
