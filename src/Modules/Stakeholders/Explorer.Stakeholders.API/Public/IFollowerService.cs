@@ -4,9 +4,13 @@ namespace Explorer.Stakeholders.API.Public;
 
 public interface IFollowerService
 {
+    // Search users
+    List<UserSearchResultDto> SearchUsers(string searchTerm, long currentUserId);
+    
     // Follow/Unfollow
     FollowerDto Follow(long userId, long followingUserId);
     void Unfollow(long userId, long followingUserId);
+    void RemoveFollower(long userId, long followerUserId);
     
     // Get followers/following
     List<FollowerDto> GetFollowers(long userId);

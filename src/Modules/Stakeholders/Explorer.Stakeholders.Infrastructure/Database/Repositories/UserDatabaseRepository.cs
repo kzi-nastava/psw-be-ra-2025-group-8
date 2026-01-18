@@ -63,4 +63,21 @@ public class UserDatabaseRepository : IUserRepository
         _dbContext.SaveChanges();
         return user;
     }
+
+    public List<User> SearchUsers(string searchTerm)
+    {
+        // If search term is empty, return all active users
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return _dbContext.Users
+                .Where(u => u.IsActive)
+                .ToList();
+        }
+
+        var lowerSearchTerm = searchTerm.ToLower();
+        
+        return _dbContext.Users
+            .Where(u => u.IsActive && u.Username.ToLower().Contains(lowerSearchTerm))
+            .ToList();
+    }
 }
