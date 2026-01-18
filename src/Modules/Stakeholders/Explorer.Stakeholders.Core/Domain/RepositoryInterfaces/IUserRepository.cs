@@ -8,5 +8,6 @@ public interface IUserRepository
     long GetPersonId(long userId);
     IEnumerable<User> GetAll();           // get all users (active+inactive)
     User? GetById(long id);
-    User Update(User user);              
+    User Update(User user);
+    List<User> SearchUsers(string searchTerm);
 }

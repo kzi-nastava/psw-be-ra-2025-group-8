@@ -18,6 +18,16 @@ private readonly IFollowerService _followerService;
         _followerService = followerService;
     }
 
+    // GET /api/followers/search?query=...
+    // If query is empty, returns all active users
+    [HttpGet("search")]
+    public ActionResult<List<UserSearchResultDto>> SearchUsers([FromQuery] string? query)
+    {
+        var userId = GetCurrentUserId();
+        var results = _followerService.SearchUsers(query ?? "", userId);
+        return Ok(results);
+    }
+
     // POST /api/followers/{followingUserId}
     [HttpPost("{followingUserId}")]
     public ActionResult<FollowerDto> Follow(long followingUserId)
@@ -43,6 +53,22 @@ private readonly IFollowerService _followerService;
             var userId = GetCurrentUserId();
             _followerService.Unfollow(userId, followingUserId);
             return Ok(new { message = "Unfollowed successfully" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    // DELETE /api/followers/remove-follower/{followerUserId}
+    [HttpDelete("remove-follower/{followerUserId}")]
+    public ActionResult RemoveFollower(long followerUserId)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            _followerService.RemoveFollower(userId, followerUserId);
+            return Ok(new { message = "Follower removed successfully" });
         }
         catch (KeyNotFoundException ex)
         {
