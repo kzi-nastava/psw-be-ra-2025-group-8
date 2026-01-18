@@ -6,6 +6,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Public.Weather;
 
 namespace Explorer.Tours.Core.UseCases.Tourist;
 
@@ -19,6 +20,8 @@ public class TouristTourService : ITouristTourService
     private readonly IPreferenceTagsRepository _preferenceTagsRepository;
     private readonly ITouristPreferencesRepository _touristPreferencesRepository;
     private readonly IInternalSaleService _saleService;
+    private readonly IWeatherForecastService _weatherForecastService;
+
 
 
     public TouristTourService(
@@ -29,7 +32,8 @@ public class TouristTourService : ITouristTourService
         IPreferenceTagsRepository preferenceTagsRepository,
         ITouristPreferencesRepository touristPreferencesRepository,
         IInternalSaleService saleService,
-        IMapper mapper)
+        IMapper mapper,
+        IWeatherForecastService weatherForecastService)
     {
         _tourRepository = tourRepository;
         _tourRatingService = tourRatingService;
@@ -39,6 +43,7 @@ public class TouristTourService : ITouristTourService
         _touristPreferencesRepository = touristPreferencesRepository;
         _saleService = saleService;
         _mapper = mapper;
+        _weatherForecastService = weatherForecastService;
     }
 
 
@@ -184,6 +189,20 @@ public class TouristTourService : ITouristTourService
 
         return dto;
     }
+
+    public WeatherDailyForecastDto GetPublishedTourDailyForecast(long id, int days = 7)
+    {
+        var tour = _tourRepository.Get(id);
+        if (tour == null || tour.Status != TourStatus.Published)
+            return null;
+
+        var kp = tour.KeyPoints.OrderBy(k => k.Order).FirstOrDefault();
+        if (kp == null)
+            return null;
+
+        return _weatherForecastService.GetDailyForecast(kp.Location.Latitude, kp.Location.Longitude, days);
+    }
+
 
     public List<KeyPointDto> GetTourKeyPoints(long tourId)
     {

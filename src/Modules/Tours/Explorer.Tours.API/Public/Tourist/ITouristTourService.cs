@@ -21,5 +21,7 @@ namespace Explorer.Tours.API.Public.Tourist
         List<KeyPointDto> GetTourKeyPoints(long tourId);
         List<TouristTourPreviewDto> SearchToursByLocation(TourSearchByLocationDto searchDto);
         List<TouristTourPreviewDto> GetToursOnSale(bool sortByDiscount = false);
+        WeatherDailyForecastDto GetPublishedTourDailyForecast(long id, int days = 7);
+
     }
 }

@@ -16,7 +16,10 @@ using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http; 
 using Npgsql;
+using Explorer.Tours.API.Public.Weather;
+using Explorer.Tours.Infrastructure.Weather;
 
 
 namespace Explorer.Tours.Infrastructure;
@@ -64,6 +67,13 @@ public static class ToursStartup
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
+        services.AddHttpClient<IWeatherForecastService, OpenMeteoWeatherForecastService>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.open-meteo.com");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
+
         services.AddScoped<IPersonEquipmentRepository, PersonEquipmentRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
