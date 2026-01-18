@@ -30,7 +30,14 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public MessageDto Send(MessageDto dto)
         {
-            var message = new Message(dto.SenderId, dto.RecipientId, dto.Content);
+            var message = new Message(dto.SenderId, dto.RecipientId, dto.Content, dto.AttachmentType, dto.AttachmentId);
+            var created = _messageRepository.Create(message);
+            return _mapper.Map<MessageDto>(created);
+        }
+
+        public MessageDto SendWithCoupon(long senderId, long recipientId, string content, long couponId)
+        {
+            var message = new Message(senderId, recipientId, content, "Coupon", couponId);
             var created = _messageRepository.Create(message);
             return _mapper.Map<MessageDto>(created);
         }

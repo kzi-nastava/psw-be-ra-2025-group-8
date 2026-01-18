@@ -11,5 +11,7 @@ namespace Explorer.Stakeholders.API.Dtos
         public DateTime TimestampCreated { get; set; }
         public DateTime? TimestampUpdated { get; set; }
         public bool IsDeleted { get; set; }
+        public string? AttachmentType { get; set; }
+        public long? AttachmentId { get; set; }
     }
 }
