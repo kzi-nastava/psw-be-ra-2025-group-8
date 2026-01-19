@@ -17,4 +17,8 @@ public interface ITourExecutionService
     List<KeyPointReachedDto> GetReachedKeyPoints(long tourExecutionId);
     KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder);
     AvailableEncountersAtKeyPointDto CheckEncountersAtKeyPoint(CheckEncountersAtKeyPointRequestDto request);
+
+    WeatherCurrentDto GetCurrentWeather(long tourExecutionId);
+    WeatherHourlyForecastDto GetNextKeyPointHourlyForecast(long tourExecutionId, int hours = 6);
+
 }
