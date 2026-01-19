@@ -12,6 +12,7 @@ public class FollowerService : IFollowerService
     private readonly IFollowerMessageRepository _messageRepository;
     private readonly INotificationRepository _notificationRepository;
     private readonly IPersonService _personService;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
     public FollowerService(
@@ -19,13 +20,52 @@ public class FollowerService : IFollowerService
         IFollowerMessageRepository messageRepository,
         INotificationRepository notificationRepository,
         IPersonService personService,
+        IUserRepository userRepository,
         IMapper mapper)
     {
         _followerRepository = followerRepository;
         _messageRepository = messageRepository;
         _notificationRepository = notificationRepository;
         _personService = personService;
+        _userRepository = userRepository;
         _mapper = mapper;
+    }
+
+    public List<UserSearchResultDto> SearchUsers(string searchTerm, long currentUserId)
+    {
+        var users = _userRepository.SearchUsers(searchTerm);
+        var following = _followerRepository.GetFollowingByUserId(currentUserId);
+        var followingUserIds = following.Select(f => f.FollowingUserId).ToHashSet();
+
+        var results = new List<UserSearchResultDto>();
+        foreach (var user in users)
+        {
+            if (user.Id == currentUserId) continue; // Skip current user
+
+            try
+            {
+                var personId = _userRepository.GetPersonId(user.Id);
+                var person = _personService.GetByPersonId(personId);
+
+                results.Add(new UserSearchResultDto
+                {
+                    UserId = user.Id,
+                    PersonId = personId,
+                    Username = user.Username,
+                    Name = person.Name,
+                    Surname = person.Surname,
+                    ProfilePicture = person.ProfilePicture,
+                    IsFollowing = followingUserIds.Contains(user.Id)
+                });
+            }
+            catch
+            {
+                // Skip users without person records
+                continue;
+            }
+        }
+
+        return results;
     }
 
     public FollowerDto Follow(long userId, long followingUserId)
@@ -38,13 +78,16 @@ public class FollowerService : IFollowerService
         var follower = new Follower(userId, followingUserId);
         var created = _followerRepository.Create(follower);
 
-        // Map to DTO with person info
-        var person = _personService.GetByUserId(userId);
+        // Map to DTO with person info of the user being followed (followingUserId)
+        var personId = _userRepository.GetPersonId(followingUserId);
+        var person = _personService.GetByPersonId(personId);
         return new FollowerDto
             {
                 Id = created.Id,
-                UserId = created.UserId,
+                UserId = followingUserId,
+                PersonId = personId,
                 Name = $"{person.Name} {person.Surname}",
+                ProfilePicture = person.ProfilePicture,
                 FollowedAt = created.FollowedAt
             };
     }
@@ -58,17 +101,30 @@ public class FollowerService : IFollowerService
         _followerRepository.Delete(follower.Id);
     }
 
+    public void RemoveFollower(long userId, long followerUserId)
+    {
+        // Remove follower: followerUserId is following userId, and userId wants to remove them
+        var follower = _followerRepository.GetByUserIds(followerUserId, userId);
+        if (follower == null)
+            throw new KeyNotFoundException("This user is not following you.");
+
+        _followerRepository.Delete(follower.Id);
+    }
+
     public List<FollowerDto> GetFollowers(long userId)
     {
         var followers = _followerRepository.GetFollowersByUserId(userId);
         return followers.Select(f =>
             {
-                var person = _personService.GetByUserId(f.UserId);
+                var personId = _userRepository.GetPersonId(f.UserId);
+                var person = _personService.GetByPersonId(personId);
                 return new FollowerDto
                     {
                         Id = f.Id,
                         UserId = f.UserId,
+                        PersonId = personId,
                         Name = $"{person.Name} {person.Surname}",
+                        ProfilePicture = person.ProfilePicture,
                         FollowedAt = f.FollowedAt
                     };
         }).ToList();
@@ -79,12 +135,15 @@ public class FollowerService : IFollowerService
         var following = _followerRepository.GetFollowingByUserId(userId);
         return following.Select(f =>
             {
-                var person = _personService.GetByUserId(f.FollowingUserId);
+                var personId = _userRepository.GetPersonId(f.FollowingUserId);
+                var person = _personService.GetByPersonId(personId);
                 return new FollowerDto
                     {
                         Id = f.Id,
                         UserId = f.FollowingUserId,
+                        PersonId = personId,
                         Name = $"{person.Name} {person.Surname}",
+                        ProfilePicture = person.ProfilePicture,
                         FollowedAt = f.FollowedAt
                     };
             }).ToList();
