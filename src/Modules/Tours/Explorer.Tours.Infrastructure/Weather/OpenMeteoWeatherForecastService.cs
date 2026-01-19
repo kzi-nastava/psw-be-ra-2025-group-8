@@ -71,6 +71,83 @@ namespace Explorer.Tours.Infrastructure.Weather
             return result;
         }
 
+        public WeatherCurrentDto GetCurrentWeather(double latitude, double longitude)
+        {
+            var lat = latitude.ToString(CultureInfo.InvariantCulture);
+            var lon = longitude.ToString(CultureInfo.InvariantCulture);
+
+            var url = $"/v1/forecast?latitude={lat}&longitude={lon}" +
+                      "&current=temperature_2m,weather_code,wind_speed_10m" +
+                      "&timezone=auto";
+
+            var response = _httpClient.GetAsync(url).GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
+
+            var payload = response.Content
+                .ReadFromJsonAsync<OpenMeteoForecastResponse>(JsonOptions)
+                .GetAwaiter().GetResult();
+
+            if (payload?.Current == null)
+                throw new Exception("Weather provider returned an unexpected response.");
+
+            return new WeatherCurrentDto
+            {
+                Latitude = payload.Latitude,
+                Longitude = payload.Longitude,
+                Timezone = payload.Timezone,
+                Time = DateTime.Parse(payload.Current.Time, CultureInfo.InvariantCulture),
+                WeatherCode = payload.Current.WeatherCode,
+                TemperatureC = payload.Current.Temperature2m,
+                WindSpeedKmh = payload.Current.WindSpeed10m
+            };
+        }
+
+        public WeatherHourlyForecastDto GetHourlyForecast(double latitude, double longitude, int hours = 6)
+        {
+            if (hours < 1 || hours > 48)
+                throw new ArgumentException("hours must be between 1 and 48.");
+
+            var lat = latitude.ToString(CultureInfo.InvariantCulture);
+            var lon = longitude.ToString(CultureInfo.InvariantCulture);
+
+            var url = $"/v1/forecast?latitude={lat}&longitude={lon}" +
+                      "&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m" +
+                      $"&forecast_hours={hours}&timezone=auto";
+
+            var response = _httpClient.GetAsync(url).GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
+
+            var payload = response.Content
+                .ReadFromJsonAsync<OpenMeteoForecastResponse>(JsonOptions)
+                .GetAwaiter().GetResult();
+
+            if (payload?.Hourly?.Time == null)
+                throw new Exception("Weather provider returned an unexpected response.");
+
+            var result = new WeatherHourlyForecastDto
+            {
+                Latitude = payload.Latitude,
+                Longitude = payload.Longitude,
+                Timezone = payload.Timezone
+            };
+
+            var n = payload.Hourly.Time.Length;
+            for (var i = 0; i < n; i++)
+            {
+                result.Hours.Add(new WeatherHourlyForecastItemDto
+                {
+                    Time = DateTime.Parse(payload.Hourly.Time[i], CultureInfo.InvariantCulture),
+                    WeatherCode = SafeAt(payload.Hourly.WeatherCode, i) ?? 0,
+                    TemperatureC = SafeAt(payload.Hourly.Temperature2m, i) ?? 0,
+                    PrecipitationProbability = SafeAt(payload.Hourly.PrecipitationProbability, i),
+                    WindSpeedKmh = SafeAt(payload.Hourly.WindSpeed10m, i)
+                });
+            }
+
+            return result;
+        }
+
+
         private static int? SafeAt(int[]? arr, int i) => arr != null && i >= 0 && i < arr.Length ? arr[i] : null;
         private static double? SafeAt(double[]? arr, int i) => arr != null && i >= 0 && i < arr.Length ? arr[i] : null;
 
@@ -81,6 +158,9 @@ namespace Explorer.Tours.Infrastructure.Weather
             [JsonPropertyName("timezone")] public string? Timezone { get; set; }
 
             [JsonPropertyName("daily")] public OpenMeteoDaily? Daily { get; set; }
+            [JsonPropertyName("current")] public OpenMeteoCurrent? Current { get; set; }
+            [JsonPropertyName("hourly")] public OpenMeteoHourly? Hourly { get; set; }
+
         }
 
         private sealed class OpenMeteoDaily
@@ -93,5 +173,23 @@ namespace Explorer.Tours.Infrastructure.Weather
 
             [JsonPropertyName("precipitation_probability_max")] public int[]? PrecipitationProbabilityMax { get; set; }
         }
+
+        private sealed class OpenMeteoCurrent
+        {
+            [JsonPropertyName("time")] public string Time { get; set; } = "";
+            [JsonPropertyName("temperature_2m")] public double Temperature2m { get; set; }
+            [JsonPropertyName("weather_code")] public int WeatherCode { get; set; }
+            [JsonPropertyName("wind_speed_10m")] public double? WindSpeed10m { get; set; }
+        }
+
+        private sealed class OpenMeteoHourly
+        {
+            [JsonPropertyName("time")] public string[] Time { get; set; } = Array.Empty<string>();
+            [JsonPropertyName("temperature_2m")] public double[]? Temperature2m { get; set; }
+            [JsonPropertyName("weather_code")] public int[]? WeatherCode { get; set; }
+            [JsonPropertyName("precipitation_probability")] public int[]? PrecipitationProbability { get; set; }
+            [JsonPropertyName("wind_speed_10m")] public double[]? WindSpeed10m { get; set; }
+        }
+
     }
 }
