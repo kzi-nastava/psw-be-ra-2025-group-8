@@ -159,6 +159,9 @@ public class ToursProfile : Profile
 
         CreateMap<TourChatMessage, TourChatMessageDto>()
             .ForMember(dest => dest.SenderName, opt => opt.Ignore());
+
+        // TourStats mapping
+        CreateMap<TourStats, TourStatsDto>().ReverseMap();
     }
 
     private static TourStatus MapStatus(string status)

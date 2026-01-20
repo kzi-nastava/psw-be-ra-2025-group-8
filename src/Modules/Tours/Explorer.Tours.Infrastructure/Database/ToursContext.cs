@@ -41,6 +41,9 @@ public class ToursContext : DbContext
     public DbSet<TourChatMember> TourChatMembers { get; set; }
     public DbSet<TourChatMessage> TourChatMessages { get; set; }
 
+    // Tour Stats
+    public DbSet<TourStats> TourStats { get; set; }
+
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -338,6 +341,36 @@ public class ToursContext : DbContext
             builder.Property(m => m.Content).IsRequired();
             builder.HasIndex(m => m.TourChatRoomId);
             builder.HasIndex(m => m.SenderId);
+        });
+
+        // TOURSTATS CONFIGURATION
+        modelBuilder.Entity<TourStats>(builder =>
+        {
+            builder.HasKey(ts => ts.Id);
+
+            builder.Property(ts => ts.TourId)
+                .IsRequired();
+
+            builder.Property(ts => ts.CompletionRate)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(ts => ts.AverageCompletionPercentage)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(ts => ts.LastUpdated)
+                .IsRequired();
+
+            // TourStats -> Tour (N:1)
+            builder.HasOne(ts => ts.Tour)
+                .WithMany()
+                .HasForeignKey(ts => ts.TourId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ensure unique TourId (one stats record per tour)
+            builder.HasIndex(ts => ts.TourId)
+                .IsUnique();
         });
     }
 
