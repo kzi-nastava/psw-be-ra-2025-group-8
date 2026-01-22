@@ -4,6 +4,8 @@ using System.Linq;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.API.Dtos;
 using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Tours.API.Dtos;
+
 
 namespace Explorer.Payments.Tests.TestHelpers
 {
@@ -53,5 +55,18 @@ namespace Explorer.Payments.Tests.TestHelpers
         public TourDto UpdateTransportTimes(long tourId, List<TourTransportTimeDto> times, int authorId) => throw new NotImplementedException();
         public TourDto UpdateEquipment(long tourId, List<long> equipmentIds, int authorId) => throw new NotImplementedException();
         public List<EquipmentForTourDto> GetEquipmentForTour(long tourId, int authorId) => new List<EquipmentForTourDto>();
+        public TourAdvertisementDto Advertise(long tourId, AdvertiseTourRequestDto request, int authorId)
+        {
+            return new TourAdvertisementDto
+            {
+                TourId = tourId,
+                Tier = request?.Tier ?? "Basic",
+                AdventureCoinsSpent = 0,
+                PurchasedAtUtc = DateTime.UtcNow,
+                EndsAtUtc = DateTime.UtcNow,
+                IsActive = false
+            };
+        }
+
     }
 }
