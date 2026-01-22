@@ -90,7 +90,40 @@ VALUES (
 );
 
 -- ============================================================
--- 3. KREIRANJE TOUR EXECUTIONS
+-- 3. KREIRANJE TOURIST PREFERENCES
+-- ============================================================
+
+-- Beginner turisti (4x): turista9001, turista9004, turista9006, turista9010
+INSERT INTO tours."TouristPreferences" ("Id", "PersonId", "Difficulty")
+VALUES
+    (784591001, 78459001, 'Beginner'),
+    (784591004, 78459004, 'Beginner'),
+    (784591006, 78459006, 'Beginner'),
+    (784591010, 78459010, 'Beginner');
+
+-- Intermediate turisti (3x): turista9002, turista9005, turista9008
+INSERT INTO tours."TouristPreferences" ("Id", "PersonId", "Difficulty")
+VALUES
+    (784591002, 78459002, 'Intermediate'),
+    (784591005, 78459005, 'Intermediate'),
+    (784591008, 78459008, 'Intermediate');
+
+-- Professional turisti (3x): turista9003, turista9007, turista9009
+INSERT INTO tours."TouristPreferences" ("Id", "PersonId", "Difficulty")
+VALUES
+    (784591003, 78459003, 'Professional'),
+    (784591007, 78459007, 'Professional'),
+    (784591009, 78459009, 'Professional');
+
+-- DISTRIBUCIJA:
+-- - Tura 1 (Beogradska): 4 Beginner, 3 Intermediate, 3 Professional
+-- - Tura 2 (Planinska): 4 Beginner (većina odustala), 1 Professional (završio)
+-- NAJČEŠĆI TIP:
+-- - Tura 1: Beginner (4/10 = 40%)
+-- - Tura 2: Beginner (4/5 = 80% - iako su većinom odustali)
+
+-- ============================================================
+-- 4. KREIRANJE TOUR EXECUTIONS
 -- ============================================================
 
 -- -------------------------------------------------------------
@@ -175,7 +208,7 @@ VALUES
 -- Average Completion Percentage: (100 + 15 + 25 + 30 + 50) / 5 = 44%
 
 -- ============================================================
--- 4. DODAVANJE IN-PROGRESS EXECUTIONS (NE UTIČU NA STATISTIKU)
+-- 5. DODAVANJE IN-PROGRESS EXECUTIONS (NE UTIČU NA STATISTIKU)
 -- ============================================================
 
 -- Ovi TourExecutions su trenutno aktivni i NE ULAZE u statistiku
@@ -191,7 +224,7 @@ VALUES
     (78453017, 78452002, 20.8163, 43.2974, 78459005, 65.0, 0, '2025-01-20 14:30:00');
 
 -- ============================================================
--- 5. KREIRANJE TOUR RATINGS (RECENZIJE)
+-- 6. KREIRANJE TOUR RATINGS (RECENZIJE)
 -- ============================================================
 
 -- -------------------------------------------------------------

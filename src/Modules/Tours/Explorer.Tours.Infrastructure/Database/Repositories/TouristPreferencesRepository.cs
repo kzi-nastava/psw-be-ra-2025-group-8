@@ -56,6 +56,14 @@ namespace Explorer.Tours.Infrastructure.Database.Repositories
             _dbSet.Remove(touristPreferences);
             _dbContext.SaveChanges();
         }
+        public List<TouristPreferences> GetAll()
+        {
+            return _dbSet
+                .Include(tp => tp.TransportTypePreferences)
+                .Include(tp => tp.PreferenceTags)
+                    .ThenInclude(pt => pt.Tags)
+                .ToList();
+        }
     }
 }
 
