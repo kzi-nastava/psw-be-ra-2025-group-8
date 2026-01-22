@@ -97,7 +97,9 @@ public static class ToursStartup
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
         services.AddScoped<ITourRatingRepository, TourRatingRepository>();
         services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
-        
+        services.AddScoped<ITourAdvertisementRepository, TourAdvertisementRepository>();
+
+
         // Tour Chat
         services.AddScoped<ITourChatRoomRepository, TourChatRoomRepository>();
 

@@ -23,7 +23,7 @@ public class ToursContext : DbContext
     public DbSet<TourRatingImage> TourRatingImages { get; set; }
     public DbSet<Bundle> Bundles { get; set; }
     public DbSet<BundleTour> BundleTours { get; set; }
-
+    public DbSet<TourAdvertisement> TourAdvertisements { get; set; }
 
 
     //Preference
@@ -339,6 +339,24 @@ public class ToursContext : DbContext
             builder.HasIndex(m => m.TourChatRoomId);
             builder.HasIndex(m => m.SenderId);
         });
+
+        modelBuilder.Entity<TourAdvertisement>(builder =>
+        {
+            builder.HasKey(a => a.Id);
+
+            builder.Property(a => a.TourId).IsRequired();
+            builder.Property(a => a.AuthorId).IsRequired();
+            builder.Property(a => a.Tier).IsRequired();
+            builder.Property(a => a.AdventureCoinsSpent).IsRequired();
+            builder.Property(a => a.PurchasedAtUtc).IsRequired();
+            builder.Property(a => a.EndsAtUtc).IsRequired();
+
+            builder.ToTable("TourAdvertisements", schema: "tours");
+
+            builder.HasIndex(a => a.TourId);
+            builder.HasIndex(a => new { a.TourId, a.EndsAtUtc });
+        });
+
     }
 
 }
