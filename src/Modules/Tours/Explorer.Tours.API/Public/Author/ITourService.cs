@@ -27,6 +27,7 @@ namespace Explorer.Tours.API.Public.Author
         TourDto GetById(long id);
         TourAdvertisementDto Advertise(long tourId, AdvertiseTourRequestDto request, int authorId);
         CancelTourAdvertisementResultDto CancelAdvertisement(long tourId, int authorId);
+        CancelTourAdvertisementPreviewDto GetCancelAdvertisementPreview(long tourId, int authorId);
 
     }
 }

@@ -508,6 +508,38 @@ public class TourService : ITourService
 
         return P;
     }
+    public CancelTourAdvertisementPreviewDto GetCancelAdvertisementPreview(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only preview cancellation for your own tours.");
+
+        var now = DateTime.UtcNow;
+
+        var activeAd = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (activeAd == null)
+            throw new EntityValidationException("Tour is not currently advertised.");
+
+        if (activeAd.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only preview cancellation for your own tour advertisement.");
+
+        var refund = CalculateRefund(activeAd, now);
+        var setupFee = (int)Math.Floor(activeAd.AdventureCoinsSpent * 0.20);
+
+        return new CancelTourAdvertisementPreviewDto
+        {
+            TourId = tourId,
+            RefundedAdventureCoins = refund,
+            CalculatedAtUtc = now,
+
+            TotalAdventureCoinsSpent = activeAd.AdventureCoinsSpent,
+            SetupFeeAdventureCoins = setupFee,
+            PurchasedAtUtc = activeAd.PurchasedAtUtc,
+            EndsAtUtc = activeAd.EndsAtUtc,
+            Tier = activeAd.Tier.ToString()
+        };
+    }
 
 
 }
