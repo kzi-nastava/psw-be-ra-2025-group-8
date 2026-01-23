@@ -142,6 +142,13 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id:long}/advertise")]
+    public ActionResult<TourAdvertisementDto> Advertise(long id, [FromBody] AdvertiseTourRequestDto request)
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.Advertise(id, request, authorId);
+        return Ok(result);
+    }
 
     private int GetAuthorIdFromToken()
     {
@@ -157,4 +164,6 @@ public class TourController : ControllerBase
 
         throw new UnauthorizedAccessException("Unable to determine user ID from token");
     }
+
+
 }
