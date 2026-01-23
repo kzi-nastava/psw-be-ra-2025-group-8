@@ -7,6 +7,8 @@ using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using static Explorer.Tours.Core.Domain.TourExecution;
+using Explorer.Tours.API.Public.Weather;
+
 
 namespace Explorer.Tours.Core.UseCases.Tourist;
 
@@ -21,6 +23,7 @@ public class TourExecutionService : ITourExecutionService
     private readonly ICrudRepository<Tour> _tourRepository;
     private readonly ITourChatRoomService _chatRoomService;
     private readonly IMapper _mapper;
+    private readonly IWeatherForecastService _weatherForecastService;
 
     // Proximity threshold (meters)
     private const double KEYPOINT_PROXIMITY_METERS = 60.0;
@@ -34,6 +37,7 @@ public class TourExecutionService : ITourExecutionService
         ITourChatRoomService chatRoomService,
         IInternalTourService internalTourService,
         IInternalEncounterService encounterService,
+        IWeatherForecastService weatherForecastService,
         IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
@@ -44,6 +48,7 @@ public class TourExecutionService : ITourExecutionService
         _chatRoomService = chatRoomService;
         _internalTourService = internalTourService;
         _encounterService = encounterService;
+        _weatherForecastService = weatherForecastService;
         _mapper = mapper;
     }
 
@@ -410,6 +415,44 @@ public class TourExecutionService : ITourExecutionService
             UnlockedAt = keyPointReached.ReachedAt
         };
     }
+
+    public WeatherCurrentDto GetCurrentWeather(long tourExecutionId)
+    {
+        var tourExecution = _tourExecutionRepository.Get((int)tourExecutionId);
+        if (tourExecution == null) return null;
+
+        return _weatherForecastService.GetCurrentWeather(tourExecution.Latitude, tourExecution.Longitude);
+    }
+
+    public WeatherHourlyForecastDto GetNextKeyPointHourlyForecast(long tourExecutionId, int hours = 6)
+    {
+        var tourExecution = _tourExecutionRepository.Get((int)tourExecutionId);
+        if (tourExecution == null) return null;
+
+        var keyPoints = _keyPointRepository.GetByTour(tourExecution.IdTour)
+            .OrderBy(kp => kp.Order)
+            .ToList();
+
+        if (!keyPoints.Any()) return null;
+
+        var reachedOrders = _keyPointReachedRepository.GetReachedKeyPointOrders(tourExecutionId)
+            .Distinct()
+            .ToHashSet();
+
+        var nextKeyPoint = keyPoints.FirstOrDefault(kp => !reachedOrders.Contains(kp.Order));
+        if (nextKeyPoint == null) return null;
+
+        var forecast = _weatherForecastService.GetHourlyForecast(
+            nextKeyPoint.Location.Latitude,
+            nextKeyPoint.Location.Longitude,
+            hours);
+
+        forecast.KeyPointOrder = nextKeyPoint.Order;
+        forecast.KeyPointName = nextKeyPoint.Name;
+
+        return forecast;
+    }
+
 
     private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {

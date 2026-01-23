@@ -75,6 +75,18 @@ namespace Explorer.API.Controllers.Tourist
             return Ok(result);
         }
 
+        [HttpGet("{id}/weather")]
+        public IActionResult GetPublishedTourWeather(long id, [FromQuery] int days = 7)
+        {
+            if (days < 1 || days > 16)
+                return BadRequest("days must be between 1 and 16.");
+
+            var result = _touristTourService.GetPublishedTourDailyForecast(id, days);
+            if (result == null) return NotFound("Tour not found, not published, or has no keypoints.");
+            return Ok(result);
+        }
+
+
         [HttpGet("{id}/keypoints")]
         public IActionResult GetTourKeyPoints(long id)
         {

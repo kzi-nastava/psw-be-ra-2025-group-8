@@ -6,10 +6,11 @@ namespace Explorer.Stakeholders.API.Public
     public interface IMessageService
     {
         MessageDto Send(MessageDto dto);
+        MessageDto SendWithCoupon(long senderId, long recipientId, string content, long couponId);
         List<MessageDto> GetConversation(long userId1, long userId2);
         MessageDto Edit(long messageId, string newContent);
         MessageDto Delete(long messageId);
         List<ConversationSummaryDto> GetConversations(long userId);
-        void DeleteConversation(long userId, long otherUserId);  // NOVA LINIJA
+        void DeleteConversation(long userId, long otherUserId);
     }
 }

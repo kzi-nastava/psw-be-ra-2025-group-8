@@ -31,10 +31,10 @@ public class FollowerCommandTests : BaseStakeholdersIntegrationTest
         // Act
         var result = ((OkObjectResult)controller.Follow(USER_TOURIST1_ID).Result)?.Value as FollowerDto;
 
-        // Assert - Response
+        // Assert - Response (should return info about the followed user, not the follower)
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(0);
-        result.UserId.ShouldBe(USER_ADMIN_ID);
+        result.UserId.ShouldBe(USER_TOURIST1_ID); // Followed user ID (Tourist1)
         result.FollowedAt.ShouldBeGreaterThan(DateTime.MinValue);
 
         // Assert - Database
