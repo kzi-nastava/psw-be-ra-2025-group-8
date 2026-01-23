@@ -23,6 +23,8 @@ public class TourAdvertisement : Entity
         EndsAtUtc = endsAtUtc;
     }
 
+    public bool IsActive(DateTime utcNow) => EndsAtUtc > utcNow;
+
     // otkazivanje 
     public void Cancel(DateTime utcNow)
     {
