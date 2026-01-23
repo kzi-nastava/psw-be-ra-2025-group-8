@@ -441,5 +441,43 @@ public class TourService : ITourService
         };
     }
 
+    public CancelTourAdvertisementResultDto CancelAdvertisement(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only cancel advertisement for your own tours.");
+
+        var now = DateTime.UtcNow;
+
+        var activeAd = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (activeAd == null)
+            throw new EntityValidationException("Tour is not currently advertised.");
+
+        if (activeAd.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only cancel your own tour advertisement.");
+
+        if (!activeAd.IsWithinFirstHalf(now))
+            throw new EntityValidationException("Cancellation is allowed only within first half of the advertisement duration.");
+
+        // hardcoded refund = 30%
+        var refund = (activeAd.AdventureCoinsSpent * 30) / 100;
+
+        activeAd.Cancel(now);
+        _tourAdvertisementRepository.Update(activeAd);
+
+        if (refund > 0)
+        {
+            var userId = (long)authorId;
+            _walletService.DepositCoins(userId, refund);
+        }
+
+        return new CancelTourAdvertisementResultDto
+        {
+            TourId = tourId,
+            RefundedAdventureCoins = refund,
+            CancelledAtUtc = now
+        };
+    }
 
 }

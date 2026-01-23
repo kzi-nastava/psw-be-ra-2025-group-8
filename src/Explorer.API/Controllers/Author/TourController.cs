@@ -150,6 +150,14 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("{tourId:long}/advertise")]
+    public ActionResult<CancelTourAdvertisementResultDto> CancelAdvertisement(long tourId)
+    {
+        var authorId = GetAuthorIdFromToken();
+        return Ok(_tourService.CancelAdvertisement(tourId, authorId));
+    }
+
+
     private int GetAuthorIdFromToken()
     {
         var idClaim = User.FindFirst("id")
