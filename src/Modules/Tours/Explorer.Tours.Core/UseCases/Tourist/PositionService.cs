@@ -37,7 +37,7 @@ namespace Explorer.Tours.Core.UseCases.Tourist
 
         public PositionDto CreatePosition(PositionDto dto)
         {
-            var pos = new Position(dto.Latitude, dto.Longitude, dto.TouristId);
+            var pos = new Position(dto.Latitude, dto.Longitude, dto.TouristId, Enum.Parse<Source>(dto.LocationSource));
             var created = _repo.Create(pos);
 
             return new PositionDto
@@ -46,6 +46,7 @@ namespace Explorer.Tours.Core.UseCases.Tourist
                 Latitude = created.Latitude,
                 Longitude = created.Longitude,
                 TouristId = created.TouristId,
+                LocationSource = created.LocationSource.ToString(),
                 UpdatedAt = created.UpdatedAt
             };
         }
