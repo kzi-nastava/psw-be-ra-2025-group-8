@@ -24,4 +24,22 @@ public class TourAdvertisement : Entity
     }
 
     public bool IsActive(DateTime utcNow) => EndsAtUtc > utcNow;
+
+    // dozvola za otkazivanje 
+    public bool IsWithinFirstHalf(DateTime utcNow)
+    {
+        var totalTicks = (EndsAtUtc - PurchasedAtUtc).Ticks;
+        if (totalTicks <= 0) return false;
+
+        var halfPoint = PurchasedAtUtc.AddTicks(totalTicks / 2);
+        return utcNow <= halfPoint;
+    }
+
+    // otkazivanje 
+    public void Cancel(DateTime utcNow)
+    {
+        if (utcNow < PurchasedAtUtc) utcNow = PurchasedAtUtc;
+        if (utcNow >= EndsAtUtc) return; // već istekao ili već "prekinut"
+        EndsAtUtc = utcNow;
+    }
 }

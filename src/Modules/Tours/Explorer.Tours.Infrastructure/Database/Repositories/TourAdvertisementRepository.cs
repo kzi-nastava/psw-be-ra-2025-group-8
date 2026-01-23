@@ -46,4 +46,12 @@ public class TourAdvertisementRepository : ITourAdvertisementRepository
                 g => g.OrderByDescending(a => a.Tier).ThenByDescending(a => a.PurchasedAtUtc).First()
             );
     }
+
+    public TourAdvertisement Update(TourAdvertisement advertisement)
+    {
+        _context.TourAdvertisements.Update(advertisement);
+        _context.SaveChanges();
+        return advertisement;
+    }
+
 }

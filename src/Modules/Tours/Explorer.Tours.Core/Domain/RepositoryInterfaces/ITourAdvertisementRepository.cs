@@ -11,4 +11,6 @@ public interface ITourAdvertisementRepository
 
     // Samo aktivne reklame (po tourId)
     Dictionary<long, TourAdvertisement> GetActiveByTourIds(IEnumerable<long> tourIds, DateTime utcNow);
+
+    TourAdvertisement Update(TourAdvertisement advertisement);
 }
