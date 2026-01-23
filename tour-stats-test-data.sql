@@ -133,46 +133,48 @@ VALUES
 -- -------------------------------------------------------------
 
 -- Completed executions (8x)
+-- Duration ranges: 2h-4h (120-240 min)
 INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity")
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 1 - Completed, 100%
-    (78453001, 78452001, 20.4489, 44.7866, 78459001, 100.0, 1, '2025-01-10 15:30:00'),
+    -- Turista 1 - Completed, 100% - Duration: 3h 15min
+    (78453001, 78452001, 20.4489, 44.7866, 78459001, 100.0, 1, '2025-01-10 15:30:00', '2025-01-10 12:15:00'),
 
-    -- Turista 2 - Completed, 100%
-    (78453002, 78452001, 20.4512, 44.7890, 78459002, 100.0, 1, '2025-01-11 16:45:00'),
+    -- Turista 2 - Completed, 100% - Duration: 2h 45min
+    (78453002, 78452001, 20.4512, 44.7890, 78459002, 100.0, 1, '2025-01-11 16:45:00', '2025-01-11 14:00:00'),
 
-    -- Turista 3 - Completed, 95%
-    (78453003, 78452001, 20.4501, 44.7877, 78459003, 95.0, 1, '2025-01-12 14:20:00'),
+    -- Turista 3 - Completed, 95% - Duration: 2h 20min
+    (78453003, 78452001, 20.4501, 44.7877, 78459003, 95.0, 1, '2025-01-12 14:20:00', '2025-01-12 12:00:00'),
 
-    -- Turista 4 - Completed, 85%
-    (78453004, 78452001, 20.4495, 44.7881, 78459004, 85.0, 1, '2025-01-13 17:10:00'),
+    -- Turista 4 - Completed, 85% - Duration: 3h 10min
+    (78453004, 78452001, 20.4495, 44.7881, 78459004, 85.0, 1, '2025-01-13 17:10:00', '2025-01-13 14:00:00'),
 
-    -- Turista 5 - Completed, 70%
-    (78453005, 78452001, 20.4488, 44.7869, 78459005, 70.0, 1, '2025-01-14 13:50:00'),
+    -- Turista 5 - Completed, 70% - Duration: 4h 0min
+    (78453005, 78452001, 20.4488, 44.7869, 78459005, 70.0, 1, '2025-01-14 13:50:00', '2025-01-14 09:50:00'),
 
-    -- Turista 6 - Completed, 65%
-    (78453006, 78452001, 20.4505, 44.7885, 78459006, 65.0, 1, '2025-01-15 12:30:00'),
+    -- Turista 6 - Completed, 65% - Duration: 2h 30min
+    (78453006, 78452001, 20.4505, 44.7885, 78459006, 65.0, 1, '2025-01-15 12:30:00', '2025-01-15 10:00:00'),
 
-    -- Turista 7 - Completed, 60%
-    (78453007, 78452001, 20.4490, 44.7872, 78459007, 60.0, 1, '2025-01-16 11:15:00'),
+    -- Turista 7 - Completed, 60% - Duration: 3h 45min
+    (78453007, 78452001, 20.4490, 44.7872, 78459007, 60.0, 1, '2025-01-16 11:15:00', '2025-01-16 07:30:00'),
 
-    -- Turista 8 - Completed, 55%
-    (78453008, 78452001, 20.4510, 44.7893, 78459008, 55.0, 1, '2025-01-17 10:00:00');
+    -- Turista 8 - Completed, 55% - Duration: 2h 50min
+    (78453008, 78452001, 20.4510, 44.7893, 78459008, 55.0, 1, '2025-01-17 10:00:00', '2025-01-17 07:10:00');
 
 -- Abandoned executions (2x)
 INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity")
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 9 - Abandoned, 35%
-    (78453009, 78452001, 20.4497, 44.7874, 78459009, 35.0, 2, '2025-01-18 09:20:00'),
+    -- Turista 9 - Abandoned, 35% - Duration: 1h 20min
+    (78453009, 78452001, 20.4497, 44.7874, 78459009, 35.0, 2, '2025-01-18 09:20:00', '2025-01-18 08:00:00'),
 
-    -- Turista 10 - Abandoned, 20%
-    (78453010, 78452001, 20.4492, 44.7870, 78459010, 20.0, 2, '2025-01-19 08:45:00');
+    -- Turista 10 - Abandoned, 20% - Duration: 1h 45min
+    (78453010, 78452001, 20.4492, 44.7870, 78459010, 20.0, 2, '2025-01-19 08:45:00', '2025-01-19 07:00:00');
 
 -- OČEKIVANE STATISTIKE ZA TURU 1:
 -- Completion Rate: 8 / (8 + 2) * 100 = 80%
 -- Average Completion Percentage: (100+100+95+85+70+65+60+55+35+20) / 10 = 68.5%
+-- Average Duration: (195+165+140+190+240+150+225+170+80+105) / 10 = 166 min = 2h 46min
 
 -- -------------------------------------------------------------
 -- TURA 2 (78452002): "Ekstremna planinska avantura"
@@ -181,31 +183,34 @@ VALUES
 -- -------------------------------------------------------------
 
 -- Completed execution (1x)
+-- Professional turista - Duration: 8h 30min (dugačka planinska tura)
 INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity")
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 3 (Professional) - Completed, 100%
-    (78453011, 78452002, 20.8167, 43.2975, 78459003, 100.0, 1, '2025-01-08 18:30:00');
+    -- Turista 3 (Professional) - Completed, 100% - Duration: 8h 30min
+    (78453011, 78452002, 20.8167, 43.2975, 78459003, 100.0, 1, '2025-01-08 18:30:00', '2025-01-08 10:00:00');
 
 -- Abandoned executions (4x)
+-- Beginners odustali nakon kraćeg vremena (1h-3h)
 INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity")
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 1 (Beginner) - Abandoned, 15% (teška tura za početnike)
-    (78453012, 78452002, 20.8145, 43.2960, 78459001, 15.0, 2, '2024-12-20 11:30:00'),
+    -- Turista 1 (Beginner) - Abandoned, 15% (teška tura za početnike) - Duration: 1h 30min
+    (78453012, 78452002, 20.8145, 43.2960, 78459001, 15.0, 2, '2024-12-20 11:30:00', '2024-12-20 10:00:00'),
 
-    -- Turista 4 (Beginner) - Abandoned, 25%
-    (78453013, 78452002, 20.8152, 43.2968, 78459004, 25.0, 2, '2024-12-25 14:10:00'),
+    -- Turista 4 (Beginner) - Abandoned, 25% - Duration: 2h 10min
+    (78453013, 78452002, 20.8152, 43.2968, 78459004, 25.0, 2, '2024-12-25 14:10:00', '2024-12-25 12:00:00'),
 
-    -- Turista 6 (Beginner) - Abandoned, 30%
-    (78453014, 78452002, 20.8160, 43.2972, 78459006, 30.0, 2, '2025-01-02 10:45:00'),
+    -- Turista 6 (Beginner) - Abandoned, 30% - Duration: 2h 45min
+    (78453014, 78452002, 20.8160, 43.2972, 78459006, 30.0, 2, '2025-01-02 10:45:00', '2025-01-02 08:00:00'),
 
-    -- Turista 10 (Beginner) - Abandoned, 50%
-    (78453015, 78452002, 20.8165, 43.2973, 78459010, 50.0, 2, '2025-01-05 16:20:00');
+    -- Turista 10 (Beginner) - Abandoned, 50% - Duration: 4h 20min
+    (78453015, 78452002, 20.8165, 43.2973, 78459010, 50.0, 2, '2025-01-05 16:20:00', '2025-01-05 12:00:00');
 
 -- OČEKIVANE STATISTIKE ZA TURU 2:
 -- Completion Rate: 1 / (1 + 4) * 100 = 20%
 -- Average Completion Percentage: (100 + 15 + 25 + 30 + 50) / 5 = 44%
+-- Average Duration: (510+90+130+165+260) / 5 = 231 min = 3h 51min
 
 -- ============================================================
 -- 5. DODAVANJE IN-PROGRESS EXECUTIONS (NE UTIČU NA STATISTIKU)
@@ -215,13 +220,13 @@ VALUES
 -- jer se racunaju samo Completed i Abandoned
 
 INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity")
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 2 na Turi 2 - In Progress, 40%
-    (78453016, 78452002, 20.8155, 43.2970, 78459002, 40.0, 0, '2025-01-20 12:00:00'),
+    -- Turista 2 na Turi 2 - In Progress, 40% - Duration: 3h 0min (trenutno)
+    (78453016, 78452002, 20.8155, 43.2970, 78459002, 40.0, 0, '2025-01-20 12:00:00', '2025-01-20 09:00:00'),
 
-    -- Turista 5 na Turi 2 - In Progress, 65%
-    (78453017, 78452002, 20.8163, 43.2974, 78459005, 65.0, 0, '2025-01-20 14:30:00');
+    -- Turista 5 na Turi 2 - In Progress, 65% - Duration: 5h 30min (trenutno)
+    (78453017, 78452002, 20.8163, 43.2974, 78459005, 65.0, 0, '2025-01-20 14:30:00', '2025-01-20 09:00:00');
 
 -- ============================================================
 -- 6. KREIRANJE TOUR RATINGS (RECENZIJE)
@@ -330,6 +335,8 @@ VALUES (
 --
 -- TESTIRANJE:
 -- 1. Login: autor1234 / autor1234
--- 2. GET /api/author/tour/78452001/stats - Očekuje: CompletionRate=80%, AvgCompletion=68.5%
--- 3. GET /api/author/tour/78452002/stats - Očekuje: CompletionRate=20%, AvgCompletion=44%
+-- 2. GET /api/author/tour/78452001/stats
+--    Očekuje: CompletionRate=80%, AvgCompletion=68.5%, AvgDuration=2h 46min
+-- 3. GET /api/author/tour/78452002/stats
+--    Očekuje: CompletionRate=20%, AvgCompletion=44%, AvgDuration=3h 51min
 -- ============================================================

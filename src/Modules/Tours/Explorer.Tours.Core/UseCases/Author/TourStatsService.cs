@@ -44,7 +44,7 @@ public class TourStatsService : ITourStatsService
             else
             {
                 // Update existing stats
-                existingStats.Update(calculatedStats.CompletionRate, calculatedStats.AverageCompletionPercentage, calculatedStats.mostCommonDiffcultyLevel);
+                existingStats.Update(calculatedStats.CompletionRate, calculatedStats.AverageCompletionPercentage, calculatedStats.mostCommonDiffcultyLevel, calculatedStats.AverageDuration);
                 existingStats = _tourStatsRepository.Update(existingStats);
             }
         }
@@ -56,6 +56,8 @@ public class TourStatsService : ITourStatsService
     {
         var allExecutions = _tourExecutionRepository.GetByTour(tourId);
         var allPreferences = _touristPreferencesRepository.GetAll();
+
+        // MOST COMMON DIFFICULTY LEVEL CALCULATION
 
         // Get unique tourist IDs from executions
         var personIds = allExecutions.Select(te => te.IdTourist).Distinct().ToList();
@@ -78,6 +80,19 @@ public class TourStatsService : ITourStatsService
                 mostCommonDifficulty = DifficultyLevel.Professional;
         }
 
+        // AVERAGE DURATION CALCULATION
+
+        var executionsWithDuration = allExecutions
+            .Where(te => te.LastActivity.Subtract(te.CreatedAt).TotalMinutes > 1)
+            .ToList();
+
+        var averageDurationMinutes = executionsWithDuration.Any()
+            ? executionsWithDuration.Average(te => te.LastActivity.Subtract(te.CreatedAt).TotalMinutes)
+            : 0;
+
+        TimeSpan averageDuration = TimeSpan.FromMinutes(averageDurationMinutes);
+
+        // COMPLETION RATE AND AVERAGE COMPLETION PERCENTAGE CALCULATION
 
         // Filter only Completed and Abandoned (exclude InProgress)
         var finishedExecutions = allExecutions
@@ -87,7 +102,7 @@ public class TourStatsService : ITourStatsService
 
         if (!finishedExecutions.Any())
         {
-            return new TourStats(tourId, 0, 0, mostCommonDifficulty);
+            return new TourStats(tourId, 0, 0, mostCommonDifficulty, averageDuration);
         }
 
         // Completion Rate: Completed / (Completed + Abandoned) * 100
@@ -97,6 +112,6 @@ public class TourStatsService : ITourStatsService
         // Average Completion Percentage
         var avgCompletionPercentage = finishedExecutions.Average(te => te.CompletionPercentage);
 
-        return new TourStats(tourId, completionRate, avgCompletionPercentage, mostCommonDifficulty);
+        return new TourStats(tourId, completionRate, avgCompletionPercentage, mostCommonDifficulty, averageDuration);
     }
 }
