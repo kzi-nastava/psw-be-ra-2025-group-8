@@ -67,6 +67,21 @@ namespace Explorer.Payments.Tests.TestHelpers
                 IsActive = false
             };
         }
+        public CancelTourAdvertisementResultDto CancelAdvertisement(long tourId, int authorId)
+            => new CancelTourAdvertisementResultDto
+            {
+                TourId = tourId,
+                RefundedAdventureCoins = 0,
+                CancelledAtUtc = DateTime.UtcNow
+            };
+        public CancelTourAdvertisementPreviewDto GetCancelAdvertisementPreview(long tourId, int authorId)
+            => new CancelTourAdvertisementPreviewDto
+            {
+                TourId = tourId,
+                RefundedAdventureCoins = 0,
+                CalculatedAtUtc = DateTime.UtcNow,
+                Tier = "Basic"
+            };
 
     }
 }

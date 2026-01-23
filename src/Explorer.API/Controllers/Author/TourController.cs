@@ -150,6 +150,21 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("{tourId:long}/advertise")]
+    public ActionResult<CancelTourAdvertisementResultDto> CancelAdvertisement(long tourId)
+    {
+        var authorId = GetAuthorIdFromToken();
+        return Ok(_tourService.CancelAdvertisement(tourId, authorId));
+    }
+
+    [HttpGet("{tourId:long}/advertise/cancel-preview")]
+    public ActionResult<CancelTourAdvertisementPreviewDto> GetCancelAdvertisementPreview(long tourId)
+    {
+        var authorId = GetAuthorIdFromToken(); // isti način kao u CancelAdvertisement
+        return Ok(_tourService.GetCancelAdvertisementPreview(tourId, authorId));
+    }
+
+
     private int GetAuthorIdFromToken()
     {
         var idClaim = User.FindFirst("id")

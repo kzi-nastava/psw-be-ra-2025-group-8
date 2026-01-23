@@ -24,4 +24,13 @@ public class TourAdvertisement : Entity
     }
 
     public bool IsActive(DateTime utcNow) => EndsAtUtc > utcNow;
+
+    // otkazivanje 
+    public void Cancel(DateTime utcNow)
+    {
+        if (utcNow < PurchasedAtUtc) utcNow = PurchasedAtUtc;
+        if (utcNow >= EndsAtUtc) return; // već istekao ili već "prekinut"
+        EndsAtUtc = utcNow;
+    }
+
 }

@@ -441,5 +441,105 @@ public class TourService : ITourService
         };
     }
 
+    public CancelTourAdvertisementResultDto CancelAdvertisement(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only cancel advertisement for your own tours.");
+
+        var now = DateTime.UtcNow;
+
+        var activeAd = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (activeAd == null)
+            throw new EntityValidationException("Tour is not currently advertised.");
+
+        if (activeAd.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only cancel your own tour advertisement.");
+
+        var refund = CalculateRefund(activeAd, now);
+
+        activeAd.Cancel(now);
+        _tourAdvertisementRepository.Update(activeAd);
+
+        if (refund > 0)
+        {
+            var userId = (long)authorId;
+            _walletService.DepositCoins(userId, refund);
+        }
+
+        return new CancelTourAdvertisementResultDto
+        {
+            TourId = tourId,
+            RefundedAdventureCoins = refund,
+            CancelledAtUtc = now
+        };
+    }
+
+    private static int CalculateRefund(TourAdvertisement ad, DateTime utcNow)
+    {
+        // U = ukupno placeno
+        var U = ad.AdventureCoinsSpent;
+        if (U <= 0) return 0;
+
+        // Tukupno, Tpreostalo
+        var total = ad.EndsAtUtc - ad.PurchasedAtUtc;
+        if (total.TotalSeconds <= 0) return 0;
+
+        var remaining = ad.EndsAtUtc - utcNow;
+        if (remaining.TotalSeconds <= 0) return 0;
+
+        // S = setup fee = 20% od U
+        var S = (int)Math.Floor(U * 0.20);
+
+        // (U - S)
+        var refundableBase = U - S;
+        if (refundableBase <= 0) return 0;
+
+        // ratio = Tpreostalo/Tukupno
+        var ratio = remaining.TotalSeconds / total.TotalSeconds;
+
+        // P = (U - S) * ratio  (zaokruzi nadole da nikad ne vrati vise)
+        var P = (int)Math.Floor(refundableBase * ratio);
+
+        // safety clamp
+        if (P < 0) return 0;
+        if (P > U) return U;
+
+        return P;
+    }
+    public CancelTourAdvertisementPreviewDto GetCancelAdvertisementPreview(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only preview cancellation for your own tours.");
+
+        var now = DateTime.UtcNow;
+
+        var activeAd = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (activeAd == null)
+            throw new EntityValidationException("Tour is not currently advertised.");
+
+        if (activeAd.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only preview cancellation for your own tour advertisement.");
+
+        var refund = CalculateRefund(activeAd, now);
+        var setupFee = (int)Math.Floor(activeAd.AdventureCoinsSpent * 0.20);
+
+        return new CancelTourAdvertisementPreviewDto
+        {
+            TourId = tourId,
+            RefundedAdventureCoins = refund,
+            CalculatedAtUtc = now,
+
+            TotalAdventureCoinsSpent = activeAd.AdventureCoinsSpent,
+            SetupFeeAdventureCoins = setupFee,
+            PurchasedAtUtc = activeAd.PurchasedAtUtc,
+            EndsAtUtc = activeAd.EndsAtUtc,
+            Tier = activeAd.Tier.ToString()
+        };
+    }
+
 
 }
