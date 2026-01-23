@@ -457,11 +457,7 @@ public class TourService : ITourService
         if (activeAd.AuthorId != authorId)
             throw new UnauthorizedAccessException("You can only cancel your own tour advertisement.");
 
-        if (!activeAd.IsWithinFirstHalf(now))
-            throw new EntityValidationException("Cancellation is allowed only within first half of the advertisement duration.");
-
-        // hardcoded refund = 30%
-        var refund = (activeAd.AdventureCoinsSpent * 30) / 100;
+        var refund = CalculateRefund(activeAd, now);
 
         activeAd.Cancel(now);
         _tourAdvertisementRepository.Update(activeAd);
@@ -479,5 +475,39 @@ public class TourService : ITourService
             CancelledAtUtc = now
         };
     }
+
+    private static int CalculateRefund(TourAdvertisement ad, DateTime utcNow)
+    {
+        // U = ukupno placeno
+        var U = ad.AdventureCoinsSpent;
+        if (U <= 0) return 0;
+
+        // Tukupno, Tpreostalo
+        var total = ad.EndsAtUtc - ad.PurchasedAtUtc;
+        if (total.TotalSeconds <= 0) return 0;
+
+        var remaining = ad.EndsAtUtc - utcNow;
+        if (remaining.TotalSeconds <= 0) return 0;
+
+        // S = setup fee = 20% od U
+        var S = (int)Math.Floor(U * 0.20);
+
+        // (U - S)
+        var refundableBase = U - S;
+        if (refundableBase <= 0) return 0;
+
+        // ratio = Tpreostalo/Tukupno
+        var ratio = remaining.TotalSeconds / total.TotalSeconds;
+
+        // P = (U - S) * ratio  (zaokruzi nadole da nikad ne vrati vise)
+        var P = (int)Math.Floor(refundableBase * ratio);
+
+        // safety clamp
+        if (P < 0) return 0;
+        if (P > U) return U;
+
+        return P;
+    }
+
 
 }
