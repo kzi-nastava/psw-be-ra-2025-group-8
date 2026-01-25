@@ -44,6 +44,15 @@ public class ProfileController : ControllerBase
         return Ok(profile);
     }
 
+    [HttpGet("{personId:long}")]
+    [AllowAnonymous]
+    public ActionResult<PersonDto> GetProfileByPersonId(long personId)
+    {
+        var profile = _personService.GetByPersonId(personId);
+        if (profile == null) return NotFound();
+        return Ok(profile);
+    }
+
     [HttpPut]
     public ActionResult<PersonDto> UpdateProfile([FromBody] UpdatePersonDto dto)
     {

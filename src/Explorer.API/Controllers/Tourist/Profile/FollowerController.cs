@@ -143,6 +143,24 @@ private readonly IFollowerService _followerService;
         }
     }
 
+    // GET /api/followers/{personId}/followers
+    [HttpGet("{personId:long}/followers")]
+    [AllowAnonymous]
+    public ActionResult<List<FollowerDto>> GetFollowersForUser(long personId)
+    {
+        var followers = _followerService.GetFollowers(personId);
+        return Ok(followers);
+    }
+
+    // GET /api/followers/{personId}/following
+    [HttpGet("{personId:long}/following")]
+    [AllowAnonymous]
+    public ActionResult<List<FollowerDto>> GetFollowingForUser(long personId)
+    {
+        var following = _followerService.GetFollowing(personId);
+        return Ok(following);
+    }
+
     private long GetCurrentUserId()
     {
         var idClaim = User.FindFirst("id")
