@@ -106,7 +106,8 @@ public class ProfileTests : BaseStakeholdersIntegrationTest
     private static ProfileController CreateController(IServiceScope scope, long userId, long personId)
     {
         var controller = new ProfileController(
-            scope.ServiceProvider.GetRequiredService<IPersonService>()
+            scope.ServiceProvider.GetRequiredService<IPersonService>(),
+            scope.ServiceProvider.GetRequiredService<IFollowerService>()
         );
 
         controller.ControllerContext = new ControllerContext
