@@ -1,12 +1,12 @@
 -- ============================================================
--- SQL SKRIPTA ZA TESTIRANJE TOURSTATS FUNKCIONALNOSTI
+-- SQL SKRIPTA ZA TESTIRANJE TOURSTATS I RECOMMENDATIONS FUNKCIONALNOSTI
 -- ============================================================
 -- Autor: autor1234 / autor1234
 -- Skripta kreira:
 -- - 1 Autor korisnika (autor1234)
 -- - 10 Turista korisnika (razlicitih nivoa)
--- - 2 Ture za autor1234
--- - 15 TourExecutions sa raznovrsnim podacima
+-- - 8 Tura za autor1234 (svaka generiše drugačiji tip preporuke)
+-- - 50+ TourExecutions sa raznovrsnim podacima
 -- ============================================================
 
 -- ============================================================
@@ -56,41 +56,7 @@ VALUES
     (78459010, 78459010, 'Dusan', 'Dušanović', 'turista9010@test.com', NULL, 'Nature lover', 'Mountains are calling', 80, 1);
 
 -- ============================================================
--- 2. KREIRANJE TURA (TOURS SCHEMA)
--- ============================================================
-
--- TURA 1: Visok completion rate (80% completed)
--- Naziv: "Beogradska kulturna tura"
-INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
-VALUES (
-    78452001,
-    'Beogradska kulturna tura',
-    'Istraživanje najpoznatijih kulturnih znamenitosti Beograda. Tura obuhvata posetu Kalemegdanu, Skadarliji, Svetom Savi i još mnogo toga. Idealna za upoznavanje sa bogatom istorijom srpske prestonice.',
-    2,  -- Difficulty: 2 (Medium)
-    1,  -- Status: 1 (Published)
-    1500.00,
-    78451234,  -- AuthorId = autor1234
-    8.5,
-    '2024-12-01 10:00:00'
-);
-
--- TURA 2: Nizak completion rate (30% completed, 70% abandoned)
--- Naziv: "Ekstremna planinska avantura"
-INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
-VALUES (
-    78452002,
-    'Ekstremna planinska avantura',
-    'Zahtevna planinska tura preko Kopaonika sa uspinjanjem na vrhove visine preko 2000m. Predviđena je za iskusne planinare sa odličnom fizičkom kondicijom. Tura uključuje noćenje u planini i prelazak težih terena.',
-    3,  -- Difficulty: 3 (Hard)
-    1,  -- Status: 1 (Published)
-    4500.00,
-    78451234,  -- AuthorId = autor1234
-    22.7,
-    '2024-11-15 09:00:00'
-);
-
--- ============================================================
--- 3. KREIRANJE TOURIST PREFERENCES
+-- 2. KREIRANJE TOURIST PREFERENCES
 -- ============================================================
 
 -- Beginner turisti (4x): turista9001, turista9004, turista9006, turista9010
@@ -115,228 +81,324 @@ VALUES
     (784591007, 78459007, 'Professional'),
     (784591009, 78459009, 'Professional');
 
--- DISTRIBUCIJA:
--- - Tura 1 (Beogradska): 4 Beginner, 3 Intermediate, 3 Professional
--- - Tura 2 (Planinska): 4 Beginner (većina odustala), 1 Professional (završio)
--- NAJČEŠĆI TIP:
--- - Tura 1: Beginner (4/10 = 40%)
--- - Tura 2: Beginner (4/5 = 80% - iako su većinom odustali)
+-- ============================================================
+-- 3. KREIRANJE TURA (TOURS SCHEMA)
+-- ============================================================
+-- Svaka tura je dizajnirana da generiše specifičan tip preporuke
+
+-- -------------------------------------------------------------
+-- TURA 1: ODLIČNA TURA (POZITIVNA PREPORUKA - "odličan procenat završenosti")
+-- Scenario: CompletionRate >85%, AvgCompletion >85%
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452001,
+    'Petrovaradinska tvrđava - Zlatna tura',
+    'Savršena tura po Petrovaradinskoj tvrđavi sa visokim procentom završenosti. Idealna za sve nivoe turista.',
+    1,  -- Difficulty: 1 (Easy)
+    1,  -- Status: 1 (Published)
+    1200.00,
+    78451234,
+    3.5,
+    '2024-12-01 10:00:00'
+);
+
+-- -------------------------------------------------------------
+-- TURA 2: KRATKA USPEŠNA TURA (POZITIVNA PREPORUKA - "idealna za turiste sa ograničenim vremenom")
+-- Scenario: Duration <2h, CompletionRate >85%
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452002,
+    'Brza šetnja centrom Novog Sada',
+    'Kratka ali sveobuhvatna tura kroz centar grada. Perfektna za ljude sa ograničenim vremenom.',
+    1,  -- Difficulty: 1 (Easy)
+    1,  -- Status: 1 (Published)
+    800.00,
+    78451234,
+    2.0,
+    '2024-12-05 10:00:00'
+);
+
+-- -------------------------------------------------------------
+-- TURA 3: TURA SA VISOKIM COMPLETION RATE (POZITIVNA PREPORUKA - "možete produžiti turu")
+-- Scenario: CompletionRate >85%, ali ne oba visoka
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452003,
+    'Fruška gora - Manastirska ruta',
+    'Popularna tura po manastirima Fruške gore. Većina turista završi turu.',
+    2,  -- Difficulty: 2 (Medium)
+    1,  -- Status: 1 (Published)
+    2500.00,
+    78451234,
+    12.0,
+    '2024-11-20 10:00:00'
+);
+
+-- -------------------------------------------------------------
+-- TURA 4: LJUDI RADE VEĆINU ALI NE ZAVRŠAVAJU (NEGATIVNA PREPORUKA)
+-- Scenario: AvgCompletion >85%, CompletionRate <30%
+-- Preporuka: "Turisti prolaze većinu ture ali je retko završavaju do kraja"
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452004,
+    'Beogradska kulturna tura - Produžena verzija',
+    'Detaljna tura kroz sve kulturne znamenitosti Beograda. Mnogi turisti završe 90% ali odustanu pred sam kraj.',
+    2,  -- Difficulty: 2 (Medium)
+    1,  -- Status: 1 (Published)
+    1800.00,
+    78451234,
+    9.0,
+    '2024-11-15 10:00:00'
+);
+
+-- -------------------------------------------------------------
+-- TURA 5: OBA NISKA (NEGATIVNA PREPORUKA - "predugačka ili preteška")
+-- Scenario: AvgCompletion <30%, CompletionRate <30%
+-- Preporuka: "Tura je možda predugačka ili preteška"
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452005,
+    'Ekstremna planinska avantura - Kopaonik',
+    'Izuzetno zahtevna planinska tura. Većina turista odustane rano zbog težine.',
+    3,  -- Difficulty: 3 (Hard)
+    1,  -- Status: 1 (Published)
+    5000.00,
+    78451234,
+    25.0,
+    '2024-11-10 10:00:00'
+);
+
+-- -------------------------------------------------------------
+-- TURA 6: MARATONSKA TURA (NEGATIVNA PREPORUKA - "preko 6 sati")
+-- Scenario: AvgDuration > 6h (360 min)
+-- Preporuka: "Razmislite o podeli ture na više kraćih tura"
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452006,
+    'Celodnevna avantura - Tara i Drina',
+    'Maratonska tura koja traje ceo dan. Prekrasni pejzaži ali veoma dugačka.',
+    2,  -- Difficulty: 2 (Medium)
+    1,  -- Status: 1 (Published)
+    4500.00,
+    78451234,
+    30.0,
+    '2024-11-05 10:00:00'
+);
+
+-- -------------------------------------------------------------
+-- TURA 7: POGREŠNA PROCENA VREMENA (NEGATIVNA PREPORUKA)
+-- Scenario: Stvarno trajanje > 150% od predviđenog
+-- Preporuka: "Tura traje značajno duže od predviđenog"
+-- TransportTime: 90 min (Walk), ali stvarno traje ~180 min
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452007,
+    'Gradska tura sa potcenjenim vremenom',
+    'Tura koja redovno traje duže nego što je planirano.',
+    1,  -- Difficulty: 1 (Easy)
+    1,  -- Status: 1 (Published)
+    1000.00,
+    78451234,
+    5.0,
+    '2024-10-25 10:00:00'
+);
+
+-- Dodaj TransportTime za turu 7 (procenjeno 90 min)
+INSERT INTO tours."TourTransportTimes" ("TourId", "Transport", "DurationMinutes")
+VALUES (78452007, 0, 90);  -- Walk = 0, 90 minuta
+
+-- -------------------------------------------------------------
+-- TURA 8: DUGO TRAJANJE + NIZAK PROCENAT (NEGATIVNA PREPORUKA - kombinovana)
+-- Scenario: AvgDuration > 6h AND AvgCompletion < 30%
+-- Preporuka: "Tura je predugačka - turisti provode mnogo vremena ali prolaze mali procenat"
+-- -------------------------------------------------------------
+INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers", "PublishedAt")
+VALUES (
+    78452008,
+    'Ultra maraton - Đerdap',
+    'Ekstremno dugačka i zahtevna tura. Turisti provode satima ali završe malo.',
+    3,  -- Difficulty: 3 (Hard)
+    1,  -- Status: 1 (Published)
+    6000.00,
+    78451234,
+    40.0,
+    '2024-10-15 10:00:00'
+);
 
 -- ============================================================
 -- 4. KREIRANJE TOUR EXECUTIONS
 -- ============================================================
 
 -- -------------------------------------------------------------
--- TURA 1 (78452001): "Beogradska kulturna tura"
--- Completion Rate: 80% (8 Completed, 2 Abandoned, 0 InProgress)
--- Average Completion Percentage: ~75%
+-- TURA 1 (78452001): Petrovaradinska tvrđava - Zlatna tura
+-- POZITIVNA: Oba visoka (>85%)
+-- CompletionRate: 4/4 = 100%, AvgCompletion: ~95%
+-- Duration: ~2h
 -- -------------------------------------------------------------
-
--- Completed executions (8x)
--- Duration ranges: 2h-4h (120-240 min)
 INSERT INTO tours."TourExecutions"(
     "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 1 - Completed, 100% - Duration: 3h 15min
-    (78453001, 78452001, 20.4489, 44.7866, 78459001, 100.0, 1, '2025-01-10 15:30:00', '2025-01-10 12:15:00'),
-
-    -- Turista 2 - Completed, 100% - Duration: 2h 45min
-    (78453002, 78452001, 20.4512, 44.7890, 78459002, 100.0, 1, '2025-01-11 16:45:00', '2025-01-11 14:00:00'),
-
-    -- Turista 3 - Completed, 95% - Duration: 2h 20min
-    (78453003, 78452001, 20.4501, 44.7877, 78459003, 95.0, 1, '2025-01-12 14:20:00', '2025-01-12 12:00:00'),
-
-    -- Turista 4 - Completed, 85% - Duration: 3h 10min
-    (78453004, 78452001, 20.4495, 44.7881, 78459004, 85.0, 1, '2025-01-13 17:10:00', '2025-01-13 14:00:00'),
-
-    -- Turista 5 - Completed, 70% - Duration: 4h 0min
-    (78453005, 78452001, 20.4488, 44.7869, 78459005, 70.0, 1, '2025-01-14 13:50:00', '2025-01-14 09:50:00'),
-
-    -- Turista 6 - Completed, 65% - Duration: 2h 30min
-    (78453006, 78452001, 20.4505, 44.7885, 78459006, 65.0, 1, '2025-01-15 12:30:00', '2025-01-15 10:00:00'),
-
-    -- Turista 7 - Completed, 60% - Duration: 3h 45min
-    (78453007, 78452001, 20.4490, 44.7872, 78459007, 60.0, 1, '2025-01-16 11:15:00', '2025-01-16 07:30:00'),
-
-    -- Turista 8 - Completed, 55% - Duration: 2h 50min
-    (78453008, 78452001, 20.4510, 44.7893, 78459008, 55.0, 1, '2025-01-17 10:00:00', '2025-01-17 07:10:00');
-
--- Abandoned executions (2x)
-INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
-VALUES
-    -- Turista 9 - Abandoned, 35% - Duration: 1h 20min
-    (78453009, 78452001, 20.4497, 44.7874, 78459009, 35.0, 2, '2025-01-18 09:20:00', '2025-01-18 08:00:00'),
-
-    -- Turista 10 - Abandoned, 20% - Duration: 1h 45min
-    (78453010, 78452001, 20.4492, 44.7870, 78459010, 20.0, 2, '2025-01-19 08:45:00', '2025-01-19 07:00:00');
-
--- OČEKIVANE STATISTIKE ZA TURU 1:
--- Completion Rate: 8 / (8 + 2) * 100 = 80%
--- Average Completion Percentage: (100+100+95+85+70+65+60+55+35+20) / 10 = 68.5%
--- Average Duration: (195+165+140+190+240+150+225+170+80+105) / 10 = 166 min = 2h 46min
+    (78453001, 78452001, 19.8617, 45.2519, 78459001, 100.0, 1, '2025-01-10 12:00:00', '2025-01-10 10:00:00'),
+    (78453002, 78452001, 19.8617, 45.2519, 78459002, 95.0, 1, '2025-01-11 12:15:00', '2025-01-11 10:00:00'),
+    (78453003, 78452001, 19.8617, 45.2519, 78459003, 92.0, 1, '2025-01-12 12:10:00', '2025-01-12 10:00:00'),
+    (78453004, 78452001, 19.8617, 45.2519, 78459004, 90.0, 1, '2025-01-13 12:05:00', '2025-01-13 10:00:00');
 
 -- -------------------------------------------------------------
--- TURA 2 (78452002): "Ekstremna planinska avantura"
--- Completion Rate: 20% (1 Completed, 4 Abandoned, 0 InProgress)
--- Average Completion Percentage: ~35%
+-- TURA 2 (78452002): Brza šetnja centrom
+-- POZITIVNA: Kratka (<2h) + visok uspeh (>85%)
+-- CompletionRate: 4/4 = 100%, Duration: ~80 min
 -- -------------------------------------------------------------
-
--- Completed execution (1x)
--- Professional turista - Duration: 8h 30min (dugačka planinska tura)
 INSERT INTO tours."TourExecutions"(
     "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 3 (Professional) - Completed, 100% - Duration: 8h 30min
-    (78453011, 78452002, 20.8167, 43.2975, 78459003, 100.0, 1, '2025-01-08 18:30:00', '2025-01-08 10:00:00');
+    (78453010, 78452002, 19.8425, 45.2551, 78459001, 100.0, 1, '2025-01-14 11:20:00', '2025-01-14 10:00:00'),
+    (78453011, 78452002, 19.8425, 45.2551, 78459002, 100.0, 1, '2025-01-15 11:25:00', '2025-01-15 10:00:00'),
+    (78453012, 78452002, 19.8425, 45.2551, 78459003, 100.0, 1, '2025-01-16 11:30:00', '2025-01-16 10:00:00'),
+    (78453013, 78452002, 19.8425, 45.2551, 78459004, 100.0, 1, '2025-01-17 11:15:00', '2025-01-17 10:00:00');
 
--- Abandoned executions (4x)
--- Beginners odustali nakon kraćeg vremena (1h-3h)
+-- -------------------------------------------------------------
+-- TURA 3 (78452003): Fruška gora - Manastirska ruta
+-- POZITIVNA: Visok completion rate (>85%)
+-- CompletionRate: 5/5 = 100%, AvgCompletion: ~75%
+-- -------------------------------------------------------------
 INSERT INTO tours."TourExecutions"(
     "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
 VALUES
-    -- Turista 1 (Beginner) - Abandoned, 15% (teška tura za početnike) - Duration: 1h 30min
-    (78453012, 78452002, 20.8145, 43.2960, 78459001, 15.0, 2, '2024-12-20 11:30:00', '2024-12-20 10:00:00'),
+    (78453020, 78452003, 19.7500, 45.1500, 78459001, 100.0, 1, '2025-01-05 15:00:00', '2025-01-05 10:00:00'),
+    (78453021, 78452003, 19.7500, 45.1500, 78459002, 80.0, 1, '2025-01-06 15:30:00', '2025-01-06 10:00:00'),
+    (78453022, 78452003, 19.7500, 45.1500, 78459003, 70.0, 1, '2025-01-07 14:45:00', '2025-01-07 10:00:00'),
+    (78453023, 78452003, 19.7500, 45.1500, 78459004, 65.0, 1, '2025-01-08 15:15:00', '2025-01-08 10:00:00'),
+    (78453024, 78452003, 19.7500, 45.1500, 78459005, 60.0, 1, '2025-01-09 14:30:00', '2025-01-09 10:00:00');
 
-    -- Turista 4 (Beginner) - Abandoned, 25% - Duration: 2h 10min
-    (78453013, 78452002, 20.8152, 43.2968, 78459004, 25.0, 2, '2024-12-25 14:10:00', '2024-12-25 12:00:00'),
+-- -------------------------------------------------------------
+-- TURA 4 (78452004): Beogradska kulturna - Produžena
+-- NEGATIVNA: Visok avg% (>85%) + nizak rate (<30%)
+-- AvgCompletion: ~90%, CompletionRate: 1/5 = 20%
+-- -------------------------------------------------------------
+INSERT INTO tours."TourExecutions"(
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
+VALUES
+    (78453030, 78452004, 20.4489, 44.7866, 78459001, 92.0, 2, '2025-01-10 16:00:00', '2025-01-10 10:00:00'),
+    (78453031, 78452004, 20.4489, 44.7866, 78459002, 88.0, 2, '2025-01-11 16:30:00', '2025-01-11 10:00:00'),
+    (78453032, 78452004, 20.4489, 44.7866, 78459003, 95.0, 2, '2025-01-12 15:45:00', '2025-01-12 10:00:00'),
+    (78453033, 78452004, 20.4489, 44.7866, 78459004, 85.0, 2, '2025-01-13 16:15:00', '2025-01-13 10:00:00'),
+    (78453034, 78452004, 20.4489, 44.7866, 78459005, 100.0, 1, '2025-01-14 17:00:00', '2025-01-14 10:00:00');
 
-    -- Turista 6 (Beginner) - Abandoned, 30% - Duration: 2h 45min
-    (78453014, 78452002, 20.8160, 43.2972, 78459006, 30.0, 2, '2025-01-02 10:45:00', '2025-01-02 08:00:00'),
+-- -------------------------------------------------------------
+-- TURA 5 (78452005): Ekstremna planinska - Kopaonik
+-- NEGATIVNA: Oba niska (<30%)
+-- AvgCompletion: ~22%, CompletionRate: 0/4 = 0%
+-- -------------------------------------------------------------
+INSERT INTO tours."TourExecutions"(
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
+VALUES
+    (78453040, 78452005, 20.8167, 43.2975, 78459001, 15.0, 2, '2024-12-20 12:00:00', '2024-12-20 10:00:00'),
+    (78453041, 78452005, 20.8167, 43.2975, 78459004, 25.0, 2, '2024-12-22 13:00:00', '2024-12-22 10:00:00'),
+    (78453042, 78452005, 20.8167, 43.2975, 78459006, 20.0, 2, '2024-12-25 12:30:00', '2024-12-25 10:00:00'),
+    (78453043, 78452005, 20.8167, 43.2975, 78459010, 28.0, 2, '2024-12-28 14:00:00', '2024-12-28 10:00:00');
 
-    -- Turista 10 (Beginner) - Abandoned, 50% - Duration: 4h 20min
-    (78453015, 78452002, 20.8165, 43.2973, 78459010, 50.0, 2, '2025-01-05 16:20:00', '2025-01-05 12:00:00');
+-- -------------------------------------------------------------
+-- TURA 6 (78452006): Celodnevna avantura - Tara
+-- NEGATIVNA: Trajanje > 6h
+-- AvgDuration: ~7.5h (450 min), CompletionRate: 100%
+-- -------------------------------------------------------------
+INSERT INTO tours."TourExecutions"(
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
+VALUES
+    (78453050, 78452006, 19.5564, 43.8914, 78459003, 100.0, 1, '2025-01-02 17:30:00', '2025-01-02 10:00:00'),
+    (78453051, 78452006, 19.5564, 43.8914, 78459007, 100.0, 1, '2025-01-03 17:45:00', '2025-01-03 10:00:00'),
+    (78453052, 78452006, 19.5564, 43.8914, 78459009, 100.0, 1, '2025-01-04 17:15:00', '2025-01-04 10:00:00'),
+    (78453053, 78452006, 19.5564, 43.8914, 78459002, 100.0, 1, '2025-01-05 18:00:00', '2025-01-05 10:00:00');
 
--- OČEKIVANE STATISTIKE ZA TURU 2:
--- Completion Rate: 1 / (1 + 4) * 100 = 20%
--- Average Completion Percentage: (100 + 15 + 25 + 30 + 50) / 5 = 44%
--- Average Duration: (510+90+130+165+260) / 5 = 231 min = 3h 51min
+-- -------------------------------------------------------------
+-- TURA 7 (78452007): Gradska tura sa potcenjenim vremenom
+-- NEGATIVNA: Traje duže od predviđenog (>150%)
+-- Predviđeno: 90 min, Stvarno: ~180 min
+-- -------------------------------------------------------------
+INSERT INTO tours."TourExecutions"(
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
+VALUES
+    (78453060, 78452007, 19.8425, 45.2551, 78459001, 100.0, 1, '2025-01-15 13:00:00', '2025-01-15 10:00:00'),
+    (78453061, 78452007, 19.8425, 45.2551, 78459002, 100.0, 1, '2025-01-16 13:10:00', '2025-01-16 10:00:00'),
+    (78453062, 78452007, 19.8425, 45.2551, 78459004, 100.0, 1, '2025-01-17 12:50:00', '2025-01-17 10:00:00'),
+    (78453063, 78452007, 19.8425, 45.2551, 78459005, 100.0, 1, '2025-01-18 13:05:00', '2025-01-18 10:00:00');
+
+-- -------------------------------------------------------------
+-- TURA 8 (78452008): Ultra maraton - Đerdap
+-- NEGATIVNA: Dugo trajanje (>6h) + nizak procenat (<30%)
+-- AvgDuration: ~8h, AvgCompletion: ~25%
+-- -------------------------------------------------------------
+INSERT INTO tours."TourExecutions"(
+    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
+VALUES
+    (78453070, 78452008, 22.0431, 44.6285, 78459001, 20.0, 2, '2024-12-10 18:00:00', '2024-12-10 10:00:00'),
+    (78453071, 78452008, 22.0431, 44.6285, 78459004, 25.0, 2, '2024-12-12 18:30:00', '2024-12-12 10:00:00'),
+    (78453072, 78452008, 22.0431, 44.6285, 78459006, 22.0, 2, '2024-12-15 17:45:00', '2024-12-15 10:00:00'),
+    (78453073, 78452008, 22.0431, 44.6285, 78459010, 30.0, 2, '2024-12-18 18:15:00', '2024-12-18 10:00:00');
 
 -- ============================================================
--- 5. DODAVANJE IN-PROGRESS EXECUTIONS (NE UTIČU NA STATISTIKU)
+-- 5. KREIRANJE TOUR RATINGS (RECENZIJE)
 -- ============================================================
 
--- Ovi TourExecutions su trenutno aktivni i NE ULAZE u statistiku
--- jer se racunaju samo Completed i Abandoned
-
-INSERT INTO tours."TourExecutions"(
-    "Id", "IdTour", "Longitude", "Latitude", "IdTourist", "CompletionPercentage", "Status", "LastActivity", "CreatedAt")
+-- Recenzije za Turu 1 (Petrovaradinska)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
 VALUES
-    -- Turista 2 na Turi 2 - In Progress, 40% - Duration: 3h 0min (trenutno)
-    (78453016, 78452002, 20.8155, 43.2970, 78459002, 40.0, 0, '2025-01-20 12:00:00', '2025-01-20 09:00:00'),
+    (78454001, 78452001, 78459001, 5, 'Savršena tura! Preporučujem svima.', '2025-01-10 13:00:00', 100.0),
+    (78454002, 78452001, 78459002, 5, 'Odlična organizacija i prekrasni pejzaži.', '2025-01-11 13:00:00', 95.0);
 
-    -- Turista 5 na Turi 2 - In Progress, 65% - Duration: 5h 30min (trenutno)
-    (78453017, 78452002, 20.8163, 43.2974, 78459005, 65.0, 0, '2025-01-20 14:30:00', '2025-01-20 09:00:00');
+-- Recenzije za Turu 5 (Ekstremna planinska)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454005, 78452005, 78459001, 2, 'Previše teška za početnike. Morao sam da odustanem.', '2024-12-20 13:00:00', 15.0),
+    (78454006, 78452005, 78459004, 2, 'Nije za moj nivo. Preporučujem samo profesionalcima.', '2024-12-22 14:00:00', 25.0);
 
--- ============================================================
--- 6. KREIRANJE TOUR RATINGS (RECENZIJE)
--- ============================================================
-
--- -------------------------------------------------------------
--- TURA 1 (78452001): "Beogradska kulturna tura" - 2 Recenzije
--- -------------------------------------------------------------
-
--- Recenzija 1: Odlična tura, 5 zvezda
-INSERT INTO tours."TourRatings"(
-    "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
-VALUES (
-    78454001,
-    78452001,
-    78459002,  -- Turista 2 (Intermediate level)
-    5,
-    'Fantastična tura! Posetili smo sve najvažnije kulturne znamenitosti Beograda. Vodič je bio izuzetno informativan i zabavan. Preporučujem svima koji žele da upoznaju bogatu istoriju srpske prestonice. Kalemegdan i Skadarlija su bili vrhunac iskustva!',
-    '2025-01-11 18:00:00',
-    100.0  -- Završio je 100% ture
-);
-
--- Recenzija 2: Dobra tura sa malim nedostacima, 4 zvezde
-INSERT INTO tours."TourRatings"(
-    "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
-VALUES (
-    78454002,
-    78452001,
-    78459005,  -- Turista 5 (Intermediate level)
-    4,
-    'Vrlo lepa tura sa dobro organizovanim rutama. Jedini minus je što je bilo dosta hodanja, pa preporučujem udobnu obuću. Ukupno sam presao 70% ture zbog vremenskih uslova, ali ono što sam video je bilo vredno!',
-    '2025-01-14 20:30:00',
-    70.0  -- Završio je 70% ture
-);
-
--- -------------------------------------------------------------
--- TURA 2 (78452002): "Ekstremna planinska avantura" - 3 Recenzije
--- -------------------------------------------------------------
-
--- Recenzija 1: Odlična za profesionalce, 5 zvezda
-INSERT INTO tours."TourRatings"(
-    "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
-VALUES (
-    78454003,
-    78452002,
-    78459003,  -- Turista 3 (Professional level - jedini koji je završio)
-    5,
-    'Izuzetna avantura za iskusne planinare! Pejzaži su bili spektakularni, a uspinjanje na vrhove preko 2000m visine je bilo pravi izazov. Odlična organizacija i oprema. Preporučujem samo za ljude u odličnoj fizičkoj kondiciji. Noćenje pod zvezdama je bilo nezaboravno iskustvo!',
-    '2025-01-09 09:00:00',
-    100.0  -- Završio je 100% ture kao profesionalac
-);
-
--- Recenzija 2: Teško za početnike, 2 zvezde
-INSERT INTO tours."TourRatings"(
-    "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
-VALUES (
-    78454004,
-    78452002,
-    78459001,  -- Turista 1 (Beginner level - odustao)
-    2,
-    'Tura je bila previše zahtevna za moj nivo. Morao sam da odustanem nakon samo 15% jer nisam bio fizički spreman za ovakvo naporno uspinjanje. Organizacija je bila dobra, ali definitivno treba bolje naglasiti da ova tura nije za početnike.',
-    '2024-12-20 15:00:00',
-    15.0  -- Odustao vrlo rano
-);
-
--- Recenzija 3: Srednja ocena zbog fizičke težine, 3 zvezde
-INSERT INTO tours."TourRatings"(
-    "Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
-VALUES (
-    78454005,
-    78452002,
-    78459010,  -- Turista 10 (Beginner level - odustao)
-    3,
-    'Pokušao sam da završim turu ali je bila previše naporna. Stigao sam do 50% i morao da odustanem. Pejzaži su prelepi i vodič je bio profesionalan, ali tura zaista zahteva odličnu kondiciju. Možda bih je pokušao ponovo nakon bolje pripreme.',
-    '2025-01-05 19:30:00',
-    50.0  -- Stigao do polovine
-);
+-- Recenzije za Turu 6 (Maratonska)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454007, 78452006, 78459003, 4, 'Prekrasna tura ali veoma dugačka. Treba ceo dan.', '2025-01-02 18:30:00', 100.0);
 
 -- ============================================================
 -- FINALNI REZIME TEST PODATAKA
 -- ============================================================
 --
--- KORISNICI:
--- - 1 Autor: autor1234 (ID: 78451234, Pass: autor1234)
--- - 10 Turista: turista9001-turista9010 (IDs: 78459001-78459010)
+-- LOGIN: autor1234 / autor1234
+-- ENDPOINT: GET /api/author/recommendations
 --
--- TURE:
--- - Tura 1 (ID: 78452001): "Beogradska kulturna tura" - Medium difficulty
---   * 8 Completed (100%, 100%, 95%, 85%, 70%, 65%, 60%, 55%)
---   * 2 Abandoned (35%, 20%)
---   * 2 Recenzije (5★ i 4★)
---   * Completion Rate: 80%
---   * Avg Completion: 68.5%
+-- OČEKIVANE PREPORUKE:
 --
--- - Tura 2 (ID: 78452002): "Ekstremna planinska avantura" - Hard difficulty
---   * 1 Completed (100%)
---   * 4 Abandoned (15%, 25%, 30%, 50%)
---   * 2 In Progress (40%, 65%) - NE UTIČU NA STATISTIKU
---   * 3 Recenzije (5★, 2★, 3★)
---   * Completion Rate: 20%
---   * Avg Completion: 44%
+-- TURA 1 (78452001) - Petrovaradinska tvrđava:
+--   ✅ POZITIVNA: "Ova tura ima odličan procenat završenosti!"
+--   ✅ POZITIVNA: "Veliki procenat turista završava ovu turu"
 --
--- RECENZIJE:
--- - Tura 1: 2 recenzije (prosek: 4.5★)
--- - Tura 2: 3 recenzije (prosek: 3.33★)
+-- TURA 2 (78452002) - Brza šetnja:
+--   ✅ POZITIVNA: "Tura se brzo završava sa visokim procentom uspešnosti"
+--   ✅ POZITIVNA: "Veliki procenat turista završava ovu turu"
 --
--- TESTIRANJE:
--- 1. Login: autor1234 / autor1234
--- 2. GET /api/author/tour/78452001/stats
---    Očekuje: CompletionRate=80%, AvgCompletion=68.5%, AvgDuration=2h 46min
--- 3. GET /api/author/tour/78452002/stats
---    Očekuje: CompletionRate=20%, AvgCompletion=44%, AvgDuration=3h 51min
+-- TURA 3 (78452003) - Fruška gora:
+--   ✅ POZITIVNA: "Veliki procenat turista završava ovu turu"
+--
+-- TURA 4 (78452004) - Beogradska produžena:
+--   ❌ NEGATIVNA: "Turisti prolaze većinu ture ali je retko završavaju do kraja"
+--
+-- TURA 5 (78452005) - Ekstremna planinska:
+--   ❌ NEGATIVNA: "Tura je možda predugačka ili preteška"
+--
+-- TURA 6 (78452006) - Celodnevna Tara:
+--   ❌ NEGATIVNA: "Prosečno vreme izvršavanja ture je preko 6 sati"
+--
+-- TURA 7 (78452007) - Potcenjeno vreme:
+--   ❌ NEGATIVNA: "Tura traje značajno duže od predviđenog vremena"
+--
+-- TURA 8 (78452008) - Ultra maraton:
+--   ❌ NEGATIVNA: "Prosečno vreme izvršavanja ture je preko 6 sati"
+--   ❌ NEGATIVNA: "Tura je predugačka - turisti provode mnogo vremena ali prolaze mali procenat"
+--   ❌ NEGATIVNA: "Tura je možda predugačka ili preteška"
+--
 -- ============================================================
