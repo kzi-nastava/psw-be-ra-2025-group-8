@@ -81,9 +81,16 @@ public class TourStatsService : ITourStatsService
         }
 
         // AVERAGE DURATION CALCULATION
+        // Filter out executions shorter than 1 minute or longer than 12 hours (720 minutes)
+        const double MinDurationMinutes = 1;
+        const double MaxDurationMinutes = 12 * 60; // 12 hours
 
         var executionsWithDuration = allExecutions
-            .Where(te => te.LastActivity.Subtract(te.CreatedAt).TotalMinutes > 1)
+            .Where(te =>
+            {
+                var durationMinutes = te.LastActivity.Subtract(te.CreatedAt).TotalMinutes;
+                return durationMinutes > MinDurationMinutes && durationMinutes <= MaxDurationMinutes;
+            })
             .ToList();
 
         var averageDurationMinutes = executionsWithDuration.Any()
