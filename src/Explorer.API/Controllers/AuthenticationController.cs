@@ -1,8 +1,6 @@
 ﻿using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
-using Explorer.Tours.API.Dtos;
-using Explorer.Tours.API.Internal;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers;
@@ -12,12 +10,10 @@ namespace Explorer.API.Controllers;
 public class AuthenticationController : ControllerBase
 {
     private readonly IAuthenticationService _authenticationService;
-    private readonly IInternalPositionService? _positionService;
 
-    public AuthenticationController(IAuthenticationService authenticationService, IInternalPositionService? positionService = null)
+    public AuthenticationController(IAuthenticationService authenticationService)
     {
         _authenticationService = authenticationService;
-        _positionService = positionService;
     }
 
     [HttpPost]
@@ -26,29 +22,6 @@ public class AuthenticationController : ControllerBase
         try
         {
             var authTokens = _authenticationService.RegisterTourist(account);
-            
-            // Kreiraj poziciju za turista nakon uspešne registracije
-            if (_positionService != null && !string.IsNullOrWhiteSpace(account.LocationSource))
-            {
-                try
-                {
-                    var positionDto = new PositionDto
-                    {
-                        TouristId = (int)authTokens.Id,
-                        Latitude = 0, // Frontend će poslati stvarne koordinate
-                        Longitude = 0,
-                        LocationSource = account.LocationSource
-                    };
-                    
-                    _positionService.CreatePosition(positionDto);
-                }
-                catch (Exception ex)
-                {
-                    // Log ali ne zaustavljaj registraciju
-                    Console.WriteLine($"Failed to create position for tourist {authTokens.Id}: {ex.Message}");
-                }
-            }
-            
             return Ok(authTokens);
         }
         catch (EntityValidationException ex)
@@ -71,7 +44,6 @@ public class AuthenticationController : ControllerBase
         }
     }
 
-    // ✅ NOVI ENDPOINT - Vrati sve korisnike
     [HttpGet]
     public ActionResult<IEnumerable<AccountOverviewDto>> GetAllAccounts()
     {
