@@ -12,10 +12,12 @@ namespace Explorer.API.Controllers.Tourist.Profile;
 public class ProfileController : ControllerBase
 {
     private readonly IPersonService _personService;
+    private readonly IFollowerService _followerService;
 
-    public ProfileController(IPersonService personService)
+    public ProfileController(IPersonService personService, IFollowerService followerService)
     {
         _personService = personService;
+        _followerService = followerService;
     }
 
     private bool TryGetUserId(out long userId)
@@ -42,6 +44,34 @@ public class ProfileController : ControllerBase
 
         var profile = _personService.GetByUserId(userId);
         return Ok(profile);
+    }
+
+    [HttpGet("{personId:long}")]
+    [AllowAnonymous]
+    public ActionResult<PersonDto> GetProfileByPersonId(long personId)
+    {
+        var profile = _personService.GetByPersonId(personId);
+        if (profile == null) return NotFound();
+        return Ok(profile);
+    }
+
+    [HttpGet("{personId:long}/full")]
+    [AllowAnonymous]
+    public ActionResult<UserProfileFullDto> GetFullProfile(long personId)
+    {
+        var profile = _personService.GetByPersonId(personId);
+        if (profile == null) return NotFound();
+
+        var followers = _followerService.GetFollowers(personId);
+        var following = _followerService.GetFollowing(personId);
+
+        var result = new UserProfileFullDto
+        {
+            Profile = profile,
+            Followers = followers,
+            Following = following
+        };
+        return Ok(result);
     }
 
     [HttpPut]
