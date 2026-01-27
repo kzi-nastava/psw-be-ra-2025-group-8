@@ -19,10 +19,10 @@ public class WalletController : ControllerBase
     }
 
     /// <summary>
-    /// Turista može da vidi stanje svog nov?anika (authenticated)
+    /// Turista može da vidi stanje svog nov?anika (authenticated) // sad moze i autor
     /// </summary>
     [HttpGet("balance")]
-    [Authorize(Policy = "touristPolicy")]
+    [Authorize(Policy = "touristAuthorPolicy")]
     [ProducesResponseType(typeof(WalletDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<WalletDto> GetMyBalance()

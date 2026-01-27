@@ -18,7 +18,7 @@ public interface ITourExecutionService
     KeyPointSecretDto GetKeyPointSecret(long tourExecutionId, int keyPointOrder);
     AvailableEncountersAtKeyPointDto CheckEncountersAtKeyPoint(CheckEncountersAtKeyPointRequestDto request);
 
-    WeatherCurrentDto GetCurrentWeather(long tourExecutionId);
+    WeatherCurrentDto GetCurrentWeather(long tourExecutionId, double? latitude = null, double? longitude = null);
     WeatherHourlyForecastDto GetNextKeyPointHourlyForecast(long tourExecutionId, int hours = 6);
 
 }
