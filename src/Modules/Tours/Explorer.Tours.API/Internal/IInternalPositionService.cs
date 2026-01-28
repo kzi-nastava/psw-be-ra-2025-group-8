@@ -10,6 +10,7 @@ namespace Explorer.Tours.API.Internal
 {
     public interface IInternalPositionService
     {
-        public PositionDto GetByTouristId(int touristId);
+        PositionDto GetByTouristId(int touristId);
+        PositionDto CreatePosition(PositionDto position);
     }
 }

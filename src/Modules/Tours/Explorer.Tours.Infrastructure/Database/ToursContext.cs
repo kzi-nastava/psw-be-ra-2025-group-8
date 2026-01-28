@@ -357,6 +357,32 @@ public class ToursContext : DbContext
             builder.HasIndex(a => new { a.TourId, a.EndsAtUtc });
         });
 
+        // POSITION CONFIGURATION
+        modelBuilder.Entity<Position>(builder =>
+        {
+            builder.HasKey(p => p.Id);
+
+            builder.Property(p => p.Latitude)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(p => p.Longitude)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(p => p.TouristId)
+                .IsRequired();
+
+            builder.Property(p => p.UpdatedAt)
+                .IsRequired();
+
+            builder.Property(p => p.LocationSource)
+                .HasConversion<string>()
+                .IsRequired();
+
+            builder.HasIndex(p => p.TouristId);
+        });
+
     }
 
 }

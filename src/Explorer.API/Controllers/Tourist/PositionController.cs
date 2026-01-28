@@ -18,19 +18,44 @@ namespace Explorer.API.Controllers.Tourist
         [HttpGet("{touristId}")]
         public ActionResult<PositionDto> Get(int touristId)
         {
-            return Ok(_service.GetByTouristId(touristId));
+            var position = _service.GetByTouristId(touristId);
+            if (position == null)
+            {
+                return NotFound($"Position for tourist {touristId} not found.");
+            }
+            return Ok(position);
         }
 
         [HttpPost]
         public ActionResult<PositionDto> Create(PositionDto position)
         {
-            return Ok(_service.CreatePosition(position));
+            try
+            {
+                var created = _service.CreatePosition(position);
+                return Ok(created);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut]
         public ActionResult<PositionDto> Update(PositionDto position)
         {
-            return Ok(_service.UpdatePosition(position));
+            try
+            {
+                var updated = _service.UpdatePosition(position);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 
