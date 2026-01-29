@@ -84,6 +84,10 @@ namespace Explorer.Encounters.Core.UseCases
             var participation = _participation_repository_get_by_person_and_encounter(completeDto.PersonId, completeDto.EncounterId);
             var encounter = _encounter_repository_get(participation.EncounterId);
 
+            // Check if this person's participation is already completed
+            if (participation.Status == ParticipationStatus.Completed)
+                throw new InvalidOperationException("You have already completed this encounter.");
+
             if (!encounter.Latitude.HasValue || !encounter.Longitude.HasValue)
                 throw new InvalidOperationException("Encounter does not have valid coordinates.");
 
@@ -99,6 +103,7 @@ namespace Explorer.Encounters.Core.UseCases
                 throw new InvalidOperationException($"You must be within {ActivationRangeMeters}m of the encounter to complete it. Current distance: {distance:F0}m");
             }
 
+            // Complete this person's participation
             participation.Complete(encounter.XPReward);
             var updated = _participationRepository.Update(participation);
 
@@ -110,6 +115,34 @@ namespace Explorer.Encounters.Core.UseCases
             catch (Exception ex)
             {
                 Console.WriteLine($"[XP] failed to award XP to user {participation.PersonId}: {ex.Message}");
+            }
+
+            // Complete ALL other ACTIVE participations for this encounter and award XP to everyone
+            var allActiveParticipations = _participationRepository.GetByEncounterId(encounter.Id)
+                .Where(p => p.Status == ParticipationStatus.Active && p.PersonId != completeDto.PersonId)
+                .ToList();
+
+            foreach (var otherParticipation in allActiveParticipations)
+            {
+                try
+                {
+                    otherParticipation.Complete(encounter.XPReward);
+                    _participationRepository.Update(otherParticipation);
+
+                    // Award XP to other participants
+                    try
+                    {
+                        _personService.AddExperience(otherParticipation.PersonId, encounter.XPReward);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[XP] failed to award XP to user {otherParticipation.PersonId}: {ex.Message}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Complete] failed to complete participation for person {otherParticipation.PersonId}: {ex.Message}");
+                }
             }
 
             return MapToDto(updated);

@@ -43,7 +43,7 @@ namespace Explorer.Encounters.Core.Domain
         public void Complete(int xpReward)
         {
             if (Status == ParticipationStatus.Completed)
-                throw new InvalidOperationException("Encounter is already completed.");
+                return; // Already completed, no-op
 
             Status = ParticipationStatus.Completed;
             CompletedAt = DateTime.UtcNow;
