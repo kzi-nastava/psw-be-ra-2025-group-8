@@ -359,6 +359,10 @@ public class ToursContext : DbContext
                 .HasColumnType("double precision")
                 .IsRequired();
 
+            builder.Property(ts => ts.AverageDuration)
+                .HasColumnType("interval")
+                .IsRequired();
+
             builder.Property(ts => ts.LastUpdated)
                 .IsRequired();
 

@@ -9,6 +9,8 @@ public class TourStats : Entity
     // Completion Statistics
     public double CompletionRate { get; private set; } // Completed / (Completed + Abandoned) in percentage
     public double AverageCompletionPercentage { get; private set; } // Average of CompletionPercentage from TourExecutions
+    public DifficultyLevel mostCommonDiffcultyLevel { get; private set; } //Beginner, Intermediate, Professional
+    public TimeSpan AverageDuration { get; private set; }
 
     // Metadata
     public DateTime LastUpdated { get; private set; }
@@ -18,20 +20,24 @@ public class TourStats : Entity
 
     public TourStats() { }
 
-    public TourStats(long tourId, double completionRate, double averageCompletionPercentage)
+    public TourStats(long tourId, double completionRate, double averageCompletionPercentage, DifficultyLevel mostCommonDifficultyLevel, TimeSpan averageDuration = default)
     {
         TourId = tourId;
         CompletionRate = completionRate;
         AverageCompletionPercentage = averageCompletionPercentage;
+        mostCommonDiffcultyLevel = mostCommonDifficultyLevel;
+        AverageDuration = averageDuration;
         LastUpdated = DateTime.UtcNow;
 
         Validate();
     }
 
-    public void Update(double completionRate, double averageCompletionPercentage)
+    public void Update(double completionRate, double averageCompletionPercentage, DifficultyLevel mostCommonDifficultyLevel, TimeSpan averageDuration = default)
     {
         CompletionRate = completionRate;
         AverageCompletionPercentage = averageCompletionPercentage;
+        mostCommonDiffcultyLevel = mostCommonDifficultyLevel;
+        AverageDuration = averageDuration;
         LastUpdated = DateTime.UtcNow;
 
         Validate();

@@ -10,6 +10,7 @@ public class TourExecution : Entity
     public double CompletionPercentage { get; set; }
     public int IdTourist { get; set; }
     public TourExecutionStatus Status { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastActivity { get; set; }
 
     public TourExecution(int idTour, double longitude, double latitude, int idTourist, TourExecutionStatus status, double completionPercentage = 0.0)
