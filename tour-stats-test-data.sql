@@ -365,6 +365,192 @@ VALUES
     (78454007, 78452006, 78459003, 4, 'Prekrasna tura ali veoma dugačka. Treba ceo dan.', '2025-01-02 18:30:00', 100.0);
 
 -- ============================================================
+-- KREIRANJE KUPONA I POPUSTA (PAYMENTS SCHEMA)
+-- ============================================================
+
+-- Jedan globalni kupon (važi za sve ture autora)
+INSERT INTO payments."Coupons"("Id", "Code", "DiscountPercentage", "ExpiryDate", "AuthorId", "TourId")
+VALUES (-10, 'SAVE2025', 20, '2025-12-31', 78451234, NULL);
+
+-- Jedan specifičan kupon za Turu 1
+INSERT INTO payments."Coupons"("Id", "Code", "DiscountPercentage", "ExpiryDate", "AuthorId", "TourId")
+VALUES (-11, 'BEOGRAD5', 15, '2025-06-01', 78451234, 78452001);
+
+-- Kreiranje Sale-a (Popust na turu)
+INSERT INTO payments."Sales"("Id", "AuthorId", "StartDate", "EndDate", "DiscountPercentage")
+VALUES (-50, 78451234, '2025-01-01', '2025-01-14', 30);
+
+INSERT INTO payments."SaleTours"("Id", "SaleId", "TourId")
+VALUES (-1, -50, 78452001);
+
+-- Prolećna akcija (April) - SaleId: -51
+INSERT INTO payments."Sales"("Id", "AuthorId", "StartDate", "EndDate", "DiscountPercentage")
+VALUES (-51, 78451234, '2025-04-01', '2025-04-15', 25);
+
+INSERT INTO payments."SaleTours"("Id", "SaleId", "TourId")
+VALUES (-2, -51, 78452001), (-3, -51, 78452002);
+
+-- Letnji kupon (Jul/Avgust) - CouponId: -12
+INSERT INTO payments."Coupons"("Id", "Code", "DiscountPercentage", "ExpiryDate", "AuthorId", "TourId")
+VALUES (-12, 'SUMMER25', 10, '2025-08-31', 78451234, NULL);
+
+-- ============================================================
+-- PRODAJE (PurchasedItems) ZA GRAFIKON
+-- ============================================================
+
+-- Prodaja decembar: Puna cena (1500)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES (-101, 78459001, 78452001, '2024-12-10 14:00:00', 1500.00, 1500.00, 1500, NULL, NULL);
+
+-- Prodaja decembar: Sa kuponom (-11, popust 15% -> 1275)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES (-102, 78459002, 78452001, '2024-12-20 10:00:00', 1500.00, 1275.00, 1275, NULL, -11);
+
+-- Prodaja januar: Period Sale-a (-50, popust 30% -> 1050)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES (-103, 78459003, 78452001, '2025-01-05 09:00:00', 1500.00, 1050.00, 1050, -50, NULL);
+
+-- Prodaja januar: Puna cena (da vidimo skok nakon završetka sale-a)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES (-104, 78459004, 78452001, '2025-01-20 18:30:00', 1500.00, 1500.00, 1500, NULL, NULL);
+
+-- -------------------------------------------------------------
+-- OKTOBAR 2024: (Puna cena i Kuponi)
+-- -------------------------------------------------------------
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-201, 78459005, 78452001, '2024-10-05 10:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-202, 78459006, 78452001, '2024-10-12 11:30:00', 1500.00, 1275.00, 1275, NULL, -11), -- Kupon 15%
+(-203, 78459007, 78452002, '2024-10-20 09:15:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-204, 78459008, 78452001, '2024-10-28 16:45:00', 1500.00, 1200.00, 1200, NULL, -10); -- Globalni Kupon 20%
+
+-- -------------------------------------------------------------
+-- NOVEMBAR 2024: (Fokus na skuplju Turu 2)
+-- -------------------------------------------------------------
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-205, 78459001, 78452002, '2024-11-02 14:00:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-206, 78459002, 78452002, '2024-11-10 12:00:00', 4500.00, 3600.00, 3600, NULL, -10), -- Globalni Kupon 20%
+(-207, 78459003, 78452001, '2024-11-15 13:20:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-208, 78459004, 78452001, '2024-11-22 17:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-209, 78459009, 78452002, '2024-11-28 10:00:00', 4500.00, 4500.00, 4500, NULL, NULL);
+
+-- -------------------------------------------------------------
+-- DECEMBAR 2024: (Praznična kupovina)
+-- -------------------------------------------------------------
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-210, 78459001, 78452001, '2024-12-05 18:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-211, 78459002, 78452001, '2024-12-12 15:30:00', 1500.00, 1275.00, 1275, NULL, -11),
+(-212, 78459005, 78452002, '2024-12-18 20:00:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-213, 78459006, 78452002, '2024-12-22 08:45:00', 4500.00, 3600.00, 3600, NULL, -10),
+(-214, 78459007, 78452001, '2024-12-28 14:20:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-215, 78459008, 78452002, '2024-12-30 22:10:00', 4500.00, 4500.00, 4500, NULL, NULL);
+
+-- -------------------------------------------------------------
+-- JANUAR 2025: (Januarski popust - SaleId: -50)
+-- -------------------------------------------------------------
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-216, 78459001, 78452001, '2025-01-02 09:00:00', 1500.00, 1050.00, 1050, -50, NULL), -- Akcija 30%
+(-217, 78459002, 78452001, '2025-01-04 11:00:00', 1500.00, 1050.00, 1050, -50, NULL), -- Akcija 30%
+(-218, 78459003, 78452001, '2025-01-08 15:45:00', 1500.00, 1050.00, 1050, -50, NULL), -- Akcija 30%
+(-219, 78459010, 78452001, '2025-01-12 13:00:00', 1500.00, 1050.00, 1050, -50, NULL), -- Akcija 30%
+(-220, 78459005, 78452001, '2025-01-22 16:30:00', 1500.00, 1500.00, 1500, NULL, NULL), -- Kraj akcije
+(-221, 78459006, 78452002, '2025-01-25 19:15:00', 4500.00, 4500.00, 4500, NULL, NULL);
+
+-- FEBRUAR & MART 2025: Standardna prodaja (Zatišje)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-301, 78459001, 78452001, '2025-02-10 10:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-302, 78459002, 78452002, '2025-02-22 14:30:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-303, 78459003, 78452001, '2025-03-05 09:15:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-304, 78459004, 78452002, '2025-03-18 16:45:00', 4500.00, 3600.00, 3600, NULL, -10); -- Korišćen globalni kupon
+
+-- APRIL 2025: Prolećna akcija (SaleId: -51, 25% popusta)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-305, 78459005, 78452001, '2025-04-02 11:00:00', 1500.00, 1125.00, 1125, -51, NULL),
+(-306, 78459006, 78452002, '2025-04-05 13:20:00', 4500.00, 3375.00, 3375, -51, NULL),
+(-307, 78459007, 78452001, '2025-04-10 10:00:00', 1500.00, 1125.00, 1125, -51, NULL),
+(-308, 78459008, 78452002, '2025-04-14 15:50:00', 4500.00, 3375.00, 3375, -51, NULL);
+
+-- MAJ & JUN 2025: Mešano (Puna cena i Kuponi)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-309, 78459009, 78452001, '2025-05-12 12:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-310, 78459010, 78452002, '2025-05-25 18:30:00', 4500.00, 3825.00, 3825, NULL, -11), -- Specifičan kupon
+(-311, 78459001, 78452001, '2025-06-05 14:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-312, 78459002, 78452002, '2025-06-20 09:00:00', 4500.00, 4500.00, 4500, NULL, NULL);
+
+-- JUL & AVGUST 2025: Letnja sezona (Summer Coupon: -12, 10% popusta)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-313, 78459003, 78452001, '2025-07-04 11:30:00', 1500.00, 1350.00, 1350, NULL, -12),
+(-314, 78459004, 78452002, '2025-07-15 17:00:00', 4500.00, 4050.00, 4050, NULL, -12),
+(-315, 78459005, 78452001, '2025-08-01 10:20:00', 1500.00, 1350.00, 1350, NULL, -12),
+(-316, 78459006, 78452002, '2025-08-12 14:45:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-317, 78459007, 78452001, '2025-08-25 19:10:00', 1500.00, 1350.00, 1350, NULL, -12);
+
+-- SEPTEMBAR & OKTOBAR 2025: Jesenji trend
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-318, 78459008, 78452001, '2025-09-08 12:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-319, 78459009, 78452002, '2025-09-22 15:30:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-320, 78459010, 78452001, '2025-10-05 11:00:00', 1500.00, 1200.00, 1200, NULL, -10),
+(-321, 78459001, 78452002, '2025-10-18 09:45:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-322, 78459002, 78452001, '2025-10-28 16:20:00', 1500.00, 1500.00, 1500, NULL, NULL);
+
+-- NOVEMBAR & DECEMBAR 2025: Kraj godine (Snažan finiš)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-323, 78459003, 78452001, '2025-11-10 14:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-324, 78459004, 78452002, '2025-11-25 12:30:00', 4500.00, 3600.00, 3600, NULL, -10),
+(-325, 78459005, 78452001, '2025-12-05 18:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-326, 78459006, 78452002, '2025-12-15 20:15:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-327, 78459007, 78452001, '2025-12-22 13:40:00', 1500.00, 1200.00, 1200, NULL, -10),
+(-328, 78459008, 78452002, '2025-12-28 10:00:00', 4500.00, 4500.00, 4500, NULL, NULL);
+
+-- JANUAR 2026: (Tekući mesec - Fresh data)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-329, 78459009, 78452001, '2026-01-05 11:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-330, 78459010, 78452002, '2026-01-15 15:30:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-331, 78459001, 78452001, '2026-01-25 09:00:00', 1500.00, 1200.00, 1200, NULL, -10);
+
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-401, 78459001, 78452001, '2025-07-10 10:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-402, 78459002, 78452001, '2025-07-15 14:30:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-403, 78459003, 78452001, '2025-07-28 09:15:00', 1500.00, 1350.00, 1350, NULL, -12), -- Summer coupon
+(-404, 78459004, 78452001, '2025-08-05 16:45:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-405, 78459005, 78452001, '2025-08-12 11:00:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-406, 78459006, 78452001, '2025-08-20 13:20:00', 1500.00, 1500.00, 1500, NULL, NULL),
+(-407, 78459007, 78452001, '2025-08-29 10:00:00', 1500.00, 1350.00, 1350, NULL, -12); -- Summer coupon
+
+-- PLANINSKA TURA (78452002) - Zimski "boom" (8 prodaja)
+-- Cilj: Decembar 2025. i Januar 2026.
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-408, 78459008, 78452002, '2025-12-10 15:50:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-409, 78459009, 78452002, '2025-12-15 12:00:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-410, 78459010, 78452002, '2025-12-20 18:30:00', 4500.00, 3600.00, 3600, NULL, -10), -- Global coupon
+(-411, 78459001, 78452002, '2025-12-25 14:00:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-412, 78459002, 78452002, '2026-01-03 09:00:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-413, 78459003, 78452002, '2026-01-08 11:30:00', 4500.00, 4500.00, 4500, NULL, NULL),
+(-414, 78459004, 78452002, '2026-01-12 17:00:00', 4500.00, 3600.00, 3600, NULL, -10), -- Global coupon
+(-415, 78459005, 78452002, '2026-01-20 10:20:00', 4500.00, 4500.00, 4500, NULL, NULL);
+
+-- ISPRAVKA DA BUDU KONZISTENTNI PODACI
+UPDATE tours."Tours" 
+SET "Price" = 1500.00 
+WHERE "Id" = 78452001;
+
+UPDATE tours."Tours" 
+SET "Price" = 4500.00 
+WHERE "Id" = 78452002;
+
+-- ============================================================
 -- FINALNI REZIME TEST PODATAKA
 -- ============================================================
 --
@@ -401,4 +587,18 @@ VALUES
 --   ❌ NEGATIVNA: "Tura je predugačka - turisti provode mnogo vremena ali prolaze mali procenat"
 --   ❌ NEGATIVNA: "Tura je možda predugačka ili preteška"
 --
+-- POPUSTI I KUPONI:
+-- - Sale -50: Januarski popust (30%) - Testira drastičan pad cene.
+-- - Sale -51: Prolećna akcija (25%) - Testira Aprilski skok prodaje.
+-- - Coupon -10: Globalni SAVE2025 (20%) - Najčešće korišćen popust kroz celu godinu.
+-- - Coupon -12: Letnji SUMMER25 (10%) - Testira sezonsku lojalnost.
+--
+-- SEZONALNOST (Trendovi na grafikonu):
+-- 1. LETNJI PEAK (Jul/Avg): Fokus na "Beogradsku turu" (78452001). 
+--    Simulira gradski turizam. Očekuje se veći broj transakcija manje vrednosti.
+--
+-- 2. ZIMSKI PEAK (Dec/Jan): Fokus na "Planinsku avanturu" (78452002).
+--    Simulira ski sezonu. Iako je manje prodaja, prihod je ogroman zbog cene od 4500 EUR.
+--
+-- 3. PROLEĆNI "SPIKE" (April): Testira uspeh Sale akcije na obe ture istovremeno.
 -- ============================================================
