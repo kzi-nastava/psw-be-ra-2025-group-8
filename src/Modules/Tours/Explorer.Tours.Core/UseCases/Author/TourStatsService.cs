@@ -1,5 +1,6 @@
 using AutoMapper;
 using Explorer.Tours.API.Dtos;
+using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
@@ -8,7 +9,7 @@ using static Explorer.Tours.Core.Domain.TourExecution;
 
 namespace Explorer.Tours.Core.UseCases.Author;
 
-public class TourStatsService : ITourStatsService
+public class TourStatsService : ITourStatsService, IInternalTourStatsService
 {
     private readonly ITourStatsRepository _tourStatsRepository;
     private readonly ITourExecutionRepository _tourExecutionRepository;
@@ -25,6 +26,24 @@ public class TourStatsService : ITourStatsService
         _tourExecutionRepository = tourExecutionRepository;
         _touristPreferencesRepository = touristPreferencesRepository;
         _mapper = mapper;
+    }
+
+    public void RegisterPurchase(long tourId, double price)
+    {
+        var stats = _tourStatsRepository.GetByTourId((int)tourId);
+
+        if (stats == null)
+        {
+            // Kreiramo novu statistiku ako ne postoji
+            stats = new TourStats((int)tourId, 0, 0, DifficultyLevel.Beginner, TimeSpan.Zero);
+        }
+
+        stats.RecordPurchase(price);
+
+        if (stats.Id == 0)
+            _tourStatsRepository.Create(stats);
+        else
+            _tourStatsRepository.Update(stats);
     }
 
     public TourStatsDto GetTourStats(int tourId)
@@ -44,7 +63,12 @@ public class TourStatsService : ITourStatsService
             else
             {
                 // Update existing stats
-                existingStats.Update(calculatedStats.CompletionRate, calculatedStats.AverageCompletionPercentage, calculatedStats.mostCommonDiffcultyLevel, calculatedStats.AverageDuration);
+                existingStats.Update(
+                    calculatedStats.CompletionRate,
+                    calculatedStats.AverageCompletionPercentage,
+                    calculatedStats.mostCommonDiffcultyLevel,
+                    calculatedStats.AverageDuration);
+
                 existingStats = _tourStatsRepository.Update(existingStats);
             }
         }
