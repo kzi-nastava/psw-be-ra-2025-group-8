@@ -550,6 +550,56 @@ UPDATE tours."Tours"
 SET "Price" = 4500.00 
 WHERE "Id" = 78452002;
 
+-- DEO DODAT ZA RECOMMENDATIONS
+-- Tura 3 ce prikazati falloff
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES (-601, 78459001, 78452003, '2024-12-01', 2000.00, 2000.00, 2000, NULL, NULL);
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-901, 78459001, 78452003, '2025-05-10 10:00:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-902, 78459002, 78452003, '2025-05-15 14:30:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-903, 78459003, 78452003, '2025-06-01 09:15:00', 2000.00, 1600.00, 1600, NULL, -10), -- Sa kuponom
+(-904, 78459004, 78452003, '2025-06-12 16:45:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-905, 78459005, 78452003, '2025-06-25 11:00:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-906, 78459006, 78452003, '2025-07-04 13:20:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-907, 78459007, 78452003, '2025-07-18 10:00:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-908, 78459008, 78452003, '2025-08-05 15:50:00', 2000.00, 1800.00, 1800, NULL, -12), -- Summer coupon
+(-909, 78459009, 78452003, '2025-08-12 12:00:00', 2000.00, 2000.00, 2000, NULL, NULL),
+(-910, 78459010, 78452003, '2025-08-28 18:30:00', 2000.00, 2000.00, 2000, NULL, NULL);
+
+-- 6 prodaja (preko praga od 5) sa velikim popustom (plaćeno 1000 umesto 3000)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES 
+(-701, 78459001, 78452004, '2025-10-01', 3000.00, 1000.00, 1000, -50, NULL),
+(-702, 78459002, 78452004, '2025-10-05', 3000.00, 1000.00, 1000, -50, NULL),
+(-703, 78459003, 78452004, '2025-10-10', 3000.00, 1000.00, 1000, -50, NULL),
+(-704, 78459004, 78452004, '2025-10-15', 3000.00, 1000.00, 1000, -50, NULL),
+(-705, 78459005, 78452004, '2025-10-20', 3000.00, 1000.00, 1000, -50, NULL),
+(-706, 78459006, 78452004, '2025-10-25', 3000.00, 1000.00, 1000, -50, NULL);
+
+-- Prodaja u septembru 2025, od tada ništa (pali preporuku jer je danas januar 2026)
+INSERT INTO payments."PurchasedItems"("Id", "UserId", "TourId", "PurchaseDate", "OriginalPrice", "Price", "AdventureCoinsSpent", "SaleId", "CouponId")
+VALUES (-801, 78459001, 78452005, '2025-09-01', 2500.00, 2500.00, 2500, NULL, NULL);
+
+--POTREBNO JE POKRENUTI OVO NAKON UNOSA DELA ZA RECOMMENDATIONS
+WITH SalesSummary AS (
+    SELECT 
+        "TourId",
+        COUNT(*) as SalesCount,
+        SUM("Price") as RevenueSum,
+        MAX("PurchaseDate") as LastDate
+    FROM payments."PurchasedItems"
+    GROUP BY "TourId"
+)
+UPDATE tours."TourStats" ts
+SET 
+    "TotalSales" = ss.SalesCount,
+    "TotalRevenue" = ss.RevenueSum,
+    "LastPurchaseDate" = ss.LastDate
+FROM SalesSummary ss
+WHERE ts."TourId" = ss."TourId";
+
+
 -- ============================================================
 -- FINALNI REZIME TEST PODATAKA
 -- ============================================================

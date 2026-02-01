@@ -14,6 +14,9 @@ public class TourStats : Entity
 
     // Metadata
     public DateTime LastUpdated { get; private set; }
+    public int TotalSales { get; private set; }
+    public double TotalRevenue { get; private set; }
+    public DateTime? LastPurchaseDate { get; private set; }
 
     // Navigation property
     public Tour Tour { get; private set; }
@@ -55,5 +58,13 @@ public class TourStats : Entity
     public bool IsStale()
     {
         return LastUpdated < DateTime.UtcNow.AddDays(-1);
+    }
+
+    public void RecordPurchase(double price)
+    {
+        TotalSales++;
+        TotalRevenue += price;
+        LastPurchaseDate = DateTime.UtcNow;
+        LastUpdated = DateTime.UtcNow;
     }
 }

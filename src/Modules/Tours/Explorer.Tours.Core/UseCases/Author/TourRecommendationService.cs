@@ -63,6 +63,7 @@ public class TourRecommendationService : ITourRecommendationService
         recommendations.AddRange(AnalyzeCompletionMetrics(tour, stats));
         recommendations.AddRange(AnalyzeDurationMetrics(tour, stats, expectedDurationMinutes));
         recommendations.AddRange(AnalyzePositiveMetrics(tour, stats));
+        recommendations.AddRange(AnalyzeEconomicMetrics(tour));
 
         return recommendations;
     }
@@ -253,6 +254,81 @@ public class TourRecommendationService : ITourRecommendationService
                 Message = "Tura se brzo završava sa visokim procentom uspešnosti. Idealna je za turiste sa ograničenim vremenom. Razmislite o kreiranju sličnih kratkih tura.",
                 Sentiment = RecommendationSentiment.Positive,
                 Category = RecommendationCategory.General
+            });
+        }
+
+        return recommendations;
+    }
+
+    private List<TourRecommendationDto> AnalyzeEconomicMetrics(Tour tour)
+    {
+        var recommendations = new List<TourRecommendationDto>();
+        var stats = _tourStatsRepository.GetByTourId((int)tour.Id);
+
+        if (stats == null) return recommendations;
+
+        // Cold start
+        if (stats.TotalSales < 2 && tour.PublishedAt < DateTime.UtcNow.AddMonths(-1))
+        {
+            recommendations.Add(new TourRecommendationDto
+            {
+                TourId = (int)tour.Id,
+                TourName = tour.Name,
+                Message = "Ova tura ima veoma malo prodaja od objavljivanja 'Cold Start'. Razmislite o promotivnoj ceni ili popustu.",
+                Sentiment = RecommendationSentiment.Negative,
+                Category = RecommendationCategory.Economic
+            });
+        }
+        // Bestseller
+        if (stats.TotalSales > 30)
+        {
+            recommendations.Add(new TourRecommendationDto
+            {
+                TourId = (int)tour.Id,
+                TourName = tour.Name,
+                Message = "Ova tura je bestseler! Razmislite o tome da napravite 'Premium' verziju ili nastavak ove rute.",
+                Sentiment = RecommendationSentiment.Positive,
+                Category = RecommendationCategory.Economic
+            });
+        }
+        // Money maker
+        if (stats.TotalRevenue > 50000)
+        {
+            recommendations.Add(new TourRecommendationDto
+            {
+                TourId = (int)tour.Id,
+                TourName = tour.Name,
+                Message = "Ova tura je 'Money Maker'. Generiše značajan prihod. Razmislite o dodatnom marketingu za ovaj segment.",
+                Sentiment = RecommendationSentiment.Positive,
+                Category = RecommendationCategory.Economic
+            });
+        }
+        // Discount King
+        if (stats.TotalSales > 5) // Potreban bar mali uzorak podataka
+        {
+            decimal averagePricePaid = (decimal)(stats.TotalRevenue / stats.TotalSales);
+            if (averagePricePaid < (tour.Price * 0.7m)) // Ako je prosečna cena 30% niža od originalne
+            {
+                recommendations.Add(new TourRecommendationDto
+                {
+                    TourId = (int)tour.Id,
+                    TourName = tour.Name,
+                    Message = "'Discount King' Većina prodaja ove ture ostvarena je putem kupona ili popusta. Razmislite o trajnom sniženju osnovne cene.",
+                    Sentiment = RecommendationSentiment.Positive,
+                    Category = RecommendationCategory.Economic
+                });
+            }
+        }
+        // Falloff
+        if (stats.LastPurchaseDate.HasValue && stats.LastPurchaseDate < DateTime.UtcNow.AddMonths(-3) && stats.TotalSales > 0)
+        {
+            recommendations.Add(new TourRecommendationDto
+            {
+                TourId = (int)tour.Id,
+                TourName = tour.Name,
+                Message = "Interesovanje za ovu turu opada 'Falloff'. Poslednja prodaja je bila pre više od 3 meseca.",
+                Sentiment = RecommendationSentiment.Negative,
+                Category = RecommendationCategory.Economic
             });
         }
 
