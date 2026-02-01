@@ -602,3 +602,84 @@ WHERE "Id" = 78452002;
 --
 -- 3. PROLEĆNI "SPIKE" (April): Testira uspeh Sale akcije na obe ture istovremeno.
 -- ============================================================
+
+-- ============================================================
+-- 6. DODATNE OCENE ZA TESTIRANJE TREND INDIKATORA
+-- ============================================================
+-- Ove ocene su potrebne za testiranje trend indikatora
+-- (mesec vs mesec poređenje ratinga)
+-- ============================================================
+
+-- -------------------------------------------------------------
+-- OCENE ZA JANUAR 2026 (prošli mesec)
+-- -------------------------------------------------------------
+
+-- Tura 1 (78452001) - Petrovaradinska tvrđava: Prosek 4.0
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454101, 78452001, 78459003, 4, 'Odlična tura, preporučujem!', '2026-01-05 14:00:00', 100.0),
+    (78454102, 78452001, 78459004, 4, 'Veoma zadovoljan turom.', '2026-01-12 16:00:00', 95.0),
+    (78454103, 78452001, 78459005, 4, 'Solidna tura, ništa posebno.', '2026-01-20 11:00:00', 90.0);
+
+-- Tura 2 (78452002) - Brza šetnja: Prosek 3.5
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454104, 78452002, 78459006, 3, 'OK tura, moglo je bolje.', '2026-01-08 10:00:00', 100.0),
+    (78454105, 78452002, 78459007, 4, 'Brza i efikasna, svidela mi se.', '2026-01-15 13:00:00', 100.0);
+
+-- Tura 3 (78452003) - Fruška gora: Prosek 4.5
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454106, 78452003, 78459008, 5, 'Prelepi manastiri!', '2026-01-10 15:00:00', 100.0),
+    (78454107, 78452003, 78459009, 4, 'Lepo iskustvo.', '2026-01-22 12:00:00', 80.0);
+
+-- Tura 4 (78452004) - Beogradska: Prosek 2.5
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454108, 78452004, 78459010, 2, 'Predugačka tura, nisam završio.', '2026-01-18 17:00:00', 88.0),
+    (78454109, 78452004, 78459001, 3, 'Interesantna ali naporna.', '2026-01-25 14:00:00', 92.0);
+
+-- -------------------------------------------------------------
+-- OCENE ZA FEBRUAR 2026 (tekući mesec)
+-- -------------------------------------------------------------
+
+-- Tura 1 (78452001) - Petrovaradinska tvrđava: Prosek 4.67 (TREND UP!)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454201, 78452001, 78459006, 5, 'Fantastična tura, najbolja do sada!', '2026-02-01 10:00:00', 100.0),
+    (78454202, 78452001, 78459007, 5, 'Preporučujem svima!', '2026-02-01 11:00:00', 100.0),
+    (78454203, 78452001, 78459008, 4, 'Vrlo dobra tura.', '2026-02-01 12:00:00', 98.0);
+
+-- Tura 2 (78452002) - Brza šetnja: Prosek 3.0 (TREND DOWN!)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454204, 78452002, 78459009, 3, 'Prosečna tura.', '2026-02-01 09:00:00', 100.0),
+    (78454205, 78452002, 78459010, 3, 'Očekivao sam više.', '2026-02-01 14:00:00', 100.0);
+
+-- Tura 3 (78452003) - Fruška gora: Prosek 4.5 (TREND STABLE!)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454206, 78452003, 78459001, 4, 'Ponovo odlično iskustvo.', '2026-02-01 13:00:00', 100.0),
+    (78454207, 78452003, 78459002, 5, 'Najlepši manastiri!', '2026-02-01 15:00:00', 85.0);
+
+-- Tura 4 (78452004) - Beogradska: Prosek 3.5 (TREND UP!)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454208, 78452004, 78459003, 4, 'Poboljšana tura, bolje nego ranije.', '2026-02-01 16:00:00', 95.0),
+    (78454209, 78452004, 78459004, 3, 'Još uvek predugačka ali interesantna.', '2026-02-01 17:00:00', 90.0);
+
+-- Tura 5 (78452005) - Ekstremna: Samo februar (NoData za januar -> prikazuje se kao UP)
+INSERT INTO tours."TourRatings"("Id", "IdTour", "IdTourist", "Rating", "Comment", "CreatedAt", "TourCompletionPercentage")
+VALUES
+    (78454210, 78452005, 78459005, 3, 'Teška ali izazovna.', '2026-02-01 18:00:00', 30.0);
+
+-- ============================================================
+-- OČEKIVANI REZULTATI TREND INDIKATORA:
+-- ============================================================
+-- Tura 1 (Petrovaradinska): Jan=4.0, Feb=4.67 -> TREND UP (zeleno ↑)
+-- Tura 2 (Brza šetnja):     Jan=3.5, Feb=3.0  -> TREND DOWN (crveno ↓)
+-- Tura 3 (Fruška gora):     Jan=4.5, Feb=4.5  -> TREND STABLE (plavo →)
+-- Tura 4 (Beogradska):      Jan=2.5, Feb=3.5  -> TREND UP (zeleno ↑)
+-- Tura 5 (Ekstremna):       Jan=N/A, Feb=3.0  -> TREND UP (zeleno ↑) - nova ocena
+-- Tura 6, 7, 8:             Nema ocena        -> TREND NODATA (sivo -)
+-- ============================================================
