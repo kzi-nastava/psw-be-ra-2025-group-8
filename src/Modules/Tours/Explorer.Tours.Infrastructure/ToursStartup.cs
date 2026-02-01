@@ -70,6 +70,9 @@ public static class ToursStartup
 
         // Tour Recommendations
         services.AddScoped<ITourRecommendationService, TourRecommendationService>();
+
+        // Author Summary Stats
+        services.AddScoped<IAuthorSummaryStatsService, AuthorSummaryStatsService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
