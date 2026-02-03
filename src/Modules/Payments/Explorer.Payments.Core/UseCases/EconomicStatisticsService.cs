@@ -1,11 +1,12 @@
 ﻿using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Payments.Core.UseCases
 {
-    public class EconomicStatisticsService : IEconomicStatisticsService
+    public class EconomicStatisticsService : IEconomicStatisticsService, IInternalEconomicStatisticsService
     {
         private readonly IPurchasedItemRepository _purchasedItemRepository;
 

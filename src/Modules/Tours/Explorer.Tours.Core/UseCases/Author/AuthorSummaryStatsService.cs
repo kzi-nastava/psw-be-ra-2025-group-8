@@ -1,4 +1,4 @@
-using Explorer.Payments.API.Public;
+using Explorer.Payments.API.Internal;
 using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
@@ -11,13 +11,13 @@ public class AuthorSummaryStatsService : IAuthorSummaryStatsService
     private readonly ITourRepository _tourRepository;
     private readonly ITourRatingRepository _tourRatingRepository;
     private readonly ITourExecutionRepository _tourExecutionRepository;
-    private readonly IEconomicStatisticsService _economicStatisticsService;
+    private readonly IInternalEconomicStatisticsService _economicStatisticsService;
 
     public AuthorSummaryStatsService(
         ITourRepository tourRepository,
         ITourRatingRepository tourRatingRepository,
         ITourExecutionRepository tourExecutionRepository,
-        IEconomicStatisticsService economicStatisticsService)
+        IInternalEconomicStatisticsService economicStatisticsService)
     {
         _tourRepository = tourRepository;
         _tourRatingRepository = tourRatingRepository;
