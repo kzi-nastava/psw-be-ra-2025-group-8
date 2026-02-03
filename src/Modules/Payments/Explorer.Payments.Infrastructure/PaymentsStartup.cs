@@ -31,6 +31,7 @@ public static class PaymentsStartup
         services.AddScoped<ISaleService, SaleService>();
         services.AddScoped<IInternalSaleService, SaleService>();
         services.AddScoped<IEconomicStatisticsService, EconomicStatisticsService>();
+        services.AddScoped<IInternalEconomicStatisticsService, EconomicStatisticsService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)

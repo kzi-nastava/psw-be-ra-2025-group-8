@@ -1,11 +1,12 @@
 ﻿using Explorer.Payments.API.Dtos;
+using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
 
 namespace Explorer.Payments.Core.UseCases
 {
-    public class EconomicStatisticsService : IEconomicStatisticsService
+    public class EconomicStatisticsService : IEconomicStatisticsService, IInternalEconomicStatisticsService
     {
         private readonly IPurchasedItemRepository _purchasedItemRepository;
 
@@ -92,6 +93,34 @@ namespace Explorer.Payments.Core.UseCases
             // Ovde bi idealno bilo pozvati interni servis iz Tours modula
             // ali za potrebe Sprinta 4, ako su podaci u istoj bazi, može i provera u repozitorijumu.
             return true; // Privremeno true dok ne povežemo provere vlasništva
+        }
+
+        public AuthorRevenueStatsDto GetRevenueStatsForTours(IEnumerable<long> tourIds)
+        {
+            var tourIdSet = tourIds.ToHashSet();
+            var purchases = _purchasedItemRepository.GetAll()
+                .Where(pi => tourIdSet.Contains(pi.TourId))
+                .ToList();
+
+            var result = new AuthorRevenueStatsDto
+            {
+                TotalRevenue = purchases.Sum(p => p.Price),
+                TotalPurchases = purchases.Count,
+                RevenueByTour = new Dictionary<long, TourRevenueDto>()
+            };
+
+            var groupedByTour = purchases.GroupBy(p => p.TourId);
+            foreach (var group in groupedByTour)
+            {
+                result.RevenueByTour[group.Key] = new TourRevenueDto
+                {
+                    TourId = group.Key,
+                    TotalRevenue = group.Sum(p => p.Price),
+                    PurchaseCount = group.Count()
+                };
+            }
+
+            return result;
         }
     }
 }
