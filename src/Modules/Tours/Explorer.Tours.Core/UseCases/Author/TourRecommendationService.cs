@@ -37,6 +37,8 @@ public class TourRecommendationService : ITourRecommendationService
             recommendations.AddRange(tourRecommendations);
         }
 
+        recommendations.AddRange(AnalyzeBundlingOpportunities(authorTours));
+
         return new AuthorRecommendationsDto
         {
             AuthorId = authorId,
@@ -334,6 +336,51 @@ public class TourRecommendationService : ITourRecommendationService
 
         return recommendations;
     }
+
+    private List<TourRecommendationDto> AnalyzeBundlingOpportunities(List<Tour> allAuthorTours)
+    {
+        var recommendations = new List<TourRecommendationDto>();
+
+        var successfulTours = allAuthorTours
+            .Where(t => t.Status == TourStatus.Published)
+            .Where(t => {
+                var s = _tourStatsRepository.GetByTourId((int)t.Id);
+                return s != null && s.TotalSales > 5;
+            }).ToList();
+
+        var groupsByDifficulty = successfulTours.GroupBy(t => t.Difficulty);
+
+        foreach (var group in groupsByDifficulty)
+        {
+            if (group.Count() >= 2)
+            {
+                var tourNames = group.Select(t => t.Name).Take(2).ToList();
+                var firstTour = group.First();
+                string difficultyName = GetDifficultyName(group.Key);
+
+                recommendations.Add(new TourRecommendationDto
+                {
+                    TourId = (int)firstTour.Id,
+                    TourName = firstTour.Name,
+                    Message = $"Primetili smo da imate više uspešnih tura težine '{difficultyName}' " +
+                              $"(npr. '{tourNames[0]}' i '{tourNames[1]}'). " +
+                              "Kreirajte paket za ovu ciljnu grupu uz mali popust!",
+                    Sentiment = RecommendationSentiment.Positive,
+                    Category = RecommendationCategory.Economic
+                });
+            }
+        }
+
+        return recommendations;
+    }
+
+    private string GetDifficultyName(int difficulty) => difficulty switch
+    {
+        1 => "Easy",
+        2 => "Medium",
+        3 => "Hard",
+        _ => "Unknown"
+    };
 
     private string FormatDuration(double minutes)
     {
