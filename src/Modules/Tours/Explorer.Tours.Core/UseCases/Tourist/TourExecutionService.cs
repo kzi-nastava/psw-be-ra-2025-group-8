@@ -24,6 +24,7 @@ public class TourExecutionService : ITourExecutionService
     private readonly ITourChatRoomService _chatRoomService;
     private readonly IMapper _mapper;
     private readonly IWeatherForecastService _weatherForecastService;
+    private readonly IInternalPositionService _positionService;
 
     // Proximity threshold (meters)
     private const double KEYPOINT_PROXIMITY_METERS = 60.0;
@@ -38,6 +39,7 @@ public class TourExecutionService : ITourExecutionService
         IInternalTourService internalTourService,
         IInternalEncounterService encounterService,
         IWeatherForecastService weatherForecastService,
+        IInternalPositionService positionService,
         IMapper mapper)
     {
         _tourExecutionRepository = tourExecutionRepository;
@@ -49,6 +51,7 @@ public class TourExecutionService : ITourExecutionService
         _internalTourService = internalTourService;
         _encounterService = encounterService;
         _weatherForecastService = weatherForecastService;
+        _positionService = positionService;
         _mapper = mapper;
     }
 
@@ -416,13 +419,28 @@ public class TourExecutionService : ITourExecutionService
         };
     }
 
-    public WeatherCurrentDto GetCurrentWeather(long tourExecutionId)
+    public WeatherCurrentDto GetCurrentWeather(long tourExecutionId, double? latitude = null, double? longitude = null)
     {
         var tourExecution = _tourExecutionRepository.Get((int)tourExecutionId);
         if (tourExecution == null) return null;
 
+        // 1) Ako frontend pošalje koordinate (trenutna lokacija na mapi) -> koristi njih odmah
+        if (latitude.HasValue && longitude.HasValue)
+        {
+            return _weatherForecastService.GetCurrentWeather(latitude.Value, longitude.Value);
+        }
+
+        // 2) Inače uzmi poslednju snimljenu poziciju turiste iz Position
+        var pos = _positionService.GetByTouristId(tourExecution.IdTourist);
+        if (pos != null)
+        {
+            return _weatherForecastService.GetCurrentWeather(pos.Latitude, pos.Longitude);
+        }
+
+        // 3) Fallback na koordinate upisane u TourExecution
         return _weatherForecastService.GetCurrentWeather(tourExecution.Latitude, tourExecution.Longitude);
     }
+
 
     public WeatherHourlyForecastDto GetNextKeyPointHourlyForecast(long tourExecutionId, int hours = 6)
     {

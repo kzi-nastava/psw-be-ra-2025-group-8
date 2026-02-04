@@ -1,5 +1,4 @@
-﻿
-using Explorer.Tours.API.Dtos;
+﻿using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Internal;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
@@ -22,7 +21,7 @@ namespace Explorer.Tours.Core.UseCases.Tourist
 
             if (pos == null)
             {
-                return null; // ili throw new KeyNotFoundException() ako želite da vratite 404
+                return null;
             }
 
             return new PositionDto
@@ -31,13 +30,14 @@ namespace Explorer.Tours.Core.UseCases.Tourist
                 Latitude = pos.Latitude,
                 Longitude = pos.Longitude,
                 TouristId = pos.TouristId,
-                UpdatedAt = pos.UpdatedAt
+                UpdatedAt = pos.UpdatedAt,
+                LocationSource = pos.LocationSource.ToString()
             };
         }
 
         public PositionDto CreatePosition(PositionDto dto)
         {
-            var pos = new Position(dto.Latitude, dto.Longitude, dto.TouristId);
+            var pos = new Position(dto.Latitude, dto.Longitude, dto.TouristId, Enum.Parse<Source>(dto.LocationSource));
             var created = _repo.Create(pos);
 
             return new PositionDto
@@ -46,6 +46,7 @@ namespace Explorer.Tours.Core.UseCases.Tourist
                 Latitude = created.Latitude,
                 Longitude = created.Longitude,
                 TouristId = created.TouristId,
+                LocationSource = created.LocationSource.ToString(),
                 UpdatedAt = created.UpdatedAt
             };
         }
@@ -53,6 +54,12 @@ namespace Explorer.Tours.Core.UseCases.Tourist
         public PositionDto UpdatePosition(PositionDto dto)
         {
             var pos = _repo.GetByTouristId(dto.TouristId);
+            
+            if (pos == null)
+            {
+                throw new KeyNotFoundException($"Position for tourist {dto.TouristId} not found.");
+            }
+
             pos.UpdatePosition(dto.Latitude, dto.Longitude);
 
             var updated = _repo.Update(pos);
@@ -63,7 +70,8 @@ namespace Explorer.Tours.Core.UseCases.Tourist
                 Latitude = updated.Latitude,
                 Longitude = updated.Longitude,
                 TouristId = updated.TouristId,
-                UpdatedAt = updated.UpdatedAt
+                UpdatedAt = updated.UpdatedAt,
+                LocationSource = updated.LocationSource.ToString()
             };
         }
     }

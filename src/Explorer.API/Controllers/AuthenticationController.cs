@@ -19,7 +19,15 @@ public class AuthenticationController : ControllerBase
     [HttpPost]
     public ActionResult<AuthenticationTokensDto> RegisterTourist([FromBody] AccountRegistrationDto account)
     {
-        return Ok(_authenticationService.RegisterTourist(account));
+        try
+        {
+            var authTokens = _authenticationService.RegisterTourist(account);
+            return Ok(authTokens);
+        }
+        catch (EntityValidationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("login")]
@@ -36,7 +44,6 @@ public class AuthenticationController : ControllerBase
         }
     }
 
-    // ✅ NOVI ENDPOINT - Vrati sve korisnike
     [HttpGet]
     public ActionResult<IEnumerable<AccountOverviewDto>> GetAllAccounts()
     {

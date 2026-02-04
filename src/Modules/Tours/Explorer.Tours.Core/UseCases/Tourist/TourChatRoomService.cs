@@ -24,7 +24,7 @@ namespace Explorer.Tours.Core.UseCases.Tourist
         {
             var existingRoom = _chatRoomRepository.GetByTourId(tourId);
             
-            if (existingRoom != null)
+            if (existingRoom != null && existingRoom.IsActive)
                 return _mapper.Map<TourChatRoomDto>(existingRoom);
 
             var newRoom = new TourChatRoom(tourId, tourName);
@@ -52,6 +52,12 @@ namespace Explorer.Tours.Core.UseCases.Tourist
             try
             {
                 chatRoom.RemoveMember(userId);
+                //Check if there are any users, if not, deactivate the chat room
+                if (!chatRoom.Members.Any(m => m.IsActive))
+                {
+                    chatRoom.Deactivate();
+                }
+
                 _chatRoomRepository.Update(chatRoom);
             }
             catch (InvalidOperationException)

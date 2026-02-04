@@ -250,7 +250,10 @@ namespace Explorer.Payments.Core.UseCases
             if (!coupon.IsValid())
                 throw new InvalidOperationException("Coupon has expired.");
 
-            if (!coupon.AppliesTo(tourId, tour.AuthorId))
+            bool appliesToTour = coupon.AppliesTo(tourId, tour.AuthorId);
+            bool isGlobalCoupon = (coupon.TourId == 0 || !coupon.TourId.HasValue) && coupon.AuthorId == tour.AuthorId;
+
+            if (!appliesToTour && !isGlobalCoupon)
                 throw new InvalidOperationException("Coupon is not valid for this tour or author.");
 
             // Apply discount
@@ -296,7 +299,7 @@ namespace Explorer.Payments.Core.UseCases
                 if (tour == null)
                     throw new NotFoundException($"Tour with ID {item.TourId} not found.");
 
-                if (coupon.TourId.HasValue)
+                if (coupon.TourId.HasValue && coupon.TourId.Value != 0)
                 {
                     // Specific tour coupon
                     if (item.TourId == coupon.TourId.Value && tour.AuthorId == coupon.AuthorId)

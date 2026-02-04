@@ -7,5 +7,6 @@
         public double Longitude { get; set; }
         public int TouristId { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string LocationSource { get; set; }
     }
 }

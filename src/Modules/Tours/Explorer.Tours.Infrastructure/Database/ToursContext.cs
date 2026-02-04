@@ -23,7 +23,7 @@ public class ToursContext : DbContext
     public DbSet<TourRatingImage> TourRatingImages { get; set; }
     public DbSet<Bundle> Bundles { get; set; }
     public DbSet<BundleTour> BundleTours { get; set; }
-
+    public DbSet<TourAdvertisement> TourAdvertisements { get; set; }
 
 
     //Preference
@@ -375,6 +375,48 @@ public class ToursContext : DbContext
             // Ensure unique TourId (one stats record per tour)
             builder.HasIndex(ts => ts.TourId)
                 .IsUnique();
+        });
+        modelBuilder.Entity<TourAdvertisement>(builder =>
+        {
+            builder.HasKey(a => a.Id);
+
+            builder.Property(a => a.TourId).IsRequired();
+            builder.Property(a => a.AuthorId).IsRequired();
+            builder.Property(a => a.Tier).IsRequired();
+            builder.Property(a => a.AdventureCoinsSpent).IsRequired();
+            builder.Property(a => a.PurchasedAtUtc).IsRequired();
+            builder.Property(a => a.EndsAtUtc).IsRequired();
+
+            builder.ToTable("TourAdvertisements", schema: "tours");
+
+            builder.HasIndex(a => a.TourId);
+            builder.HasIndex(a => new { a.TourId, a.EndsAtUtc });
+        });
+
+        // POSITION CONFIGURATION
+        modelBuilder.Entity<Position>(builder =>
+        {
+            builder.HasKey(p => p.Id);
+
+            builder.Property(p => p.Latitude)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(p => p.Longitude)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(p => p.TouristId)
+                .IsRequired();
+
+            builder.Property(p => p.UpdatedAt)
+                .IsRequired();
+
+            builder.Property(p => p.LocationSource)
+                .HasConversion<string>()
+                .IsRequired();
+
+            builder.HasIndex(p => p.TouristId);
         });
     }
 

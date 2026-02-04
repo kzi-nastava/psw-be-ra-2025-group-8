@@ -1,4 +1,4 @@
-using Explorer.BuildingBlocks.Core.Exceptions;
+﻿using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
 using Microsoft.AspNetCore.Authorization;
@@ -19,10 +19,10 @@ public class WalletController : ControllerBase
     }
 
     /// <summary>
-    /// Turista mo�e da vidi stanje svog nov?anika (authenticated)
+    /// Turista može da vidi stanje svog nov?anika (authenticated) // sad moze i autor
     /// </summary>
     [HttpGet("balance")]
-    [Authorize(Policy = "touristPolicy")]
+    [Authorize(Policy = "touristAuthorPolicy")]
     [ProducesResponseType(typeof(WalletDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<WalletDto> GetMyBalance()
@@ -38,10 +38,22 @@ public class WalletController : ControllerBase
             var wallet = _walletService.GetByUserId(userId);
             return Ok(wallet);
         }
-        catch (NotFoundException ex)
+        catch (NotFoundException)
         {
-            return NotFound(new { message = ex.Message });
+            // Ako autor (ili korisnik) nema wallet, kreiraj ga automatski i vrati 200
+            try
+            {
+                var created = _walletService.CreateWallet(userId);
+                return Ok(created);
+            }
+            catch (InvalidOperationException)
+            {
+                // Ako je u međuvremenu već kreiran (race condition), samo vrati postojeći
+                var wallet = _walletService.GetByUserId(userId);
+                return Ok(wallet);
+            }
         }
+
     }
 
     /// <summary>

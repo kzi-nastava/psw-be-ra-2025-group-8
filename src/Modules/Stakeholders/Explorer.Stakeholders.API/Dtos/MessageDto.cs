@@ -6,6 +6,7 @@ namespace Explorer.Stakeholders.API.Dtos
     {
         public long Id { get; set; }
         public long SenderId { get; set; }
+        public string? SenderUsername { get; set; }
         public long RecipientId { get; set; }
         public string Content { get; set; }
         public DateTime TimestampCreated { get; set; }

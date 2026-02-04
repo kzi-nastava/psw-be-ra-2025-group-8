@@ -5,6 +5,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Author;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Stakeholders.API.Internal;
 
 
 namespace Explorer.Tours.Core.UseCases.Administration;
@@ -16,26 +17,34 @@ public class TourService : ITourService
     private readonly IMapper _mapper;
     private readonly ITagsRepository _tagsRepository;
     private readonly ICrudRepository<Equipment> _equipmentRepository;
+    private readonly ITourAdvertisementRepository _tourAdvertisementRepository;
+    private readonly IInternalWalletService _walletService;
+
 
     public TourService(
         ICrudRepository<Tour> crudRepository,
         ITourRepository tourRepository,
         ITagsRepository tagsRepository,
         ICrudRepository<Equipment> equipmentRepository,
-        IMapper mapper)
+        IMapper mapper,
+        ITourAdvertisementRepository tourAdvertisementRepository,
+        IInternalWalletService walletService)
     {
         _crudRepository = crudRepository;
         _tourRepository = tourRepository;
         _tagsRepository = tagsRepository;
         _equipmentRepository = equipmentRepository;
         _mapper = mapper;
+        _tourAdvertisementRepository = tourAdvertisementRepository;
+        _walletService = walletService;
     }
 
 
     public PagedResult<TourDto> GetPaged(int page, int pageSize)
     {
         var result = _crudRepository.GetPaged(page, pageSize);
-        var items = result.Results.Select(_mapper.Map<TourDto>).ToList();
+        var tours = result.Results.ToList();
+        var items = MapToursWithAdvertisementInfo(tours);
         return new PagedResult<TourDto>(items, result.TotalCount);
     }
 
@@ -55,7 +64,7 @@ public class TourService : ITourService
     public List<TourDto> GetByAuthor(int authorId)
     {
         var tours = _tourRepository.GetByAuthor(authorId);
-        return tours.Select(_mapper.Map<TourDto>).ToList();
+        return MapToursWithAdvertisementInfo(tours);
     }
 
     public TourDto Update(TourDto tourDto)
@@ -358,6 +367,179 @@ public class TourService : ITourService
     public TourDto GetById(long id)
     {
         var tour = _tourRepository.GetById(id);
-        return _mapper.Map<TourDto>(tour);
+        var dto = _mapper.Map<TourDto>(tour);
+
+        ApplyAdvertisementInfo(dto, _tourAdvertisementRepository.GetActiveForTour(id, DateTime.UtcNow));
+        return dto;
     }
+
+    private List<TourDto> MapToursWithAdvertisementInfo(List<Tour> tours)
+    {
+        var dtos = tours.Select(_mapper.Map<TourDto>).ToList();
+
+        var now = DateTime.UtcNow;
+        var adsByTourId = _tourAdvertisementRepository.GetActiveByTourIds(tours.Select(t => t.Id), now);
+
+        foreach (var dto in dtos)
+        {
+            adsByTourId.TryGetValue(dto.Id, out var ad);
+            ApplyAdvertisementInfo(dto, ad);
+        }
+
+        return dtos;
+    }
+
+    private static void ApplyAdvertisementInfo(TourDto dto, TourAdvertisement? ad)
+    {
+        dto.IsAdvertised = ad != null;
+        dto.AdvertisementTier = ad?.Tier.ToString();
+        dto.AdvertisementEndsAtUtc = ad?.EndsAtUtc;
+    }
+    public TourAdvertisementDto Advertise(long tourId, AdvertiseTourRequestDto request, int authorId)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Tier))
+            throw new EntityValidationException("Tier is required.");
+
+        if (!Enum.TryParse<TourAdvertisementTier>(request.Tier, true, out var tier))
+            throw new EntityValidationException($"Invalid tier '{request.Tier}'. Allowed: Basic, Standard, Premium.");
+
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only advertise your own tours.");
+
+        if (tour.Status != TourStatus.Published)
+            throw new EntityValidationException("Only published tours can be advertised.");
+
+        var now = DateTime.UtcNow;
+
+        var existingActive = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (existingActive != null)
+            throw new EntityValidationException($"Tour is already advertised until {existingActive.EndsAtUtc:O}.");
+
+        var (cost, durationDays, _) = TourAdvertisingRules.ForTier(tier);
+
+        var userId = (long)authorId;
+        if (!_walletService.HasSufficientFunds(userId, cost))
+            throw new EntityValidationException("Insufficient Adventure Coins.");
+
+        // Deduct first (safer: da ne ostane reklama bez placanja)
+        _walletService.DeductCoins(userId, cost);
+
+        var endsAt = now.AddDays(durationDays);
+        var ad = new TourAdvertisement(tourId, authorId, tier, cost, now, endsAt);
+        var created = _tourAdvertisementRepository.Create(ad);
+
+        return new TourAdvertisementDto
+        {
+            TourId = created.TourId,
+            Tier = created.Tier.ToString(),
+            AdventureCoinsSpent = created.AdventureCoinsSpent,
+            PurchasedAtUtc = created.PurchasedAtUtc,
+            EndsAtUtc = created.EndsAtUtc,
+            IsActive = created.IsActive(now)
+        };
+    }
+
+    public CancelTourAdvertisementResultDto CancelAdvertisement(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only cancel advertisement for your own tours.");
+
+        var now = DateTime.UtcNow;
+
+        var activeAd = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (activeAd == null)
+            throw new EntityValidationException("Tour is not currently advertised.");
+
+        if (activeAd.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only cancel your own tour advertisement.");
+
+        var refund = CalculateRefund(activeAd, now);
+
+        activeAd.Cancel(now);
+        _tourAdvertisementRepository.Update(activeAd);
+
+        if (refund > 0)
+        {
+            var userId = (long)authorId;
+            _walletService.DepositCoins(userId, refund);
+        }
+
+        return new CancelTourAdvertisementResultDto
+        {
+            TourId = tourId,
+            RefundedAdventureCoins = refund,
+            CancelledAtUtc = now
+        };
+    }
+
+    private static int CalculateRefund(TourAdvertisement ad, DateTime utcNow)
+    {
+        // U = ukupno placeno
+        var U = ad.AdventureCoinsSpent;
+        if (U <= 0) return 0;
+
+        // Tukupno, Tpreostalo
+        var total = ad.EndsAtUtc - ad.PurchasedAtUtc;
+        if (total.TotalSeconds <= 0) return 0;
+
+        var remaining = ad.EndsAtUtc - utcNow;
+        if (remaining.TotalSeconds <= 0) return 0;
+
+        // S = setup fee = 20% od U
+        var S = (int)Math.Floor(U * 0.20);
+
+        // (U - S)
+        var refundableBase = U - S;
+        if (refundableBase <= 0) return 0;
+
+        // ratio = Tpreostalo/Tukupno
+        var ratio = remaining.TotalSeconds / total.TotalSeconds;
+
+        // P = (U - S) * ratio  (zaokruzi nadole da nikad ne vrati vise)
+        var P = (int)Math.Floor(refundableBase * ratio);
+
+        // safety clamp
+        if (P < 0) return 0;
+        if (P > U) return U;
+
+        return P;
+    }
+    public CancelTourAdvertisementPreviewDto GetCancelAdvertisementPreview(long tourId, int authorId)
+    {
+        var tour = _tourRepository.Get(tourId) ?? throw new NotFoundException("Tour not found.");
+
+        if (tour.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only preview cancellation for your own tours.");
+
+        var now = DateTime.UtcNow;
+
+        var activeAd = _tourAdvertisementRepository.GetActiveForTour(tourId, now);
+        if (activeAd == null)
+            throw new EntityValidationException("Tour is not currently advertised.");
+
+        if (activeAd.AuthorId != authorId)
+            throw new UnauthorizedAccessException("You can only preview cancellation for your own tour advertisement.");
+
+        var refund = CalculateRefund(activeAd, now);
+        var setupFee = (int)Math.Floor(activeAd.AdventureCoinsSpent * 0.20);
+
+        return new CancelTourAdvertisementPreviewDto
+        {
+            TourId = tourId,
+            RefundedAdventureCoins = refund,
+            CalculatedAtUtc = now,
+
+            TotalAdventureCoinsSpent = activeAd.AdventureCoinsSpent,
+            SetupFeeAdventureCoins = setupFee,
+            PurchasedAtUtc = activeAd.PurchasedAtUtc,
+            EndsAtUtc = activeAd.EndsAtUtc,
+            Tier = activeAd.Tier.ToString()
+        };
+    }
+
+
 }
