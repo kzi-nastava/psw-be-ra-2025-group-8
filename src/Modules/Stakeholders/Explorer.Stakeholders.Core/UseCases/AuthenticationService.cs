@@ -90,6 +90,17 @@ public class AuthenticationService : IAuthenticationService
         // Always create a Person row for every user (required for app to work properly)
         var person = _personRepository.Create(new Person(createdUser.Id, "", "", dto.Email ?? ""));
 
+        // Kreiraj wallet automatski za autora (turist se ne kreira ovde)
+        if (role == UserRole.Author)
+        {
+            var existingWallet = _walletRepository.GetByUserId(createdUser.Id);
+            if (existingWallet == null)
+            {
+                _walletRepository.Create(new Wallet(createdUser.Id));
+            }
+        }
+
+
         return new AccountDto
         {
             Id = createdUser.Id,
