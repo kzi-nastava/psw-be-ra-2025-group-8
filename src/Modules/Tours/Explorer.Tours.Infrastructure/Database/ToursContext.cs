@@ -23,7 +23,7 @@ public class ToursContext : DbContext
     public DbSet<TourRatingImage> TourRatingImages { get; set; }
     public DbSet<Bundle> Bundles { get; set; }
     public DbSet<BundleTour> BundleTours { get; set; }
-
+    public DbSet<TourAdvertisement> TourAdvertisements { get; set; }
 
 
     //Preference
@@ -40,6 +40,9 @@ public class ToursContext : DbContext
     public DbSet<TourChatRoom> TourChatRooms { get; set; }
     public DbSet<TourChatMember> TourChatMembers { get; set; }
     public DbSet<TourChatMessage> TourChatMessages { get; set; }
+
+    // Tour Stats
+    public DbSet<TourStats> TourStats { get; set; }
 
     public ToursContext(DbContextOptions<ToursContext> options) : base(options) {}
 
@@ -338,6 +341,82 @@ public class ToursContext : DbContext
             builder.Property(m => m.Content).IsRequired();
             builder.HasIndex(m => m.TourChatRoomId);
             builder.HasIndex(m => m.SenderId);
+        });
+
+        // TOURSTATS CONFIGURATION
+        modelBuilder.Entity<TourStats>(builder =>
+        {
+            builder.HasKey(ts => ts.Id);
+
+            builder.Property(ts => ts.TourId)
+                .IsRequired();
+
+            builder.Property(ts => ts.CompletionRate)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(ts => ts.AverageCompletionPercentage)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(ts => ts.AverageDuration)
+                .HasColumnType("interval")
+                .IsRequired();
+
+            builder.Property(ts => ts.LastUpdated)
+                .IsRequired();
+
+            // TourStats -> Tour (N:1)
+            builder.HasOne(ts => ts.Tour)
+                .WithMany()
+                .HasForeignKey(ts => ts.TourId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Ensure unique TourId (one stats record per tour)
+            builder.HasIndex(ts => ts.TourId)
+                .IsUnique();
+        });
+        modelBuilder.Entity<TourAdvertisement>(builder =>
+        {
+            builder.HasKey(a => a.Id);
+
+            builder.Property(a => a.TourId).IsRequired();
+            builder.Property(a => a.AuthorId).IsRequired();
+            builder.Property(a => a.Tier).IsRequired();
+            builder.Property(a => a.AdventureCoinsSpent).IsRequired();
+            builder.Property(a => a.PurchasedAtUtc).IsRequired();
+            builder.Property(a => a.EndsAtUtc).IsRequired();
+
+            builder.ToTable("TourAdvertisements", schema: "tours");
+
+            builder.HasIndex(a => a.TourId);
+            builder.HasIndex(a => new { a.TourId, a.EndsAtUtc });
+        });
+
+        // POSITION CONFIGURATION
+        modelBuilder.Entity<Position>(builder =>
+        {
+            builder.HasKey(p => p.Id);
+
+            builder.Property(p => p.Latitude)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(p => p.Longitude)
+                .HasColumnType("double precision")
+                .IsRequired();
+
+            builder.Property(p => p.TouristId)
+                .IsRequired();
+
+            builder.Property(p => p.UpdatedAt)
+                .IsRequired();
+
+            builder.Property(p => p.LocationSource)
+                .HasConversion<string>()
+                .IsRequired();
+
+            builder.HasIndex(p => p.TouristId);
         });
     }
 

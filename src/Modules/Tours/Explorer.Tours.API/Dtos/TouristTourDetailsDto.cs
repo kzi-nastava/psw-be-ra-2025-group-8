@@ -27,5 +27,10 @@ namespace Explorer.Tours.API.Dtos
         public bool IsOnSale { get; set; }
         public decimal? OriginalPrice { get; set; }
         public int? DiscountPercentage { get; set; }
+
+        public bool IsAdvertised { get; set; }
+        public string? AdvertisementTier { get; set; }
+        public DateTime? AdvertisementEndsAtUtc { get; set; }
+
     }
 }

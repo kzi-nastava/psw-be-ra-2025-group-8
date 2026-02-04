@@ -6,6 +6,7 @@ using Explorer.Tours.API.Dtos;
 using Explorer.Tours.API.Public.Tourist;
 using Explorer.Tours.Core.Domain;
 using Explorer.Tours.Core.Domain.RepositoryInterfaces;
+using Explorer.Tours.API.Public.Weather;
 
 namespace Explorer.Tours.Core.UseCases.Tourist;
 
@@ -19,7 +20,8 @@ public class TouristTourService : ITouristTourService
     private readonly IPreferenceTagsRepository _preferenceTagsRepository;
     private readonly ITouristPreferencesRepository _touristPreferencesRepository;
     private readonly IInternalSaleService _saleService;
-
+    private readonly IWeatherForecastService _weatherForecastService;
+    private readonly ITourAdvertisementRepository _tourAdvertisementRepository;
 
     public TouristTourService(
         ITourRepository tourRepository,
@@ -29,7 +31,9 @@ public class TouristTourService : ITouristTourService
         IPreferenceTagsRepository preferenceTagsRepository,
         ITouristPreferencesRepository touristPreferencesRepository,
         IInternalSaleService saleService,
-        IMapper mapper)
+        IMapper mapper,
+        IWeatherForecastService weatherForecastService,
+        ITourAdvertisementRepository tourAdvertisementRepository)
     {
         _tourRepository = tourRepository;
         _tourRatingService = tourRatingService;
@@ -39,6 +43,8 @@ public class TouristTourService : ITouristTourService
         _touristPreferencesRepository = touristPreferencesRepository;
         _saleService = saleService;
         _mapper = mapper;
+        _weatherForecastService = weatherForecastService;
+        _tourAdvertisementRepository = tourAdvertisementRepository;
     }
 
 
@@ -49,7 +55,7 @@ public class TouristTourService : ITouristTourService
             .Where(t => t.Status == TourStatus.Published)
             .ToList();
 
-        return tours.Select(MapPreview).ToList();
+        return MapPreviewsWithAdvertising(tours);
     }
 
     public List<TouristTourPreviewDto> GetPublishedTours(int? minPrice, int? maxPrice)
@@ -64,7 +70,7 @@ public class TouristTourService : ITouristTourService
         if (maxPrice.HasValue)
             tours = tours.Where(t => t.Price <= (decimal)maxPrice.Value);
 
-        return tours.ToList().Select(MapPreview).ToList();
+        return MapPreviewsWithAdvertising(tours);
     }
 
     public List<TouristTourPreviewDto> GetPublishedTours(List<int> difficulties, int? minPrice, int? maxPrice)
@@ -82,10 +88,8 @@ public class TouristTourService : ITouristTourService
         if (maxPrice.HasValue)
             tours = tours.Where(t => t.Price <= (decimal)maxPrice.Value);
 
-        return tours.ToList().Select(MapPreview).ToList();
+        return MapPreviewsWithAdvertising(tours);
     }
-
-
 
 
     public List<TouristTourPreviewDto> GetPublishedTours(
@@ -154,7 +158,7 @@ public class TouristTourService : ITouristTourService
             tours = tours.Where(t => t.Price <= (decimal)maxPrice.Value).ToList();
 
 
-        return tours.Select(MapPreview).ToList();
+        return MapPreviewsWithAdvertising(tours);
     }
 
     private static HashSet<int> MapPreferenceDifficultyToStars(DifficultyLevel level)
@@ -177,13 +181,29 @@ public class TouristTourService : ITouristTourService
         if (tour == null || tour.Status != TourStatus.Published)
             return null;
 
-        var dto = MapDetails(tour);
+        var ad = _tourAdvertisementRepository.GetActiveForTour(tour.Id, DateTime.UtcNow);
+        var dto = MapDetails(tour, ad);
+        ApplyAdvertisementInfo(dto, ad);
         dto.Reviews = MapReviews(id, out var avg);
         dto.AverageRating = avg;
         dto.FirstKeyPoint = MapFirstKeyPoint(tour);
 
         return dto;
     }
+
+    public WeatherDailyForecastDto GetPublishedTourDailyForecast(long id, int days = 7)
+    {
+        var tour = _tourRepository.Get(id);
+        if (tour == null || tour.Status != TourStatus.Published)
+            return null;
+
+        var kp = tour.KeyPoints.OrderBy(k => k.Order).FirstOrDefault();
+        if (kp == null)
+            return null;
+
+        return _weatherForecastService.GetDailyForecast(kp.Location.Latitude, kp.Location.Longitude, days);
+    }
+
 
     public List<KeyPointDto> GetTourKeyPoints(long tourId)
     {
@@ -205,7 +225,7 @@ public class TouristTourService : ITouristTourService
             searchDto.Longitude,
             searchDto.DistanceInKilometers);
 
-        return tours.Select(MapPreview).ToList();
+        return MapPreviewsWithAdvertising(tours);
     }
 
     public List<TouristTourPreviewDto> GetToursOnSale(bool sortByDiscount = false)
@@ -222,27 +242,31 @@ public class TouristTourService : ITouristTourService
             .Where(t => t.Status == TourStatus.Published && tourIds.Contains(t.Id))
             .ToList();
 
-        var result = tours.Select(MapPreview).ToList();
+        var result = MapPreviewsWithAdvertising(tours);
 
         if (sortByDiscount)
         {
+            // i dalje zadrzava advertised-first + tier prioritet
             result = result
-                .OrderByDescending(t => t.DiscountPercentage ?? 0)
+                .OrderByDescending(t => t.IsAdvertised)
+                .ThenByDescending(t => TierPriority(t.AdvertisementTier))
+                .ThenByDescending(t => t.DiscountPercentage ?? 0)
                 .ToList();
         }
 
         return result;
+
     }
 
     // =======================================================
     // Private helpers
     // =======================================================
 
-    private TouristTourPreviewDto MapPreview(Tour tour)
+    private TouristTourPreviewDto MapPreview(Tour tour, TourAdvertisement? ad)
     {
         var saleInfo = _saleService.GetTourSaleInfo(tour.Id);
-        
-        return new TouristTourPreviewDto
+
+        var dto = new TouristTourPreviewDto
         {
             Id = tour.Id,
             Name = tour.Name,
@@ -257,13 +281,17 @@ public class TouristTourService : ITouristTourService
             OriginalPrice = saleInfo.IsOnSale ? saleInfo.OriginalPrice : null,
             DiscountPercentage = saleInfo.DiscountPercentage
         };
+
+        ApplyAdvertisementInfo(dto, ad);
+        return dto;
     }
 
-    private TouristTourDetailsDto MapDetails(Tour tour)
+
+    private TouristTourDetailsDto MapDetails(Tour tour, TourAdvertisement? ad)
     {
         var saleInfo = _saleService.GetTourSaleInfo(tour.Id);
-        
-        return new TouristTourDetailsDto
+
+        var dto = new TouristTourDetailsDto
         {
             Id = tour.Id,
             Name = tour.Name,
@@ -278,7 +306,11 @@ public class TouristTourService : ITouristTourService
             OriginalPrice = saleInfo.IsOnSale ? saleInfo.OriginalPrice : null,
             DiscountPercentage = saleInfo.DiscountPercentage
         };
+
+        ApplyAdvertisementInfo(dto, ad);
+        return dto;
     }
+
 
     private KeyPointPreviewDto MapFirstKeyPoint(Tour tour)
     {
@@ -313,4 +345,56 @@ public class TouristTourService : ITouristTourService
         var ratings = _tourRatingService.GetByTour((int)tourId);
         return ratings.Any() ? ratings.Average(r => r.Rating) : 0;
     }
+
+    private List<TouristTourPreviewDto> MapPreviewsWithAdvertising(IEnumerable<Tour> tours)
+    {
+        var tourList = tours.ToList();
+
+        var now = DateTime.UtcNow;
+        var adsByTourId = _tourAdvertisementRepository.GetActiveByTourIds(tourList.Select(t => t.Id), now);
+
+        var sorted = tourList
+            .OrderByDescending(t => adsByTourId.ContainsKey(t.Id))
+            .ThenByDescending(t => adsByTourId.TryGetValue(t.Id, out var ad) ? (int)ad.Tier : 0)
+            .ThenByDescending(t => adsByTourId.TryGetValue(t.Id, out var ad) ? ad.PurchasedAtUtc : DateTime.MinValue)
+            .ThenByDescending(t => t.PublishedAt ?? DateTime.MinValue)
+            .ToList();
+
+        var result = new List<TouristTourPreviewDto>(sorted.Count);
+        foreach (var tour in sorted)
+        {
+            adsByTourId.TryGetValue(tour.Id, out var ad);
+            result.Add(MapPreview(tour, ad));
+        }
+
+        return result;
+    }
+
+
+    private static void ApplyAdvertisementInfo(TouristTourPreviewDto dto, TourAdvertisement? ad)
+    {
+        dto.IsAdvertised = ad != null;
+        dto.AdvertisementTier = ad?.Tier.ToString();
+        dto.AdvertisementEndsAtUtc = ad?.EndsAtUtc;
+    }
+
+    private static void ApplyAdvertisementInfo(TouristTourDetailsDto dto, TourAdvertisement? ad)
+    {
+        dto.IsAdvertised = ad != null;
+        dto.AdvertisementTier = ad?.Tier.ToString();
+        dto.AdvertisementEndsAtUtc = ad?.EndsAtUtc;
+    }
+
+    private static int TierPriority(string? tier)
+    {
+        return tier?.ToLowerInvariant() switch
+        {
+            "premium" => 3,
+            "standard" => 2,
+            "basic" => 1,
+            _ => 0
+        };
+    }
+
+
 }

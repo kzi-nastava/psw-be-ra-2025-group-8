@@ -10,13 +10,17 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
 using Explorer.Tours.Core.UseCases;
 using Explorer.Tours.Core.UseCases.Administration;
+using Explorer.Tours.Core.UseCases.Author;
 using Explorer.Tours.Core.UseCases.PersonalEquipment;
 using Explorer.Tours.Core.UseCases.Tourist;
 using Explorer.Tours.Infrastructure.Database;
 using Explorer.Tours.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http; 
 using Npgsql;
+using Explorer.Tours.API.Public.Weather;
+using Explorer.Tours.Infrastructure.Weather;
 
 
 namespace Explorer.Tours.Infrastructure;
@@ -57,13 +61,30 @@ public static class ToursStartup
         services.AddScoped<ITourRatingService, TourRatingService>();
         services.AddScoped<ITourRatingImageService, TourRatingImageService>();
         services.AddScoped<ITouristTourService, TouristTourService>();
-        
+
         // Tour Chat
         services.AddScoped<ITourChatRoomService, TourChatRoomService>();
+
+        // Tour Stats
+        services.AddScoped<ITourStatsService, TourStatsService>();
+
+        // Tour Recommendations
+        services.AddScoped<ITourRecommendationService, TourRecommendationService>();
+        services.AddScoped<IInternalTourStatsService, TourStatsService>();
+
+        // Author Summary Stats
+        services.AddScoped<IAuthorSummaryStatsService, AuthorSummaryStatsService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
     {
+        services.AddHttpClient<IWeatherForecastService, OpenMeteoWeatherForecastService>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.open-meteo.com");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
+
         services.AddScoped<IPersonEquipmentRepository, PersonEquipmentRepository>();
         services.AddScoped<IMonumentRepository, MonumentDbRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
@@ -87,9 +108,13 @@ public static class ToursStartup
         services.AddScoped(typeof(ICrudRepository<ReportProblem>), typeof(CrudDatabaseRepository<ReportProblem, ToursContext>));
         services.AddScoped<ITourRatingRepository, TourRatingRepository>();
         services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
-        
+        services.AddScoped<ITourAdvertisementRepository, TourAdvertisementRepository>();
+
         // Tour Chat
         services.AddScoped<ITourChatRoomRepository, TourChatRoomRepository>();
+
+        // Tour Stats
+        services.AddScoped<ITourStatsRepository, TourStatsRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("tours"));
         dataSourceBuilder.EnableDynamicJson();

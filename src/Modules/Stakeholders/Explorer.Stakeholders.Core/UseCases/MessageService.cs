@@ -30,15 +30,34 @@ namespace Explorer.Stakeholders.Core.UseCases
 
         public MessageDto Send(MessageDto dto)
         {
-            var message = new Message(dto.SenderId, dto.RecipientId, dto.Content);
+            var message = new Message(dto.SenderId, dto.RecipientId, dto.Content, dto.AttachmentType, dto.AttachmentId);
             var created = _messageRepository.Create(message);
-            return _mapper.Map<MessageDto>(created);
+            var result = _mapper.Map<MessageDto>(created);
+            var user = _userRepository.GetById(result.SenderId);
+            result.SenderUsername = user?.Username ?? $"User#{result.SenderId}";
+            return result;
+        }
+
+        public MessageDto SendWithCoupon(long senderId, long recipientId, string content, long couponId)
+        {
+            var message = new Message(senderId, recipientId, content, "Coupon", couponId);
+            var created = _messageRepository.Create(message);
+            var result = _mapper.Map<MessageDto>(created);
+            var user = _userRepository.GetById(result.SenderId);
+            result.SenderUsername = user?.Username ?? $"User#{result.SenderId}";
+            return result;
         }
 
         public List<MessageDto> GetConversation(long userId1, long userId2)
         {
             var messages = _messageRepository.GetConversation(userId1, userId2);
-            return _mapper.Map<List<MessageDto>>(messages);
+            var dtos = _mapper.Map<List<MessageDto>>(messages);
+            foreach (var dto in dtos)
+            {
+                var user = _userRepository.GetById(dto.SenderId);
+                dto.SenderUsername = user?.Username ?? $"User#{dto.SenderId}";
+            }
+            return dtos;
         }
 
         public MessageDto Edit(long messageId, string newContent)
@@ -46,7 +65,10 @@ namespace Explorer.Stakeholders.Core.UseCases
             var message = _messageRepository.Get(messageId);
             message.Edit(newContent);
             var updated = _messageRepository.Update(message);
-            return _mapper.Map<MessageDto>(updated);
+            var result = _mapper.Map<MessageDto>(updated);
+            var user = _userRepository.GetById(result.SenderId);
+            result.SenderUsername = user?.Username ?? $"User#{result.SenderId}";
+            return result;
         }
 
         public MessageDto Delete(long messageId)
@@ -54,7 +76,10 @@ namespace Explorer.Stakeholders.Core.UseCases
             var message = _messageRepository.Get(messageId);
             message.Delete();
             var updated = _messageRepository.Update(message);
-            return _mapper.Map<MessageDto>(updated);
+            var result = _mapper.Map<MessageDto>(updated);
+            var user = _userRepository.GetById(result.SenderId);
+            result.SenderUsername = user?.Username ?? $"User#{result.SenderId}";
+            return result;
         }
 
         // ✅ ISPRAVLJENA METODA - Vrati sve konverzacije sa pravim imenima

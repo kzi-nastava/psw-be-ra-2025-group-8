@@ -25,5 +25,9 @@ namespace Explorer.Tours.API.Public.Author
         List<EquipmentForTourDto> GetEquipmentForTour(long tourId, int authorId);
         //Maksim: Dodao sam Get po ID-ju zato sto su mi potrebni podaci Tour-a za ShoppingCart
         TourDto GetById(long id);
+        TourAdvertisementDto Advertise(long tourId, AdvertiseTourRequestDto request, int authorId);
+        CancelTourAdvertisementResultDto CancelAdvertisement(long tourId, int authorId);
+        CancelTourAdvertisementPreviewDto GetCancelAdvertisementPreview(long tourId, int authorId);
+
     }
 }

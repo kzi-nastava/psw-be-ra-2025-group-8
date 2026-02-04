@@ -190,6 +190,60 @@ public class TourExecutionController : ControllerBase
         return Ok(activeTour);
     }
 
+    [HttpGet("{tourExecutionId:long}/weather/current")]
+    public ActionResult<WeatherCurrentDto> GetCurrentWeather(
+    long tourExecutionId,
+    [FromQuery] double? lat = null,
+    [FromQuery] double? lon = null)
+    {
+        var touristId = GetTouristIdFromToken();
+
+        var tourExecution = _tourExecutionService.Get((int)tourExecutionId);
+        if (tourExecution == null)
+            return NotFound(new { message = "TourExecution not found" });
+
+        if (tourExecution.IdTourist != touristId)
+            return Forbid();
+
+        // opcione koordinate koje frontend šalje (trenutna pozicija na mapi)
+        if (lat.HasValue && (lat < -90 || lat > 90))
+            return BadRequest(new { message = "lat must be between -90 and 90." });
+
+        if (lon.HasValue && (lon < -180 || lon > 180))
+            return BadRequest(new { message = "lon must be between -180 and 180." });
+
+        var result = _tourExecutionService.GetCurrentWeather(tourExecutionId, lat, lon);
+        if (result == null)
+            return NotFound(new { message = "Weather not available" });
+
+        return Ok(result);
+    }
+
+
+    [HttpGet("{tourExecutionId:long}/weather/next-keypoint")]
+    public ActionResult<WeatherHourlyForecastDto> GetNextKeyPointWeather(long tourExecutionId, [FromQuery] int hours = 6)
+    {
+        if (hours < 1 || hours > 48)
+            return BadRequest(new { message = "hours must be between 1 and 48." });
+
+        var touristId = GetTouristIdFromToken();
+
+        var tourExecution = _tourExecutionService.Get((int)tourExecutionId);
+        if (tourExecution == null)
+            return NotFound(new { message = "TourExecution not found" });
+
+        if (tourExecution.IdTourist != touristId)
+            return Forbid();
+
+        var result = _tourExecutionService.GetNextKeyPointHourlyForecast(tourExecutionId, hours);
+        if (result == null)
+            return NotFound(new { message = "Next keypoint not found or weather not available." });
+
+        return Ok(result);
+    }
+
+
+
     [HttpPost("{tourExecutionId:long}/activate-encounter/{encounterId:long}")]
     public ActionResult<EncounterParticipationDto> ActivateEncounter(long tourExecutionId, long encounterId)
     {

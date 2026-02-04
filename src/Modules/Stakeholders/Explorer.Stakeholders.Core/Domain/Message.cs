@@ -11,16 +11,20 @@ namespace Explorer.Stakeholders.Core.Domain
         public DateTime TimestampCreated { get; private set; }
         public DateTime? TimestampUpdated { get; private set; }
         public bool IsDeleted { get; private set; }
+        public string? AttachmentType { get; private set; }
+        public long? AttachmentId { get; private set; }
 
         protected Message() { }
 
-        public Message(long senderId, long recipientId, string content)
+        public Message(long senderId, long recipientId, string content, string? attachmentType = null, long? attachmentId = null)
         {
             SenderId = senderId;
             RecipientId = recipientId;
             Content = content;
             TimestampCreated = DateTime.UtcNow;
             IsDeleted = false;
+            AttachmentType = attachmentType;
+            AttachmentId = attachmentId;
         }
 
         public void Edit(string newContent)

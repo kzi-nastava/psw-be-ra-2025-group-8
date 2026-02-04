@@ -142,6 +142,28 @@ public class TourController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id:long}/advertise")]
+    public ActionResult<TourAdvertisementDto> Advertise(long id, [FromBody] AdvertiseTourRequestDto request)
+    {
+        var authorId = GetAuthorIdFromToken();
+        var result = _tourService.Advertise(id, request, authorId);
+        return Ok(result);
+    }
+
+    [HttpDelete("{tourId:long}/advertise")]
+    public ActionResult<CancelTourAdvertisementResultDto> CancelAdvertisement(long tourId)
+    {
+        var authorId = GetAuthorIdFromToken();
+        return Ok(_tourService.CancelAdvertisement(tourId, authorId));
+    }
+
+    [HttpGet("{tourId:long}/advertise/cancel-preview")]
+    public ActionResult<CancelTourAdvertisementPreviewDto> GetCancelAdvertisementPreview(long tourId)
+    {
+        var authorId = GetAuthorIdFromToken(); // isti način kao u CancelAdvertisement
+        return Ok(_tourService.GetCancelAdvertisementPreview(tourId, authorId));
+    }
+
 
     private int GetAuthorIdFromToken()
     {
@@ -157,4 +179,6 @@ public class TourController : ControllerBase
 
         throw new UnauthorizedAccessException("Unable to determine user ID from token");
     }
+
+
 }

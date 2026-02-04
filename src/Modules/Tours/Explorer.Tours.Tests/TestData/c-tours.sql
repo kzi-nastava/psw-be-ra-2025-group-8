@@ -1,5 +1,5 @@
 INSERT INTO tours."Tours" ("Id", "Name", "Description", "Difficulty", "Status", "Price", "AuthorId", "LengthInKilometers")
-VALUES 
+VALUES
     (-1, 'Tour for Issue Testing', 'Tura za testiranje prijave problema', 2, 0, 0, -1, 0),
     (-2, 'Tour 2 for Issue Testing', 'Druga tura za testiranje prijave problema', 3, 0, 0, -2, 0),
     (-3, 'Tour 3 for Issue Testing', 'Tre?a tura za testiranje prijave problema', 1, 0, 0, -1, 0),
@@ -10,6 +10,6 @@ VALUES
     (-14, 'Test tour for preview 2', 'Tura drugog autora', 1, 1, 0, -12, 0),
     (-511, 'Beogradska avantura', 'Tura po Beogradu', 1, 0, 50, -11, 1),
     (-522, 'Planinska tura', 'Tara i Zlatibor', 2, 0, 100, -11, 1),
-    (-533, 'Dunavska ruta', 'Tura duž Dunava', 1, 0, 70, -11, 1);
+    (-533, 'Dunavska ruta', 'Tura duï¿½ Dunava', 1, 0, 70, -11, 1);
 
 

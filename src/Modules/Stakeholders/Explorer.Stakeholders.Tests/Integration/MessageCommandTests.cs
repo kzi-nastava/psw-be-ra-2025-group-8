@@ -31,5 +31,26 @@ namespace Explorer.Stakeholders.Tests.Integration
             list.ShouldContain(m => m.Id == -1 && m.SenderId == 1 && m.RecipientId == 2);
             list.ShouldContain(m => m.Id == -2 && m.SenderId == 2 && m.RecipientId == 1);
         }
+
+        [Fact]
+        public async Task Get_conversation_returns_message_with_coupon_attachment()
+        {
+            // Act - User 1 gets conversation with user -11 (Author who sent coupon)
+            var response = await Client.GetAsync("/api/messages/-11");
+
+            // Assert
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            var list = await response.Content.ReadFromJsonAsync<List<MessageDto>>();
+            list.ShouldNotBeNull();
+            list!.Count.ShouldBeGreaterThan(0);
+
+            // Verify message with coupon attachment exists (from test data: -3)
+            var messageWithCoupon = list.Find(m => m.Id == -3);
+            messageWithCoupon.ShouldNotBeNull();
+            messageWithCoupon.AttachmentType.ShouldBe("Coupon");
+            messageWithCoupon.AttachmentId.ShouldBe(-1);
+            messageWithCoupon.Content.ShouldBe("Evo kupona za tebe!");
+        }
     }
 }
