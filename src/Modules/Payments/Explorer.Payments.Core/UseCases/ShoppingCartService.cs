@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
+using Explorer.BuildingBlocks.Core.Exceptions;
+using Explorer.BuildingBlocks.Core.UseCases;
 using Explorer.Payments.API.Dtos;
 using Explorer.Payments.API.Internal;
 using Explorer.Payments.API.Public;
 using Explorer.Payments.Core.Domain;
 using Explorer.Payments.Core.Domain.RepositoryInterfaces;
-using Explorer.BuildingBlocks.Core.Exceptions;
 using Explorer.Stakeholders.API.Internal;
-using Explorer.BuildingBlocks.Core.UseCases;
+using Explorer.Tours.API.Internal;
+using Explorer.Tours.Core.Domain;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,6 +23,7 @@ namespace Explorer.Payments.Core.UseCases
         private readonly IPurchaseNotificationService _purchaseNotificationService;
         private readonly ICouponRepository _couponRepository;
         private readonly IInternalSaleService _saleService;
+        private readonly IInternalTourStatsService _internalTourStatsService;
 
         public ShoppingCartService(
             IShoppingCartRepository cartRepository, 
@@ -29,7 +32,8 @@ namespace Explorer.Payments.Core.UseCases
             IMapper mapper,
             IPurchaseNotificationService purchaseNotificationService,
             ICouponRepository couponRepository,
-            IInternalSaleService saleService)
+            IInternalSaleService saleService,
+            IInternalTourStatsService internalTourStatsService)
         {
             _cartRepository = cartRepository;
             _tourPriceProvider = tourPriceProvider;
@@ -38,6 +42,7 @@ namespace Explorer.Payments.Core.UseCases
             _purchaseNotificationService = purchaseNotificationService;
             _couponRepository = couponRepository;
             _saleService = saleService;
+            _internalTourStatsService = internalTourStatsService;
         }
 
         public ShoppingCartDto CreateCart(long userId)
@@ -169,6 +174,7 @@ namespace Explorer.Payments.Core.UseCases
             // Record purchase with the actual price paid (which includes sale discount)
             cart.PurchaseItem(tourId, originalPrice, finalPrice, saleId, couponId);
             _cartRepository.Update(cart);
+            _internalTourStatsService.RegisterPurchase(tourId, (double)finalPrice);
             _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
 
@@ -195,6 +201,7 @@ namespace Explorer.Payments.Core.UseCases
                 
                 tourPrices[item.TourId] = finalPrice;
                 totalRequiredCoins += (int)Math.Ceiling(finalPrice);
+                _internalTourStatsService.RegisterPurchase(item.TourId, (double)tourPrices[item.TourId]);
             }
 
             // Check if user has sufficient Adventure Coins for all items
@@ -260,6 +267,7 @@ namespace Explorer.Payments.Core.UseCases
 
             cart.PurchaseItem(tourId, tour.Price, discountedPrice, saleId: null, couponId: coupon.Id);
             _cartRepository.Update(cart);
+            _internalTourStatsService.RegisterPurchase(tourId, (double)discountedPrice);
             _purchaseNotificationService.NotifyTourPurchased(userId, tourId);
         }
 
@@ -336,6 +344,10 @@ namespace Explorer.Payments.Core.UseCases
 
             cart.PurchaseAllItems(tourPrices);
             _cartRepository.Update(cart);
+            foreach (var tourIdPrice in tourPrices)
+            {
+                _internalTourStatsService.RegisterPurchase(tourIdPrice.Key, (double)tourIdPrice.Value);
+            }
             _purchaseNotificationService.NotifyToursPurchased(userId, purchasedTourIds);
         }
     }

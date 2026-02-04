@@ -10,6 +10,7 @@ using Explorer.Tours.Core.Domain.RepositoryInterfaces;
 using Explorer.Tours.Core.Mappers;
 using Explorer.Tours.Core.UseCases;
 using Explorer.Tours.Core.UseCases.Administration;
+using Explorer.Tours.Core.UseCases.Author;
 using Explorer.Tours.Core.UseCases.PersonalEquipment;
 using Explorer.Tours.Core.UseCases.Tourist;
 using Explorer.Tours.Infrastructure.Database;
@@ -60,9 +61,19 @@ public static class ToursStartup
         services.AddScoped<ITourRatingService, TourRatingService>();
         services.AddScoped<ITourRatingImageService, TourRatingImageService>();
         services.AddScoped<ITouristTourService, TouristTourService>();
-        
+
         // Tour Chat
         services.AddScoped<ITourChatRoomService, TourChatRoomService>();
+
+        // Tour Stats
+        services.AddScoped<ITourStatsService, TourStatsService>();
+
+        // Tour Recommendations
+        services.AddScoped<ITourRecommendationService, TourRecommendationService>();
+        services.AddScoped<IInternalTourStatsService, TourStatsService>();
+
+        // Author Summary Stats
+        services.AddScoped<IAuthorSummaryStatsService, AuthorSummaryStatsService>();
     }
 
     private static void SetupInfrastructure(IServiceCollection services)
@@ -99,9 +110,11 @@ public static class ToursStartup
         services.AddScoped<ITourRatingImageRepository, TourRatingImageRepository>();
         services.AddScoped<ITourAdvertisementRepository, TourAdvertisementRepository>();
 
-
         // Tour Chat
         services.AddScoped<ITourChatRoomRepository, TourChatRoomRepository>();
+
+        // Tour Stats
+        services.AddScoped<ITourStatsRepository, TourStatsRepository>();
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(DbConnectionStringBuilder.Build("tours"));
         dataSourceBuilder.EnableDynamicJson();

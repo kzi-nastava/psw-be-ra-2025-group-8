@@ -159,6 +159,11 @@ public class ToursProfile : Profile
 
         CreateMap<TourChatMessage, TourChatMessageDto>()
             .ForMember(dest => dest.SenderName, opt => opt.Ignore());
+
+        // TourStats mapping
+        CreateMap<TourStats, TourStatsDto>()
+            .ForMember(dest => dest.MostCommonDifficultyLevel,
+                opt => opt.MapFrom(src => src.mostCommonDiffcultyLevel.ToString()));
     }
 
     private static TourStatus MapStatus(string status)

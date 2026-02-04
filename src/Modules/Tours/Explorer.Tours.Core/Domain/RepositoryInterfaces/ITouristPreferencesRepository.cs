@@ -13,6 +13,7 @@ namespace Explorer.Tours.Core.Domain.RepositoryInterfaces
         TouristPreferences GetByPersonId(long personId);
         TouristPreferences Create(TouristPreferences touristPreferences);
         TouristPreferences Update(TouristPreferences touristPreferences);
+        List<TouristPreferences> GetAll();
         void DeleteByPersonId(long personId);
     }
 }
