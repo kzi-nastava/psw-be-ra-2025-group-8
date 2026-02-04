@@ -37,6 +37,8 @@ public class TourRecommendationService : ITourRecommendationService
             recommendations.AddRange(tourRecommendations);
         }
 
+        recommendations.AddRange(AnalyzeBundlingOpportunities(authorTours));
+
         return new AuthorRecommendationsDto
         {
             AuthorId = authorId,
@@ -334,6 +336,85 @@ public class TourRecommendationService : ITourRecommendationService
 
         return recommendations;
     }
+
+    private List<TourRecommendationDto> AnalyzeBundlingOpportunities(List<Tour> allAuthorTours)
+    {
+        var recommendations = new List<TourRecommendationDto>();
+
+        var successfulTours = allAuthorTours
+            .Where(t => t.Status == TourStatus.Published)
+            .Where(t => {
+                var s = _tourStatsRepository.GetByTourId((int)t.Id);
+                return s != null && s.TotalSales > 5;
+            }).ToList();
+
+        var groupsByDifficulty = successfulTours.GroupBy(t => t.Difficulty);
+
+        foreach (var group in groupsByDifficulty)
+        {
+            if (group.Count() >= 2)
+            {
+                var tourNames = group.Select(t => t.Name).Take(2).ToList();
+                var firstTour = group.First();
+                string difficultyName = GetDifficultyName(group.Key);
+
+                recommendations.Add(new TourRecommendationDto
+                {
+                    TourId = (int)firstTour.Id,
+                    TourName = firstTour.Name,
+                    Message = $"Primetili smo da imate više uspešnih tura težine '{difficultyName}' " +
+                              $"(npr. '{tourNames[0]}' i '{tourNames[1]}'). " +
+                              "Kreirajte paket za ovu ciljnu grupu uz mali popust!",
+                    Sentiment = RecommendationSentiment.Positive,
+                    Category = RecommendationCategory.Economic
+                });
+            }
+        }
+
+        var groupsByLength = successfulTours.GroupBy(t => t.LengthInKilometers switch
+        {
+            < 5 => "Short",
+            <= 15 => "Standard",
+            _ => "Long"
+        });
+
+        foreach (var group in groupsByLength)
+        {
+            if (group.Count() >= 2)
+            {
+                var tourNames = group.Select(t => t.Name).Take(2).ToList();
+                var firstTour = group.First();
+                string categoryDescription = group.Key switch
+                {
+                    "Short" => "kratkih i efikasnih tura (ispod 5km)",
+                    "Standard" => "tura standardne dužine (5-15km)",
+                    "Long" => "maratonskih avantura (preko 15km)",
+                    _ => "sličnih tura"
+                };
+
+                recommendations.Add(new TourRecommendationDto
+                {
+                    TourId = (int)firstTour.Id,
+                    TourName = firstTour.Name,
+                    Message = $"Potencijal za paket: Imate više uspešnih {categoryDescription} " +
+                              $"(npr. '{tourNames[0]}' i '{tourNames[1]}'). " +
+                              "Turisti često vole da kupe set tura sličnog intenziteta!",
+                    Sentiment = RecommendationSentiment.Positive,
+                    Category = RecommendationCategory.Economic
+                });
+            }
+        }
+
+        return recommendations;
+    }
+
+    private string GetDifficultyName(int difficulty) => difficulty switch
+    {
+        1 => "Easy",
+        2 => "Medium",
+        3 => "Hard",
+        _ => "Unknown"
+    };
 
     private string FormatDuration(double minutes)
     {
