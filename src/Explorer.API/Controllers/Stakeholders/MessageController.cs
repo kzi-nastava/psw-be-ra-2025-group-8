@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using Explorer.Stakeholders.API.Dtos;
 using Explorer.Stakeholders.API.Public;
+using Explorer.Payments.API.Public;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Explorer.API.Controllers.Stakeholders
@@ -12,10 +14,12 @@ namespace Explorer.API.Controllers.Stakeholders
     public class MessageController : ControllerBase
     {
         private readonly IMessageService _messageService;
+        private readonly ICouponService _couponService;
 
-        public MessageController(IMessageService messageService)
+        public MessageController(IMessageService messageService, ICouponService couponService)
         {
             _messageService = messageService;
+            _couponService = couponService;
         }
 
         private long GetCurrentUserId()
@@ -62,6 +66,52 @@ namespace Explorer.API.Controllers.Stakeholders
             dto.SenderId = currentUserId;  // ✅ ISPRAVKA: Koristi stvarni ID
             var created = _messageService.Send(dto);
             return Ok(created);
+        }
+
+        [HttpPost("with-coupon")]
+        public ActionResult<MessageDto> SendWithCoupon([FromBody] SendMessageWithCouponDto dto)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                
+                var coupon = _couponService.GetById(dto.CouponId);
+                
+                if (coupon.AuthorId != currentUserId)
+                {
+                    return Forbid("You can only share your own coupons.");
+                }
+                
+                if (coupon.ExpiryDate.HasValue && coupon.ExpiryDate.Value < System.DateTime.UtcNow)
+                {
+                    return BadRequest("Cannot share expired coupon.");
+                }
+                
+                var created = _messageService.SendWithCoupon(currentUserId, dto.RecipientId, dto.Content, dto.CouponId);
+                return Ok(created);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("my-coupons")]
+        public ActionResult GetMyCoupons()
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var coupons = _couponService.GetByAuthorId(currentUserId);
+                
+                var validCoupons = coupons.Where(c => !c.ExpiryDate.HasValue || c.ExpiryDate.Value >= System.DateTime.UtcNow).ToList();
+                
+                return Ok(validCoupons);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpGet("{otherUserId:long}")]

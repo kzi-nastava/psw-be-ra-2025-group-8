@@ -17,5 +17,9 @@ namespace Explorer.Tours.API.Dtos
         public DateTime? PublishedAt { get; set; }
         public DateTime? ArchivedAt { get; set; }
         public List<TourTransportTimeDto>? TransportTimes { get; set; }
+        public bool IsAdvertised { get; set; }
+        public string? AdvertisementTier { get; set; }
+        public DateTime? AdvertisementEndsAtUtc { get; set; }
+
     }
 }
