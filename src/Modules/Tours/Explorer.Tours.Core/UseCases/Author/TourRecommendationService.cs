@@ -371,6 +371,40 @@ public class TourRecommendationService : ITourRecommendationService
             }
         }
 
+        var groupsByLength = successfulTours.GroupBy(t => t.LengthInKilometers switch
+        {
+            < 5 => "Short",
+            <= 15 => "Standard",
+            _ => "Long"
+        });
+
+        foreach (var group in groupsByLength)
+        {
+            if (group.Count() >= 2)
+            {
+                var tourNames = group.Select(t => t.Name).Take(2).ToList();
+                var firstTour = group.First();
+                string categoryDescription = group.Key switch
+                {
+                    "Short" => "kratkih i efikasnih tura (ispod 5km)",
+                    "Standard" => "tura standardne dužine (5-15km)",
+                    "Long" => "maratonskih avantura (preko 15km)",
+                    _ => "sličnih tura"
+                };
+
+                recommendations.Add(new TourRecommendationDto
+                {
+                    TourId = (int)firstTour.Id,
+                    TourName = firstTour.Name,
+                    Message = $"Potencijal za paket: Imate više uspešnih {categoryDescription} " +
+                              $"(npr. '{tourNames[0]}' i '{tourNames[1]}'). " +
+                              "Turisti često vole da kupe set tura sličnog intenziteta!",
+                    Sentiment = RecommendationSentiment.Positive,
+                    Category = RecommendationCategory.Economic
+                });
+            }
+        }
+
         return recommendations;
     }
 
